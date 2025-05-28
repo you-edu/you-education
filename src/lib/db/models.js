@@ -24,7 +24,7 @@ const chapterSchema = new mongoose.Schema({
 });
 chapterSchema.index({ subjectId: 1 });
 
-const nodeDataSchema = new mongoose.Schema({
+const notesSchema = new mongoose.Schema({
   content: { type: mongoose.Schema.Types.Mixed, required: true },
   createdAt: { type: Date, default: Date.now }
 });
@@ -38,5 +38,5 @@ const mindMapSchema = new mongoose.Schema({
 export const User = mongoose.models.User || mongoose.model('User', userSchema);
 export const Subject = mongoose.models.Subject || mongoose.model('Subject', subjectSchema);
 export const Chapter = mongoose.models.Chapter || mongoose.model('Chapter', chapterSchema);
-export const NodeData = mongoose.models.NodeData || mongoose.model('NodeData', nodeDataSchema);
+export const NodeData = mongoose.models.NodeData || mongoose.model('Notes', notesSchema);
 export const MindMap = mongoose.models.MindMap || mongoose.model('MindMap', mindMapSchema);
