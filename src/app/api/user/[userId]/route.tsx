@@ -1,15 +1,15 @@
-import { User } from '@lib/db/models';
-import { connectToDatabase } from '@lib/db/mongoose';
+import { User } from '@/lib/db/models';
+import { connectToDatabase } from '@/lib/db/mongoose';
 import { NextResponse, NextRequest } from 'next/server';
-import {useSession} from 'next-auth/react';
 
-export async function GET(request: NextRequest) {
+
+export async function GET(request: NextRequest, {params} : {params: { userId: string }}) {
     try {
-        const { data: session } = useSession();
-        console.log('Session data:', session);
-        const email = session?.user?.email;
-        const user = await User.findOne({email});
-
+        const userId = params.userId; 
+        const user = await User.findOne({_id: userId});
+        console.log(user);
+        
+        
         if(user){
             // return user data as JSON with status 200
             return NextResponse.json(user.toObject(), { status: 200, headers: { 'Content-Type': 'application/json' } });

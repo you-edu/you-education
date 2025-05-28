@@ -38,5 +38,5 @@ const mindMapSchema = new mongoose.Schema({
 export const User = mongoose.models.User || mongoose.model('User', userSchema);
 export const Subject = mongoose.models.Subject || mongoose.model('Subject', subjectSchema);
 export const Chapter = mongoose.models.Chapter || mongoose.model('Chapter', chapterSchema);
-export const NodeData = mongoose.models.NodeData || mongoose.model('Notes', notesSchema);
+export const Notes = mongoose.models.Notes || mongoose.model('Notes', notesSchema);
 export const MindMap = mongoose.models.MindMap || mongoose.model('MindMap', mindMapSchema);
