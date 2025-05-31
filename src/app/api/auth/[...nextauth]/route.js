@@ -43,9 +43,10 @@ export const authOptions = {
     })
   ],
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, account }) => {
       await dbConnect()
-      if (user) {
+      if (user && account) {
+        token.accessToken = account.access_token;
         let dbUser = await User.findOne({ email: user.email })
         if (!dbUser) {
           dbUser = await User.create({
@@ -60,6 +61,11 @@ export const authOptions = {
         if (dbUser) token.id = dbUser._id.toString()
       }
       return token
+    },
+    session: async ({ session, token }) => {
+      session.accessToken = token.accessToken;
+      session.user.id = token.id;
+      return session;
     },
     pages: {
       signIn: '/login', 

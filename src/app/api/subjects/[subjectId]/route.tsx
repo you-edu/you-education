@@ -18,24 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: { subjectI
         return NextResponse.json({ error: 'Failed to fetch subject' }, { status: 500 });
     }
 }
-export async function POST(request: NextRequest) {  
-    try {
-        const { userId, title, description } = await request.json();
-        const newSubject = new Subject({ userId, title, description });
 
-        // check if subject already exists
-        const existingSubject = await Subject.findOne({ userId, title });
-        if (existingSubject) {
-            return NextResponse.json({ error: 'Subject already exists' }, { status: 400 });
-        }
-
-        await newSubject.save();
-        return NextResponse.json(newSubject.toObject(), { status: 201 });
-    } catch (error) {
-        console.error('Error creating subject:', error);
-        return NextResponse.json({ error: 'Failed to create subject' }, { status: 500 });
-    }
-}
 
 // Delete
 export async function DELETE(request: NextRequest, { params }: { params: { subjectId: string } }) {

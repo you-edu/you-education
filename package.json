@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.1",
     "next": "15.1.8",
     "next-auth": "^4.24.11",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
