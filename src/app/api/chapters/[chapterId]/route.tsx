@@ -16,24 +16,6 @@ export async function GET(request: NextRequest, {params}: { params: { chapterId:
         return NextResponse.json({error: 'Failed to fetch chapter'}, {status: 500});
     }
 }
-export async function POST(request: NextRequest) {
-    try {
-        const {subjectId, title, content, mindMapId} = await request.json();
-        const newChapter = new Chapter({subjectId, title, content, mindMapId});
-
-        // check if chapter already exists
-        const existingChapter = await Chapter.findOne({subjectId, title});
-        if (existingChapter) {
-            return NextResponse.json({error: 'Chapter already exists'}, {status: 400});
-        }
-
-        await newChapter.save();
-        return NextResponse.json(newChapter.toObject(), {status: 201});
-    } catch (error) {
-        console.error('Error creating chapter:', error);
-        return NextResponse.json({error: 'Failed to create chapter'}, {status: 500});
-    }
-}
 
 // Delete
 export async function DELETE(request: NextRequest, {params}: { params: { chapterId: string } }) {
