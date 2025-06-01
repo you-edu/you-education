@@ -16,24 +16,7 @@ export async function GET(request: NextRequest, {params}: { params: { mindMapId:
         return NextResponse.json({error: 'Failed to fetch mind map'}, {status: 500});
     }
 }
-export async function POST(request: NextRequest) {
-    try {
-        const {chapterId, content} = await request.json();
-        const newMindMap = new MindMap({chapterId, content});
 
-        // check if mind map already exists
-        const existingMindMap = await MindMap.findOne({chapterId});
-        if (existingMindMap) {
-            return NextResponse.json({error: 'Mind map already exists'}, {status: 400});
-        }
-
-        await newMindMap.save();
-        return NextResponse.json(newMindMap.toObject(), {status: 201});
-    } catch (error) {
-        console.error('Error creating mind map:', error);
-        return NextResponse.json({error: 'Failed to create mind map'}, {status: 500});
-    }
-}
 
 // Delete
 export async function DELETE(request: NextRequest, {params}: { params: { mindMapId: string } }) {

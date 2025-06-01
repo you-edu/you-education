@@ -17,19 +17,6 @@ export async function GET(request: NextRequest, {params}: { params: { noteId: st
     }
 }
 
-export async function POST(request: NextRequest) {
-    try {
-        const { content} = await request.json();
-        const newNote = new Notes({content});
-
-        await newNote.save();
-        return NextResponse.json(newNote.toObject(), {status: 201});
-    } catch (error) {
-        console.error('Error creating note:', error);
-        return NextResponse.json({error: 'Failed to create note'}, {status: 500});
-    }
-}
-
 // Delete
 
 export async function DELETE(request: NextRequest, {params}: { params: { noteId: string } }) {
