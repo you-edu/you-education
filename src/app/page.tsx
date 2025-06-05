@@ -44,7 +44,7 @@ const Page = () => {
         
         {/* Stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl p-8 border border-gray-100 dark:border-white/10 hover:shadow-lg transition-all duration-300">
+          <div className="bg-gray-50 dark:bg-black/90 shadow-lg shadow-gray-500 rounded-2xl p-8 border border-gray-100  dark:border-white/10  transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-600 dark:text-white/70 uppercase text-sm tracking-wide">Current Exams</h3>
               <span className="bg-white dark:bg-black/70 text-black dark:text-white text-sm px-3 py-1 rounded-full font-bold shadow-sm">{currentExams.length}</span>
@@ -55,7 +55,7 @@ const Page = () => {
             </div>
           </div>
           
-          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl p-8 border border-gray-100 dark:border-white/10 hover:shadow-lg transition-all duration-300">
+          <div className="bg-gray-50 dark:bg-black/90 shadow-lg shadow-gray-500 rounded-2xl p-8 border border-gray-100 dark:border-white/10 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-600 dark:text-white/70 uppercase text-sm tracking-wide">Completed Exams</h3>
               <span className="bg-white dark:bg-black/70 text-black dark:text-white text-sm px-3 py-1 rounded-full font-bold shadow-sm">{completedExams.length}</span>
@@ -66,7 +66,7 @@ const Page = () => {
             </div>
           </div>
           
-          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl p-8 border border-gray-100 dark:border-white/10 hover:shadow-lg transition-all duration-300">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 p-8 border border-gray-100 dark:border-white/10  transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-600 dark:text-white/70 uppercase text-sm tracking-wide">Average Score</h3>
               <span className="bg-white dark:bg-black/70 text-black dark:text-white text-sm px-3 py-1 rounded-full font-bold shadow-sm">30 days</span>
