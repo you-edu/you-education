@@ -7,23 +7,23 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const subjectSchema = new mongoose.Schema({
+const ExamSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  title: { type: String, required: true },
+  subjectName: { type: String, required: true },
   description: { type: String },
   createdAt: { type: Date, default: Date.now },
   examDate: { type: Date },
 });
-subjectSchema.index({ userId: 1 });
+ExamSchema.index({ userId: 1 });
 
 const chapterSchema = new mongoose.Schema({
-  subjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true },
+  ExamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
   title: { type: String, required: true },
   content: { type: [String] },
   mindMapId: { type: mongoose.Schema.Types.ObjectId, ref: 'MindMap' },
   createdAt: { type: Date, default: Date.now }
 });
-chapterSchema.index({ subjectId: 1 });
+chapterSchema.index({ ExamId: 1 });
 
 const notesSchema = new mongoose.Schema({
   content: { type: mongoose.Schema.Types.Mixed, required: true },
@@ -37,7 +37,7 @@ const mindMapSchema = new mongoose.Schema({
 });
   
 export const User = mongoose.models.User || mongoose.model('User', userSchema);
-export const Subject = mongoose.models.Subject || mongoose.model('Subject', subjectSchema);
+export const Exam = mongoose.models.Exam || mongoose.model('Exam', ExamSchema);
 export const Chapter = mongoose.models.Chapter || mongoose.model('Chapter', chapterSchema);
 export const Notes = mongoose.models.Notes || mongoose.model('Notes', notesSchema);
 export const MindMap = mongoose.models.MindMap || mongoose.model('MindMap', mindMapSchema);

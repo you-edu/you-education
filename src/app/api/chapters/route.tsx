@@ -2,16 +2,16 @@ import {Chapter} from '@/lib/db/models';
 import {connectToDatabase} from '@/lib/db/mongoose';
 import {NextResponse, NextRequest} from 'next/server';
 
-// GET all chapters for a specific subject
-export async function GET(request: NextRequest, {params}: {params: {subjectId: string}}) {
+// GET all chapters for a specific exam
+export async function GET(request: NextRequest, {params}: {params: {examId: string}}) {
    
     try {
-        const {subjectId} = params;
-        if (!subjectId) {
-            return NextResponse.json({error: 'Subject ID is required'}, {status: 400});
+        const {examId} = params;
+        if (!examId) {
+            return NextResponse.json({error: 'Exam ID is required'}, {status: 400});
         }
        
-        const chapters = await Chapter.find({subjectId}).sort({createdAt: -1}); 
+        const chapters = await Chapter.find({examId}).sort({createdAt: -1}); 
         return NextResponse.json(chapters.map(chapter => chapter.toObject()), {status: 200});
     } catch (error) {
         console.error('Error fetching chapters:', error);
@@ -22,11 +22,11 @@ export async function GET(request: NextRequest, {params}: {params: {subjectId: s
 // POST request to create a new chapter
 export async function POST(request: NextRequest) {
     try {
-        const {subjectId, title, content, mindMapId} = await request.json();
-        const newChapter = new Chapter({subjectId, title, content, mindMapId});
+        const {examId, title, content, mindMapId} = await request.json();
+        const newChapter = new Chapter({examId, title, content, mindMapId});
 
         // check if chapter already exists
-        const existingChapter = await Chapter.findOne({subjectId, title});
+        const existingChapter = await Chapter.findOne({examId, title});
         if (existingChapter) {
             return NextResponse.json({error: 'Chapter already exists'}, {status: 400});
         }
