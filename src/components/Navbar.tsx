@@ -15,7 +15,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="w-full py-4 px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-10">
+    <nav className="w-full py-4 px-6 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-black shadow-sm sticky top-0 z-10">
       <div className="container max-w-6xl mx-auto flex items-center justify-between">
         <div className="text-xl font-bold tracking-tight">
           <Link href="/" className="flex items-center gap-2">
@@ -29,19 +29,19 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <Link 
             href="/dashboard" 
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
+            className="text-sm text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
           >
             Dashboard
           </Link>
           <Link 
             href="/exams" 
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
+            className="text-sm text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
           >
             Exams
           </Link>
           <Link 
             href="/profile" 
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
+            className="text-sm text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
           >
             Profile
           </Link>
@@ -52,7 +52,7 @@ export default function Navbar() {
               size="icon"
               aria-label="Toggle theme"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-9 w-9 rounded-full border-gray-200 dark:border-gray-700"
+              className="h-9 w-9 rounded-full border-gray-200 dark:border-white/20"
             >
               {theme === "dark" ? 
                 <Sun className="h-4 w-4" /> : 
