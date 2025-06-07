@@ -19,6 +19,7 @@ interface AddExamCardProps {
 }
 
 export interface ExamData {
+  examId?: string; // Optional for new exams
   userId: string;
   subjectName: string;
   description: string;
@@ -30,11 +31,12 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
   const [subjectName, setSubjectName] = useState("")
   const [description, setDescription] = useState("")
   const [examDate, setExamDate] = useState<Date>()
+  const session = useSession() 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const examData: ExamData = {
-      userId: useSession().data?.user?.id || "", 
+      userId: session.data?.user.id || "", // Use the session from the variable
       subjectName: subjectName,
       description: description,
       createdAt: new Date(),

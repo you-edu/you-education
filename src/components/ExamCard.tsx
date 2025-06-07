@@ -1,12 +1,5 @@
 import React from 'react';
-
-export interface ExamData {
-  id: number;
-  title: string;
-  date: string;
-  subject: string;
-  score?: string;
-}
+import {ExamData} from './AddExamCard'; // Adjust the import path as necessary
 
 interface ExamCardProps {
   exam: ExamData;
@@ -22,19 +15,18 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <span className="inline-block px-3 py-1 text-xs rounded-full bg-gray-100 dark:bg-black/70 text-gray-700 dark:text-white/70 mb-3 font-semibold uppercase tracking-wide">{exam.subject}</span>
-          <h3 className="font-bold text-xl mb-2 group-hover:text-gray-700 dark:group-hover:text-white/80 transition-colors">{exam.title}</h3>
+          <h3 className="font-bold text-xl mb-2 group-hover:text-gray-700 dark:group-hover:text-white/80 transition-colors">{exam.subjectName}</h3>
           <p className="text-gray-500 dark:text-white/60">
             {isCompleted 
-              ? `Completed on ${new Date(exam.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-              : (new Date(exam.date) > new Date() 
-                 ? `Due ${new Date(exam.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` 
-                 : `Overdue since ${new Date(exam.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+              ? `Completed on ${new Date(exam.examDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+              : (new Date(exam.examDate) > new Date() 
+                 ? `Due ${new Date(exam.examDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` 
+                 : `Overdue since ${new Date(exam.examDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
                 )
             }
           </p>
         </div>
-        {isCompleted ? (
+        {/* {isCompleted ? (
           <div className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-bold text-lg">
             {exam.score}
           </div>
@@ -44,7 +36,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </div>
-        )}
+        )} */}
       </div>
       
       <div className="mb-4 h-2 w-full bg-gray-100 dark:bg-black/50 rounded-full overflow-hidden">

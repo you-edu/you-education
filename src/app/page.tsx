@@ -6,20 +6,14 @@ import ExamsList from '@/components/Examlist'
 import axios from 'axios'
 
 
-interface Exam {
-  userId: string;
-  subjectName: string;
-  description: string;
-  createdAt: Date;
-  examDate: Date;
-}
+
 const Page = () => {
   const [showAddExamCard, setShowAddExamCard] = useState(false);
 
   // Sample data - would come from your actual data source
-  const [currentExams, setCurrentExams] = useState<Exam[]>([]);
+  const [currentExams, setCurrentExams] = useState<ExamData[]>([]);
   
-  const [completedExams, setCompletedExams] = useState<Exam[]>([]);
+  const [completedExams, setCompletedExams] = useState<ExamData[]>([]);
 
   // Here you would fetch data from your API
   useEffect(() => {
