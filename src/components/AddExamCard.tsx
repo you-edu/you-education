@@ -1,17 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon, Upload, File as FileIcon, X } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useSession } from "next-auth/react"
+import { toast } from "sonner"
 
 interface AddExamCardProps {
   onSave: (examData: ExamData) => void
@@ -25,22 +26,118 @@ export interface ExamData {
   description: string;
   createdAt: Date;
   examDate: Date;
+  syllabus?: File; // Changed from optional to required
 }
+
+// Helper component for required field label
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <div>
+    {children} <span className="text-red-500">*</span>
+  </div>
+);
 
 export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
   const [subjectName, setSubjectName] = useState("")
   const [description, setDescription] = useState("")
   const [examDate, setExamDate] = useState<Date>()
   const session = useSession() 
+  const [syllabus, setSyllabus] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [filePreview, setFilePreview] = useState<string | null>(null)
+
+  // Handle file drop
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    
+    const files = e.dataTransfer.files
+    handleFiles(files)
+  }, [])
+
+  // Handle file input
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files)
+    }
+  }
+
+  // Process the files
+  const handleFiles = (files: FileList) => {
+    if (files.length > 0) {
+      const file = files[0]
+      // Check if file is jpg or png
+      if (file.type === "image/jpeg" || file.type === "image/png") {
+        setSyllabus(file)
+        
+        // Create preview
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setFilePreview(e.target?.result as string)
+        }
+        reader.readAsDataURL(file)
+      } else {
+        toast.error("Please upload a JPG or PNG file", {
+          style: { backgroundColor: "#f44336", color: "white" }
+        })
+      }
+    }
+  }
+
+  // Remove file
+  const handleRemoveFile = () => {
+    setSyllabus(null)
+    setFilePreview(null)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent default form validation and handle manually
+    let isValid = true;
+    
+    if (!subjectName.trim()) {
+      toast.error("Please enter subject name", {
+        style: { backgroundColor: "#f44336", color: "white" }
+      });
+      isValid = false;
+    }
+    
+    if (!examDate) {
+      toast.error("Please select an exam date", {
+        style: { backgroundColor: "#f44336", color: "white" }
+      });
+      isValid = false;
+    }
+    
+    if (!syllabus) {
+      toast.error("Please upload a syllabus", {
+        style: { backgroundColor: "#f44336", color: "white" }
+      });
+      isValid = false;
+    }
+    
+    if (!isValid) return;
+    
     const examData: ExamData = {
-      userId: session.data?.user.id || "", // Use the session from the variable
+      userId: session.data?.user.id || "", 
       subjectName: subjectName,
       description: description,
       createdAt: new Date(),
       examDate: examDate || new Date(),
+      syllabus: syllabus || undefined
     }
     onSave(examData)
   }
@@ -53,7 +150,9 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="exam-title">Subject Name</Label>
+            <RequiredLabel>
+              <Label htmlFor="exam-title">Subject Name</Label>
+            </RequiredLabel>
             <Input 
               id="subject-name" 
               placeholder="Enter subject name" 
@@ -76,7 +175,9 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
           </div>
           
           <div className="space-y-2">
-            <Label>Exam Date</Label>
+            <RequiredLabel>
+              <Label>Exam Date</Label>
+            </RequiredLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -99,6 +200,76 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                 />
               </PopoverContent>
             </Popover>
+          </div>
+          
+          {/* Syllabus Upload Section */}
+          <div className="space-y-2">
+            <RequiredLabel>
+              <Label htmlFor="syllabus-upload">Syllabus (JPG/PNG)</Label>
+            </RequiredLabel>
+            {!syllabus ? (
+              <div 
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
+                  isDragging 
+                    ? "border-black bg-gray-50 dark:border-white dark:bg-black/70" 
+                    : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600"
+                )}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('file-upload')?.click()}
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2" />
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Drag and drop your syllabus image here
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    or click to browse (JPG, PNG)
+                  </p>
+                </div>
+                <input 
+                  id="file-upload" 
+                  type="file"
+                  className="hidden"
+                  accept="image/jpeg,image/png"
+                  onChange={handleFileInput}
+                  // Remove required attribute from hidden input
+                />
+              </div>
+            ) : (
+              <div className="relative">
+                <div className="flex items-center p-4 border rounded-lg border-gray-200 dark:border-gray-700">
+                  {filePreview ? (
+                    <div className="relative w-12 h-12 mr-4 overflow-hidden rounded">
+                      <img 
+                        src={filePreview} 
+                        alt="Syllabus preview" 
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  ) : (
+                    <FileIcon className="w-12 h-12 mr-4 text-gray-400" />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium truncate">{syllabus.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {(syllabus.size / 1024).toFixed(2)} KB
+                    </p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleRemoveFile}
+                    type="button"
+                    className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
         

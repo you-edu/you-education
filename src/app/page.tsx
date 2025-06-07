@@ -68,6 +68,7 @@ const Page = () => {
     try {
 
       // Send to server
+      
       const response = await axios.post('/api/exams', examData);
       const savedExam = response.data;
       
