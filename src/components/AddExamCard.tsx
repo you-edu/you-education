@@ -11,6 +11,7 @@ import { Calendar as CalendarIcon } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { useSession } from "next-auth/react"
 
 interface AddExamCardProps {
   onSave: (examData: ExamData) => void
@@ -18,21 +19,28 @@ interface AddExamCardProps {
 }
 
 export interface ExamData {
-  title: string
-  description: string
-  date: Date | undefined
-  subject: string
+  userId: string;
+  subjectName: string;
+  description: string;
+  createdAt: Date;
+  examDate: Date;
 }
 
 export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
-  const [title, setTitle] = useState("")
+  const [subjectName, setSubjectName] = useState("")
   const [description, setDescription] = useState("")
-  const [date, setDate] = useState<Date>()
-  const [subject, setSubject] = useState("")
+  const [examDate, setExamDate] = useState<Date>()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave({ title, description, date, subject })
+    const examData: ExamData = {
+      userId: useSession().data?.user?.id || "", 
+      subjectName: subjectName,
+      description: description,
+      createdAt: new Date(),
+      examDate: examDate || new Date(),
+    }
+    onSave(examData)
   }
 
   return (
@@ -43,24 +51,12 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="exam-title">Exam Title</Label>
+            <Label htmlFor="exam-title">Subject Name</Label>
             <Input 
-              id="exam-title" 
-              placeholder="Enter exam title" 
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="border border-gray-200 dark:border-white/20"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="exam-subject">Subject</Label>
-            <Input 
-              id="exam-subject" 
-              placeholder="Enter subject" 
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              id="subject-name" 
+              placeholder="Enter subject name" 
+              value={subjectName}
+              onChange={(e) => setSubjectName(e.target.value)}
               required
               className="border border-gray-200 dark:border-white/20"
             />
@@ -85,18 +81,18 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                   variant={"outline"}
                   className={cn(
                     "w-full justify-start text-left font-normal border border-gray-200 dark:border-white/20",
-                    !date && "text-muted-foreground"
+                    !examDate && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  {examDate ? format(examDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={date}
-                  onSelect={setDate}
+                  selected={examDate}
+                  onSelect={setExamDate}
                   initialFocus
                 />
               </PopoverContent>
@@ -113,6 +109,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
           >
             Cancel
           </Button>
+          
           <Button 
             type="submit"
             className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"

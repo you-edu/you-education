@@ -3,53 +3,90 @@ import React, { useState, useEffect } from 'react'
 import Navbar from '@/components/Navbar'
 import { AddExamCard, ExamData } from '@/components/AddExamCard'
 import ExamsList from '@/components/Examlist'
+import axios from 'axios'
 
+
+interface Exam {
+  userId: string;
+  subjectName: string;
+  description: string;
+  createdAt: Date;
+  examDate: Date;
+}
 const Page = () => {
   const [showAddExamCard, setShowAddExamCard] = useState(false);
-  
+
   // Sample data - would come from your actual data source
-  const [currentExams, setCurrentExams] = useState([
-    { id: 1, title: "Mathematics Final", date: "2023-12-15", subject: "Mathematics" },
-    
-  ]);
+  const [currentExams, setCurrentExams] = useState<Exam[]>([]);
   
-  const [completedExams, setCompletedExams] = useState([
-    { id: 4, title: "Biology Quiz", date: "2023-11-10", subject: "Biology", score: "85%" },
-    
-  ]);
+  const [completedExams, setCompletedExams] = useState<Exam[]>([]);
 
   // Here you would fetch data from your API
-  // useEffect(() => {
-  //   const fetchExams = async () => {
-  //     try {
-  //       const response = await fetch('/api/exams');
-  //       const data = await response.json();
-  //       setCurrentExams(data.currentExams);
-  //       setCompletedExams(data.completedExams);
-  //     } catch (error) {
-  //       console.error('Error fetching exams:', error);
-  //     }
-  //   };
-  //   
-  //   fetchExams();
-  // }, []);
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        const currentDate = new Date();
+        // Fetching exams from the API using Get request with axios
+        const response = await axios.get('/api/exams'); 
+        console.log('Fetched exams:', response.data);
+        const completedExamsList = [];
+        const currentExamsList = [];
+        // Data would contain the list of all exams it can be previous or upcoming
+        // Obtaining current and completed exams from the data
+
+        for( const exam of response.data) {
+          if(exam.examDate < currentDate){
+            completedExamsList.push({
+              examId : exam._id,
+              userId: exam.userId,
+              subjectName: exam.subjectName,
+              description: exam.description,
+              createdAt: new Date(exam.createdAt),
+              examDate: new Date(exam.examDate)
+            });
+          }else{
+            currentExamsList.push({
+              examId : exam._id, 
+              userId: exam.userId,
+              subjectName: exam.subjectName,
+              description: exam.description,
+              createdAt: new Date(exam.createdAt),
+              examDate: new Date(exam.examDate)
+            });
+          }
+        }
+        setCurrentExams(currentExamsList);
+        setCompletedExams(completedExamsList);
+      } catch (error) {
+        console.error('Error fetching exams:', error);
+      }
+    };
+    
+    fetchExams();
+  }, []);
 
   const handleAddExam = () => {
     setShowAddExamCard(true);
     document.body.style.overflow = 'hidden';
   };
 
-  const handleSaveExam = (examData: ExamData) => {
-    const newExam = {
-      id: currentExams.length + 6,
-      title: examData.title,
-      date: examData.date ? examData.date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      subject: examData.subject
-    };
-    
-    setCurrentExams([...currentExams, newExam]);
-    setShowAddExamCard(false);
-    document.body.style.overflow = 'auto';
+  const handleSaveExam = async (examData: ExamData) => {
+    try {
+
+      // Send to server
+      const response = await axios.post('/api/exams', examData);
+      const savedExam = response.data;
+      
+      // Update state with the exam returned from server
+      setCurrentExams([...currentExams, savedExam]);
+      
+      // Close modal
+      setShowAddExamCard(false);
+      document.body.style.overflow = 'auto';
+    } catch (error) {
+      console.error('Error saving exam:', error);
+      // Handle error (show error message to user)
+    }
   };
 
   const handleCancelAddExam = () => {
@@ -102,7 +139,7 @@ const Page = () => {
         {/* Current Exams Section - Now using the component */}
         <ExamsList 
           title="Current Exams" 
-          exams={currentExams} 
+          exams={currentExams}
           type="current" 
           onAddExam={handleAddExam} 
         />
@@ -110,7 +147,7 @@ const Page = () => {
         {/* Completed Exams Section - Now using the component */}
         <ExamsList 
           title="Completed Exams" 
-          exams={completedExams} 
+          exams= {completedExams}
           type="completed" 
         />
       </div>
