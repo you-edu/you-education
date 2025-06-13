@@ -1,5 +1,6 @@
 import React from 'react';
 import {ExamData} from './AddExamCard'; // Adjust the import path as necessary
+import { useRouter } from 'next/navigation'; // Import router for navigation
 
 interface ExamCardProps {
   exam: ExamData;
@@ -8,10 +9,18 @@ interface ExamCardProps {
 
 const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
   const isCompleted = type === 'completed';
+  const router = useRouter(); // Initialize router
+  
+  // Handler for card click
+  const handleCardClick = () => {
+    console.log(`Navigating to exam with ID: ${exam.examId}`);
+    router.push(`/exams/${exam.examId}`);
+  };
   
   return (
     <div 
       className="bg-white dark:bg-black/90 border-2 border-gray-100 dark:border-white/10 rounded-2xl p-6 hover:border-gray-300 dark:hover:border-white/30 hover:shadow-xl transition-all duration-300 cursor-pointer group"
+      onClick={handleCardClick} // Add onClick handler
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
