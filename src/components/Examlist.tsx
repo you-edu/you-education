@@ -1,6 +1,6 @@
 import React from 'react';
 import ExamCard from './ExamCard';
-import { ExamData } from './AddExamCard'; 
+import { ExamData, ExamsListProps} from '@/lib/types'; // Adjust the import path as necessary
 
 // Import Shadcn Carousel components
 import {
@@ -10,13 +10,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-
-interface ExamsListProps {
-  title: string;
-  exams: ExamData[];
-  type: 'current' | 'completed';
-  onAddExam?: () => void;
-}
 
 const ExamsList: React.FC<ExamsListProps> = ({ title, exams, type, onAddExam }) => {
   return (

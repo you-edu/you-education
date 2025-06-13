@@ -1,11 +1,7 @@
 import React from 'react';
-import {ExamData} from './AddExamCard'; // Adjust the import path as necessary
+import {ExamData, ExamCardProps} from '@/lib/types'; // Adjust the import path as necessary
 import { useRouter } from 'next/navigation'; // Import router for navigation
 
-interface ExamCardProps {
-  exam: ExamData;
-  type: 'current' | 'completed';
-}
 
 const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
   const isCompleted = type === 'completed';

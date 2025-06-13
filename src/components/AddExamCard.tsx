@@ -13,21 +13,9 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
+import { ExamData } from "@/lib/types"
+import { AddExamCardProps } from "@/lib/types"
 
-interface AddExamCardProps {
-  onSave: (examData: ExamData) => void
-  onCancel: () => void
-}
-
-export interface ExamData {
-  examId?: string; // Optional for new exams
-  userId: string;
-  subjectName: string;
-  description: string;
-  createdAt: Date;
-  examDate: Date;
-  syllabus?: File; // Changed from optional to required
-}
 
 // Helper component for required field label
 const RequiredLabel = ({ children }: { children: React.ReactNode }) => (

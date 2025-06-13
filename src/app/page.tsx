@@ -1,9 +1,9 @@
 "use client"
 import React, { useState, useEffect } from 'react'
-import Navbar from '@/components/Navbar'
-import { AddExamCard, ExamData } from '@/components/AddExamCard'
+import { AddExamCard } from '@/components/AddExamCard'
 import ExamsList from '@/components/Examlist'
 import axios from 'axios'
+import { ExamData } from '@/lib/types' // Adjust the import path as necessary
 
 
 
