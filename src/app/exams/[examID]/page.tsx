@@ -219,7 +219,7 @@ const ExamDetailsPage = () => {
                       {/* Aesthetic Chapter Navigation Button */}
                       <div className="mt-6 flex justify-end">
                         <Link 
-                          href={`/exams/${examId}/chapters/${chapter.examId}`} 
+                          href={`/exams/chapters/${chapter.examId}`} 
                           className="group relative overflow-hidden flex items-center gap-2 px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
                         >
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">
