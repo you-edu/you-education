@@ -1,18 +1,20 @@
-import {Chapter} from '@/lib/db/models';
-import {connectToDatabase} from '@/lib/db/mongoose';
-import {NextResponse, NextRequest} from 'next/server';
+import { Chapter } from '@/lib/db/models';
+import { connectToDatabase } from '@/lib/db/mongoose';
+import { NextResponse, NextRequest } from 'next/server';
 
 // GET all chapters for a specific exam
-export async function GET(request: NextRequest, {params}: {params: {examId: string}}) {
-   
+export async function GET(request: NextRequest) {
     try {
-        const {examId} = params;
+        const { searchParams } = new URL(request.url);
+        const examId = searchParams.get('examId');
+        
         if (!examId) {
-            return NextResponse.json({error: 'Exam ID is required'}, {status: 400});
+            return NextResponse.json({ error: 'examId is required' }, { status: 400 });
         }
-       
-        const chapters = await Chapter.find({examId}).sort({createdAt: -1}); 
-        return NextResponse.json(chapters.map(chapter => chapter.toObject()), {status: 200});
+
+        // Find all chapters associated with this exam
+        const chapters = await Chapter.find({ examId: examId });
+        return NextResponse.json(chapters, { status: 200 });
     } catch (error) {
         console.error('Error fetching chapters:', error);
         return NextResponse.json({error: 'Failed to fetch chapters'}, {status: 500});
@@ -27,12 +29,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({error: 'Invalid request data'}, {status: 400});
         }
         
-        console.log('Creating chapters for exam:', examId, 'Chapters:', chapters);
+        // console.log('Creating chapters for exam:', examId, 'Chapters:', chapters);
         // Create new chapters in the database
         const createdChapters = await Chapter.insertMany(
             chapters.map(chapter => ({...chapter, examId }))
         );
-        console.log('Chapters created successfully:', createdChapters);
+        // console.log('Chapters created successfully:', createdChapters);
         return NextResponse.json(createdChapters.map(chapter => chapter.toObject()), {status: 201});
     } catch (error) {
         console.error('Error creating chapters:', error);

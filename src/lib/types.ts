@@ -32,3 +32,9 @@ export interface AddExamCardProps {
   onSave: (examData: ExamData) => void
   onCancel: () => void
 }
+
+export interface Chapter {
+  examId: number;
+  title: string;
+  content: string[];
+}
