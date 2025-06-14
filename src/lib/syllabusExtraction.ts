@@ -62,7 +62,7 @@ export async function extractAndSaveChaptersFromImage(file: File | null, examDat
 
     // Process the response
     const responseContent = completion.choices[0].message.content;
-    
+    console.log("Response from Azure OpenAI:", responseContent);
     if (!responseContent) {
       toast.error("Failed to extract content from the syllabus image");
       return null;
@@ -114,7 +114,7 @@ async function fileToDataUrl(file: File): Promise<string> {
 async function saveChaptersToDatabase(chapters: Array<{title: string, content: string[]}>, examId: ExamData) {
     console.log('Saving chapters to database:', chapters, 'for exam:', examId);
   try {
-    const response = await fetch('/api/chapters', {
+    const response = await fetch('/api/exams/chapters', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
