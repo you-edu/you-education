@@ -17,11 +17,9 @@ const ExamSchema = new mongoose.Schema({
 ExamSchema.index({ userId: 1 });
 
 const chapterSchema = new mongoose.Schema({
-  ExamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
+  examId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
   title: { type: String, required: true },
-  content: { type: [String] },
-  mindMapId: { type: mongoose.Schema.Types.ObjectId, ref: 'MindMap' },
-  createdAt: { type: Date, default: Date.now }
+  content: { type: [String] }
 });
 chapterSchema.index({ ExamId: 1 });
 

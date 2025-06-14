@@ -24,7 +24,7 @@ const ExamsList: React.FC<ExamsListProps> = ({ title, exams, type, onAddExam }) 
         </button>
       </div>
       
-      {exams.length > 0 ? (
+      {exams && exams.length > 0 ? (
         <div className="relative">
           <Carousel 
             opts={{
@@ -52,7 +52,7 @@ const ExamsList: React.FC<ExamsListProps> = ({ title, exams, type, onAddExam }) 
           <div className="mt-4 flex justify-center gap-1 md:hidden">
             {Array.from({ length: Math.ceil(exams.length / 3) }).map((_, index) => (
               <div 
-                key={index}
+                key={`indicator-${index}`}
                 className={`h-1.5 w-1.5 rounded-full ${index === 0 ? 'bg-black dark:bg-white' : 'bg-gray-300 dark:bg-gray-600'}`}
               />
             ))}

@@ -19,23 +19,24 @@ export async function GET(request: NextRequest, {params}: {params: {examId: stri
     }
 }
 
-// POST request to create a new chapter
+// POST request to create a new chapters for an exam
 export async function POST(request: NextRequest) {
     try {
-        const {examId, title, content, mindMapId} = await request.json();
-        const newChapter = new Chapter({examId, title, content, mindMapId});
-
-        // check if chapter already exists
-        const existingChapter = await Chapter.findOne({examId, title});
-        if (existingChapter) {
-            return NextResponse.json({error: 'Chapter already exists'}, {status: 400});
+        const {examId, chapters} = await request.json();
+        if (!examId || !chapters || !Array.isArray(chapters)) {
+            return NextResponse.json({error: 'Invalid request data'}, {status: 400});
         }
-
-        await newChapter.save();
-        return NextResponse.json(newChapter.toObject(), {status: 201});
+        
+        console.log('Creating chapters for exam:', examId, 'Chapters:', chapters);
+        // Create new chapters in the database
+        const createdChapters = await Chapter.insertMany(
+            chapters.map(chapter => ({...chapter, examId }))
+        );
+        console.log('Chapters created successfully:', createdChapters);
+        return NextResponse.json(createdChapters.map(chapter => chapter.toObject()), {status: 201});
     } catch (error) {
-        console.error('Error creating chapter:', error);
-        return NextResponse.json({error: 'Failed to create chapter'}, {status: 500});
+        console.error('Error creating chapters:', error);
+        return NextResponse.json({error: 'Failed to create chapters'}, {status: 500});
     }
 }
 

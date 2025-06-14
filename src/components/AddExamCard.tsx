@@ -15,6 +15,7 @@ import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { ExamData } from "@/lib/types"
 import { AddExamCardProps } from "@/lib/types"
+import { extractAndSaveChaptersFromImage } from "@/lib/syllabusExtraction"
 
 
 // Helper component for required field label
@@ -90,7 +91,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
     setFilePreview(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Prevent default form validation and handle manually
@@ -119,15 +120,49 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
     
     if (!isValid) return;
     
-    const examData: ExamData = {
-      userId: session.data?.user.id || "", 
-      subjectName: subjectName,
-      description: description,
-      createdAt: new Date(),
-      examDate: examDate || new Date(),
-      syllabus: syllabus || undefined
+    try {
+      // First save the exam data
+      const examData = {
+        userId: session.data?.user.id || "", 
+        subjectName: subjectName,
+        description: description,
+        examDate: examDate || new Date(),
+      };
+      
+      // Show loading toast
+      toast.loading("Creating your exam...");
+      
+      // Save exam data using the API route
+      const response = await fetch('/api/exams', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(examData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create exam');
+      }
+      
+      // Get the saved exam data with ID
+      const savedExam = await response.json();
+      
+      // Now process the syllabus with the exam ID
+      if (syllabus) {
+        await extractAndSaveChaptersFromImage(syllabus, savedExam._id);
+      }
+      
+      // Notify success
+      toast.dismiss();
+      toast.success("Exam created successfully!");
+
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : "Failed to create exam");
+      console.error("Error creating exam:", error);
     }
-    onSave(examData)
   }
 
   return (
