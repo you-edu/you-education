@@ -1,4 +1,3 @@
-import { AzureOpenAI } from "openai";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -35,29 +34,6 @@ interface ProcessResult {
 export async function processNotesForMindMap(mindMap: MindMapNode): Promise<ProcessResult> {
   console.log("Starting notes generation process");
   try {
-    // Required Azure OpenAI credentials and configuration
-    const endpoint = process.env.NEXT_PUBLIC_AZURE_OPENAI_ENDPOINT;
-    const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
-    const apiVersion = process.env.NEXT_PUBLIC_OPENAI_API_VERSION || "2024-12-01-preview";
-    const deploymentName = process.env.NEXT_PUBLIC_AZURE_OPENAI_DEPLOYMENT_NAME || "o4-mini";
-
-    if (!endpoint || !apiKey) {
-      console.error("Azure OpenAI credentials not configured");
-      toast.error("Azure OpenAI credentials not configured");
-      return { updatedMindMap: mindMap, notesMap: {} };
-    }
-
-    console.log("Azure OpenAI credentials found");
-
-    // Initialize Azure OpenAI client
-    const client = new AzureOpenAI({
-      apiKey,
-      endpoint,
-      deployment: deploymentName,
-      apiVersion,
-      dangerouslyAllowBrowser: true
-    });
-
     // Create a deep clone of the mind map so we can modify it
     const clonedMindMap = JSON.parse(JSON.stringify(mindMap)) as MindMapNode;
     
@@ -101,45 +77,32 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
       console.log(`Generating notes for "${node.title}"`);
       
       try {
-        const completion = await client.chat.completions.create({
-          model: deploymentName,
-          messages: [
-            { 
-              role: "system", 
-              content: `You are a specialized AI for creating comprehensive educational notes.
-              Your task is to generate clear, well-structured notes on a given topic for study purposes.
-              Create notes suitable for students that include key concepts, definitions, explanations, examples, 
-              and important points to remember. Format the notes with markdown.`
-            },
-            {
-              role: "user",
-              content: `Please generate comprehensive educational notes for the topic: "${node.title}"
-              
-              Additional context for note generation: "${description}"
-              
-              The notes should:
-              1. Start with a clear heading (# Topic Title)
-              2. Include an introduction section
-              3. Organize content with appropriate section headings (## Section Title)
-              4. Use subsections where appropriate (### Subsection Title)
-              5. Utilize bullet points and numbered lists for clarity
-              6. Include code examples if relevant (in code blocks)
-              7. Highlight important concepts or definitions with bold or italics
-              8. Provide a summary or key takeaways at the end
-              
-              Only use Markdown formatting for structure.`
-            },
-          ],
-          max_completion_tokens: 100000,
+        // Call the backend API endpoint for generating notes
+        const response = await fetch('/api/mind-maps/notes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: node.title,
+            description: description
+          }),
         });
 
-        const notesContent = completion.choices[0].message.content;
-        if (!notesContent) {
-          console.error(`Failed to generate notes for topic: ${node.title}`);
-          notesMap[noteId] = `# ${node.title}\n\n*Notes generation failed. Please try again later.*`;
+        const data = await response.json();
+        
+        if (!response.ok) {
+          console.error("API error:", data.error);
+          notesMap[noteId] = `# ${node.title}\n\n*Failed to generate notes: ${data.error}*`;
         } else {
-          console.log(`Generated notes for "${node.title}"`);
-          notesMap[noteId] = notesContent;
+          const notesContent = data.notes;
+          if (!notesContent) {
+            console.error(`Failed to generate notes for topic: ${node.title}`);
+            notesMap[noteId] = `# ${node.title}\n\n*Notes generation failed. Please try again later.*`;
+          } else {
+            console.log(`Generated notes for "${node.title}"`);
+            notesMap[noteId] = notesContent;
+          }
         }
         
         // Remove the description fields as they're no longer needed

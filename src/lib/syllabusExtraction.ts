@@ -1,5 +1,4 @@
 import { ExamData } from "@/lib/types";
-import { AzureOpenAI } from "openai";
 import { toast } from "sonner";
 
 export async function extractAndSaveChaptersFromImage(file: File | null, examData: ExamData) {
@@ -12,87 +11,36 @@ export async function extractAndSaveChaptersFromImage(file: File | null, examDat
     // Convert image file to base64 data URL
     const imageDataUrl = await fileToDataUrl(file);
     
-    // Required Azure OpenAI credentials and configuration
-    const endpoint = process.env.NEXT_PUBLIC_AZURE_OPENAI_ENDPOINT;
-    const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
-    const apiVersion = process.env.NEXT_PUBLIC_OPENAI_API_VERSION || "2024-12-01-preview";
-    const deploymentName = process.env.NEXT_PUBLIC_AZURE_OPENAI_DEPLOYMENT_NAME || "o4-mini";
+    // Call the Azure OpenAI API route
+    const response = await fetch('/api/syllabus', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageDataUrl: imageDataUrl
+      }),
+    });
 
-    if (!endpoint || !apiKey) {
-      toast.error("Azure OpenAI credentials not configured");
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast.error(errorData.error || "Failed to process the syllabus image");
       return null;
     }
 
-    // Initialize Azure OpenAI client
-    const client = new AzureOpenAI({
-      apiKey,
-      endpoint,
-      deployment: deploymentName,
-      apiVersion,
-      dangerouslyAllowBrowser: true
-    });
-
+    const data = await response.json();
     
-    // Create the message payload with the system prompt and the image
-    const completion = await client.chat.completions.create({
-      model: deploymentName,  // Keep this line - it's needed with Azure OpenAI
-      messages: [
-        { 
-          role: "system", 
-          content: "You are a specialized AI for extracting educational syllabus information from images. Extract all chapters and their subtopics from the image and format them in a structured JSON format. Each chapter should include a title and content array containing all subtopics as strings."
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Extract all chapters and subtopics from this syllabus image and return the data in JSON format with the following structure: { chapters: [{ title: string, content: string[] }] }. Make sure to include all chapters and their subtopics from the image.",
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: imageDataUrl,
-              },
-            },
-          ],
-        },
-      ],
-      max_completion_tokens: 3000,
-    });
-
-    // Process the response
-    const responseContent = completion.choices[0].message.content;
-    console.log("Response from Azure OpenAI:", responseContent);
-    if (!responseContent) {
+    if (!data.success) {
       toast.error("Failed to extract content from the syllabus image");
       return null;
     }
 
-    // Extract JSON from the response
-    let chaptersData;
-    try {
-      // Try to find and parse JSON in the response
-      const jsonMatch = responseContent.match(/```json\s*([\s\S]*?)\s*```/) || 
-                        responseContent.match(/\{[\s\S]*\}/);
-      
-      const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : responseContent;
-      chaptersData = JSON.parse(jsonString);
-      
-      // If the expected structure isn't there, check if we need to wrap it
-      if (!chaptersData.chapters && Array.isArray(chaptersData)) {
-        chaptersData = { chapters: chaptersData };
-      }
-      
-      // Save chapters to database
-      await saveChaptersToDatabase(chaptersData.chapters, examData);
-      
-      toast.success("Syllabus chapters extracted and saved successfully!");
-      return chaptersData.chapters;
-    } catch (error) {
-      console.error("Error parsing chapter data:", error);
-      toast.error("Failed to parse the extracted chapter data");
-      return null;
-    }
+    // Save chapters to database
+    await saveChaptersToDatabase(data.chapters, examData);
+    
+    toast.success("Syllabus chapters extracted and saved successfully!");
+    return data.chapters;
+    
   } catch (error) {
     console.error("Error in syllabus extraction:", error);
     toast.error("Failed to process the syllabus image");

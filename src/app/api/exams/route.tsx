@@ -2,6 +2,7 @@ import { Exam } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { NextResponse, NextRequest } from 'next/server';
 import { getToken } from "next-auth/jwt";
+import mongoose from "mongoose";
 
 
 
@@ -27,6 +28,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {  
     try {
         const { userId, subjectName, description, examDate} = await request.json();
+
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+          return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
+        }
+
         const newExam = new Exam({ userId, subjectName, description, examDate });
 
         // check if Exam already exists
