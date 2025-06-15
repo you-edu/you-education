@@ -77,17 +77,6 @@ export default function YoutubeVideoAdderChecker() {
   const testTopics = [
     'Formal Grammar and their application to Syntax Analysis',
     'BNF Notation',
-    'The Syntactic specification of Languages: CFG',
-    'Derivation and Parse Trees',
-    'Shift Reduce Parsing',
-    'Operator precedence parsing',
-    'Top-down Parsing',
-    'Predictive Parsers',
-    'LR Parsers',
-    'The canonical collection of LR(0) items',
-    'Constructing SLR Parsing Tables',
-    'Constructing canonical LR and LALR Parsing Tables',
-    'An Automatic Parser Generator',
     'YACC'
   ];
 

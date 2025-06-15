@@ -267,7 +267,7 @@ const ExamDetailsPage = () => {
                         {chapter.mindmapId ? (
                           // Mind map exists - Show Start Learning button
                           <Link 
-                            href={`/exams/chapters/${chapter._id}/learn`}
+                            href={`/exams/chapters/${chapter._id}`}
                             className="group relative overflow-hidden flex items-center gap-2 px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
                           >
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">
