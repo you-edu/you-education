@@ -33,7 +33,6 @@ export async function DELETE(request: NextRequest, {params}: { params: { chapter
 }
 
 // Update
-// not sure if this is correct, but it should work
 export async function PUT(request: NextRequest, {params}: { params: { chapterId: string } }) {
     try {
         const chapterId = params.chapterId;
@@ -54,4 +53,4 @@ connectToDatabase()
     .then(() => console.log('Connected to MongoDB'))
     .catch((error) => console.error('MongoDB connection error:', error));
 
-// This file handles the API routes for chapters, allowing for fetching and creating chapters.   
+// This file handles the API routes for chapters, allowing for fetching and creating chapters.

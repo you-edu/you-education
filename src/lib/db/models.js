@@ -19,7 +19,8 @@ ExamSchema.index({ userId: 1 });
 const chapterSchema = new mongoose.Schema({
   examId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
   title: { type: String, required: true },
-  content: { type: [String] }
+  content: { type: [String], required: true},
+  mindmapId: { type: mongoose.Schema.Types.ObjectId, ref: 'MindMap' },
 });
 chapterSchema.index({ ExamId: 1 });
 

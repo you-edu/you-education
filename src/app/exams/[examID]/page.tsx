@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Calendar, BookOpen, FileText, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, BookOpen, FileText, Clock, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
-import { Chapter, ExamData } from '@/lib/types'; 
+import { Chapter, ExamData } from '@/lib/types';
+import { toast } from 'sonner';
+import { generateMindMapFromTopics } from '@/components/mindMapGenerator/index';
 
 const ExamDetailsPage = () => {
   const params = useParams();
@@ -15,6 +17,7 @@ const ExamDetailsPage = () => {
   const [examData, setExamData] = useState<ExamData | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [generatingMindMaps, setGeneratingMindMaps] = useState<{[chapterId: string]: boolean}>({});
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -42,6 +45,49 @@ const ExamDetailsPage = () => {
       fetchExamData();
     }
   }, [examId]);
+
+  const handleGenerateMindMap = async (chapter: Chapter) => {
+    // Set this chapter's generating state to true
+    setGeneratingMindMaps(prev => ({
+      ...prev,
+      [chapter._id]: true
+    }));
+    
+    toast.info(
+      <div className="flex flex-col">
+        <span className="font-medium">Starting mind map generation</span>
+        <span className="text-sm opacity-80">You can navigate away from this page.</span>
+      </div>
+    );
+
+    // Start the generation process
+    try {
+      const result = await generateMindMapFromTopics(
+        chapter.content,
+        chapter._id,
+        chapter.title
+      );
+      
+      if (result.success) {
+        toast.success(`Mind map for "${chapter.title}" generated successfully!`);
+        
+        // Refresh the chapter data to update the UI
+        const chaptersResponse = await axios.get(`/api/exams/chapters?examId=${examId}`);
+        setChapters(chaptersResponse.data);
+      } else {
+        toast.error(`Failed to generate mind map: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error generating mind map:', error);
+      toast.error('Failed to generate mind map. Please try again later.');
+    } finally {
+      // Reset this chapter's generating state
+      setGeneratingMindMaps(prev => ({
+        ...prev,
+        [chapter._id]: false
+      }));
+    }
+  };
 
   const formatDate = (dateString: string | number | Date) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -216,21 +262,55 @@ const ExamDetailsPage = () => {
                         </p>
                       </div>
                       
-                      {/* Aesthetic Chapter Navigation Button */}
+                      {/* Chapter Action Button - Show either Start Learning or Generate Mind Map */}
                       <div className="mt-6 flex justify-end">
-                        <Link 
-                          href={`/exams/chapters/${chapter.examId}`} 
-                          className="group relative overflow-hidden flex items-center gap-2 px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
-                        >
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">
-                            Start Learning
-                          </span>
-                          <div className="relative flex items-center justify-center w-6 h-6">
-                            <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-black rounded-full opacity-0 group-hover:opacity-100 scale-0 group-hover:scale-100 transition-all duration-300"></div>
-                            <ArrowRight className="h-4 w-4 text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white transition-colors duration-200 relative z-10" />
-                          </div>
-                          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                        </Link>
+                        {chapter.mindmapId ? (
+                          // Mind map exists - Show Start Learning button
+                          <Link 
+                            href={`/exams/chapters/${chapter._id}/learn`}
+                            className="group relative overflow-hidden flex items-center gap-2 px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
+                          >
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">
+                              Start Learning
+                            </span>
+                            <div className="relative flex items-center justify-center w-6 h-6">
+                              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-black rounded-full opacity-0 group-hover:opacity-100 scale-0 group-hover:scale-100 transition-all duration-300"></div>
+                              <ArrowRight className="h-4 w-4 text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white transition-colors duration-200 relative z-10" />
+                            </div>
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                          </Link>
+                        ) : (
+                          // Mind map doesn't exist - Show Generate Mind Map button
+                          <button
+                            onClick={() => handleGenerateMindMap(chapter)}
+                            disabled={generatingMindMaps[chapter._id]}
+                            className={`group relative overflow-hidden flex items-center gap-2 px-5 py-3 
+                              ${generatingMindMaps[chapter._id] 
+                                ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' 
+                                : 'bg-white dark:bg-gray-900 hover:shadow-md'} 
+                              border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm transition-all duration-300 ease-in-out`}
+                          >
+                            {generatingMindMaps[chapter._id] ? (
+                              <>
+                                <Loader2 className="h-4 w-4 text-gray-500 dark:text-gray-400 animate-spin mr-2" />
+                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                  Generating...
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">
+                                  Generate Mind Map
+                                </span>
+                                <div className="relative flex items-center justify-center w-6 h-6">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-black rounded-full opacity-0 group-hover:opacity-100 scale-0 group-hover:scale-100 transition-all duration-300"></div>
+                                  <ArrowRight className="h-4 w-4 text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white transition-colors duration-200 relative z-10" />
+                                </div>
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

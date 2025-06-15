@@ -29,12 +29,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({error: 'Invalid request data'}, {status: 400});
         }
         
-        // console.log('Creating chapters for exam:', examId, 'Chapters:', chapters);
-        // Create new chapters in the database
-        const createdChapters = await Chapter.insertMany(
-            chapters.map(chapter => ({...chapter, examId }))
-        );
-        // console.log('Chapters created successfully:', createdChapters);
+        // Create new chapters in the database with mindmapId explicitly set to null
+        const chaptersToCreate = chapters.map(chapter => ({
+            ...chapter,
+            examId,
+            mindmapId: null 
+        }));
+        
+        const createdChapters = await Chapter.insertMany(chaptersToCreate);
+        
         return NextResponse.json(createdChapters.map(chapter => chapter.toObject()), {status: 201});
     } catch (error) {
         console.error('Error creating chapters:', error);
