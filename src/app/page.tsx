@@ -5,20 +5,20 @@ import ExamsList from '@/components/Examlist'
 import axios from 'axios'
 import { ExamData } from '@/lib/types' // Adjust the import path as necessary
 
-
-
 const Page = () => {
   const [showAddExamCard, setShowAddExamCard] = useState(false);
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState<string | null>(null); // Add error state for better UX
 
   // Sample data - would come from your actual data source
   const [currentExams, setCurrentExams] = useState<ExamData[]>([]);
-  
   const [completedExams, setCompletedExams] = useState<ExamData[]>([]);
 
   // Here you would fetch data from your API
   useEffect(() => {
     const fetchExams = async () => {
       try {
+        setLoading(true); // Set loading to true before fetching data
         const currentDate = new Date();
         // Fetching exams from the API using Get request with axios
         const response = await axios.get('/api/exams'); 
@@ -51,8 +51,12 @@ const Page = () => {
         }
         setCurrentExams(currentExamsList);
         setCompletedExams(completedExamsList);
+        setError(null);
       } catch (error) {
         console.error('Error fetching exams:', error);
+        setError('Failed to load exams. Please try again later.');
+      } finally {
+        setLoading(false); // Set loading to false after data is fetched
       }
     };
     
@@ -91,6 +95,36 @@ const Page = () => {
     setShowAddExamCard(false);
     document.body.style.overflow = 'auto';
   };
+  
+  // Loading state - similar to the exam details page
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
+        <div className="max-w-md mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
+          <p className="text-gray-700 dark:text-gray-300 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 rounded-lg hover:opacity-90"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
@@ -144,7 +178,7 @@ const Page = () => {
         {/* Completed Exams Section - Now using the component */}
         <ExamsList 
           title="Completed Exams" 
-          exams= {completedExams}
+          exams={completedExams}
           type="completed" 
         />
       </div>
