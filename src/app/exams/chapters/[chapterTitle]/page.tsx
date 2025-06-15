@@ -1,8 +1,11 @@
 "use client"
-import React from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import MindMap from '@/components/Mindmap';
+import VideoPlayer from '@/components/VideoPlayer';
 
 const ChapterPage: React.FC = () => {
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+
   // Helper function to transform the nested JSON structure into the format expected by MindMap
   const transformData = (node: any): any => {
     // Base case: if it's an end node with resources, create leaf nodes for each resource
@@ -28,9 +31,8 @@ const ChapterPage: React.FC = () => {
     return { name: node.title };
   };
 
-  // The structure from the provided JSON
-  const compilerDesignData = {
-  "title": "Compiler Design – Syntax Analysis",
+const compilerDesignData = {
+  "title": "Compiler Design   Syntax Analysis",
   "is_end_node": false,
   "subtopics": [
     {
@@ -322,17 +324,47 @@ const ChapterPage: React.FC = () => {
   ]
 };
 
-  // Transform the data for the MindMap component
-  const treeData = [
-    transformData(compilerDesignData)
-  ];
+  // Use useMemo to prevent recreating the data structure on each render
+  const memoizedData = useMemo(() => compilerDesignData, []);
+
+  // Use useCallback to prevent recreating the function on each render
+  const handleLeafClick = useCallback((selection: any) => {
+    console.log("Leaf node clicked:", selection);
+    if (selection && selection.resource && selection.resource.data && selection.resource.data.url) {
+      console.log("Setting selected video URL:", selection.resource.data.url);
+      
+      setSelectedVideo(selection.resource.data.url);
+    } else if (typeof selection === 'string') {
+      // Fallback for simpler implementations that just pass a URL string
+      setSelectedVideo(selection);
+    }
+  }, []);
 
   return (
-    <div className="container mx-auto px-4 py-2">
-      <MindMap data={treeData} />
+    <div className="container mx-auto px-4 py-2 min-h-screen flex flex-col">
+      <div className="flex flex-col md:flex-row gap-4 flex-grow">
+        {selectedVideo && (
+          <div className="w-full md:w-1/4">
+            <div className="sticky top-4">
+              <VideoPlayer url={selectedVideo} />
+            </div>
+          </div>
+        )}
+        <div className={`w-full ${selectedVideo ? 'md:w-3/4' : 'md:w-full'} flex-grow`}>
+          <div className="h-full">
+            <MemoizedMindMap 
+              data={memoizedData} 
+              onLeafClick={handleLeafClick}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
+
+// Create a memoized version of the MindMap component
+const MemoizedMindMap = React.memo(MindMap);
 
 export default ChapterPage;
 

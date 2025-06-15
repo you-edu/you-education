@@ -13,7 +13,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url }) => {
       height: '0',          // Height will be determined by the aspect ratio
       width: '100%',
       background: '#000',
-      flex: '1 0 auto'      // Allows container to grow but not shrink
+      marginBottom: '1rem'  // Add some spacing below the video
     }}>
       <ReactPlayer
         url={url}
