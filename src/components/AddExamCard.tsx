@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Upload, File as FileIcon, X } from "lucide-react"
+import { Calendar as CalendarIcon, Upload, File as FileIcon, X, Loader2 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
@@ -33,6 +33,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
   const [syllabus, setSyllabus] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Handle file drop
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -118,9 +119,12 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       isValid = false;
     }
     
-    if (!isValid) return;
+    if (!isValid || isSubmitting) return;
     
     try {
+      // Set submitting state to true to disable the button
+      setIsSubmitting(true);
+      
       // First save the exam data
       const examData = {
         userId: session.data?.user.id || "", 
@@ -157,11 +161,19 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       // Notify success
       toast.dismiss();
       toast.success("Exam created successfully!");
+      
+      // Pass the saved exam data back to the parent component
+      onSave(savedExam);
+      
+      // Close the modal
+      onCancel();
 
     } catch (error) {
       toast.dismiss();
       toast.error(error instanceof Error ? error.message : "Failed to create exam");
       console.error("Error creating exam:", error);
+      // Reset submitting state on error
+      setIsSubmitting(false);
     }
   }
 
@@ -183,6 +195,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
               onChange={(e) => setSubjectName(e.target.value)}
               required
               className="border border-gray-200 dark:border-white/20"
+              disabled={isSubmitting}
             />
           </div>
           
@@ -194,6 +207,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-[100px] border border-gray-200 dark:border-white/20"
+              disabled={isSubmitting}
             />
           </div>
           
@@ -209,6 +223,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                     "w-full justify-start text-left font-normal border border-gray-200 dark:border-white/20",
                     !examDate && "text-muted-foreground"
                   )}
+                  disabled={isSubmitting}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {examDate ? format(examDate, "PPP") : <span>Pick a date</span>}
@@ -220,6 +235,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                   selected={examDate}
                   onSelect={setExamDate}
                   initialFocus
+                  disabled={isSubmitting}
                 />
               </PopoverContent>
             </Popover>
@@ -236,12 +252,13 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                   "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
                   isDragging 
                     ? "border-black bg-gray-50 dark:border-white dark:bg-black/70" 
-                    : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600"
+                    : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600",
+                  isSubmitting && "opacity-50 cursor-not-allowed"
                 )}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => document.getElementById('file-upload')?.click()}
+                onDragOver={!isSubmitting ? handleDragOver : undefined}
+                onDragLeave={!isSubmitting ? handleDragLeave : undefined}
+                onDrop={!isSubmitting ? handleDrop : undefined}
+                onClick={() => !isSubmitting && document.getElementById('file-upload')?.click()}
               >
                 <div className="flex flex-col items-center justify-center">
                   <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2" />
@@ -258,7 +275,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                   className="hidden"
                   accept="image/jpeg,image/png"
                   onChange={handleFileInput}
-                  // Remove required attribute from hidden input
+                  disabled={isSubmitting}
                 />
               </div>
             ) : (
@@ -286,6 +303,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                     size="icon" 
                     onClick={handleRemoveFile}
                     type="button"
+                    disabled={isSubmitting}
                     className="hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     <X className="w-4 h-4" />
@@ -301,6 +319,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
             variant="outline" 
             type="button" 
             onClick={onCancel}
+            disabled={isSubmitting}
             className="border border-gray-200 dark:border-white/20"
           >
             Cancel
@@ -308,9 +327,17 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
           
           <Button 
             type="submit"
+            disabled={isSubmitting}
             className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
           >
-            Save Exam
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Save Exam'
+            )}
           </Button>
         </CardFooter>
       </form>

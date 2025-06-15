@@ -11,7 +11,7 @@ import { generateMindMapFromTopics } from '@/components/mindMapGenerator/index';
 
 const ExamDetailsPage = () => {
   const params = useParams();
-  const examId = params.examID as string;
+  const examId = params.examID as string; 
   
   const [loading, setLoading] = useState<boolean>(true);
   const [examData, setExamData] = useState<ExamData | null>(null);

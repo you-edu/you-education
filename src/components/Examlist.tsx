@@ -35,7 +35,7 @@ const ExamsList: React.FC<ExamsListProps> = ({ title, exams, type, onAddExam }) 
           >
             <CarouselContent>
               {exams.map((exam) => (
-                <CarouselItem key={exam.examId} className="md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={exam._id} className="md:basis-1/2 lg:basis-1/3">
                   <div className="p-1">
                     <ExamCard exam={exam} type={type} />
                   </div>

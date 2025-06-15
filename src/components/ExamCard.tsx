@@ -9,8 +9,8 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
   
   // Handler for card click
   const handleCardClick = () => {
-    console.log(`Navigating to exam with ID: ${exam.examId}`);
-    router.push(`/exams/${exam.examId}`);
+    console.log(`Navigating to exam with ID: ${exam._id}`);
+    router.push(`/exams/${exam._id}`);
   };
   
   return (

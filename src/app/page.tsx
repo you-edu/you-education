@@ -31,7 +31,7 @@ const Page = () => {
         for( const exam of response.data) {
           if(exam.examDate < currentDate){
             completedExamsList.push({
-              examId : exam._id,
+              _id : exam._id,
               userId: exam.userId,
               subjectName: exam.subjectName,
               description: exam.description,
@@ -40,7 +40,7 @@ const Page = () => {
             });
           }else{
             currentExamsList.push({
-              examId : exam._id, 
+              _id : exam._id, 
               userId: exam.userId,
               subjectName: exam.subjectName,
               description: exam.description,
@@ -64,23 +64,26 @@ const Page = () => {
     document.body.style.overflow = 'hidden';
   };
 
-  const handleSaveExam = async (examData: ExamData) => {
+  const handleSaveExam = async (savedExam: any) => {
     try {
-
-      // Send to server
+      // Format the received exam to match your ExamData type
+      const newExam: ExamData = {
+        _id: savedExam._id,
+        userId: savedExam.userId,
+        subjectName: savedExam.subjectName,
+        description: savedExam.description,
+        createdAt: new Date(savedExam.createdAt),
+        examDate: new Date(savedExam.examDate)
+      };
       
-      const response = await axios.post('/api/exams', examData);
-      const savedExam = response.data;
+      // Update the current exams state with the newly added exam
+      setCurrentExams(prevExams => [...prevExams, newExam]);
       
-      // Update state with the exam returned from server
-      setCurrentExams([...currentExams, savedExam]);
-      
-      // Close modal
-      setShowAddExamCard(false);
-      document.body.style.overflow = 'auto';
+      // Close modal - this is handled in AddExamCard now
+      // setShowAddExamCard(false);
+      // document.body.style.overflow = 'auto';
     } catch (error) {
-      console.error('Error saving exam:', error);
-      // Handle error (show error message to user)
+      console.error('Error handling saved exam:', error);
     }
   };
 
