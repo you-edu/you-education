@@ -103,24 +103,42 @@ export async function POST(request: NextRequest) {
                       {
                         "title": "Detailed Concept",
                         "is_end_node": true,
-                        "resources": {
-                          "id": "res-uuid",
-                          "type": "youtube_link",
-                          "data": {
-                            "url": "YouTube video URL"
+                        "resources": [
+                          {
+                            "id": "res-uuid-1",
+                            "type": "youtube_link",
+                            "data": {
+                              "url": "https://www.youtube.com/watch?v=video1",
+                            }
+                          },
+                          {
+                            "id": "res-uuid-2",
+                            "type": "notes",
+                            "data": {
+                              "description": "Description of notes content."
+                            }
                           }
-                        }
+                        ]
                       },
                       {
                         "title": "Detailed Concept",
                         "is_end_node": true,
-                        "resources": {
-                            "id": "res-uuid",
+                        "resources": [
+                          {
+                            "id": "res-uuid-3",
+                            "type": "youtube_link",
+                            "data": {
+                              "url": "https://www.youtube.com/watch?v=video2",
+                            }
+                          },
+                          {
+                            "id": "res-uuid-4",
                             "type": "notes",
                             "data": {
-                               "description": "Description of notes content",
+                              "description": "Description of notes content."
                             }
-                        }
+                          }
+                        ]
                       }
                     ]
                   }
@@ -128,7 +146,7 @@ export async function POST(request: NextRequest) {
               }
             ]
           }
-          
+
           IMPORTANT: 
           - Aim for approximately 1/3 of the end nodes to have notes resources and 2/3 to have video resources
           - Choose topics for notes resources strategically based on content complexity and learning needs
