@@ -16,7 +16,7 @@ interface MindMapNode {
   title: string;
   is_end_node: boolean;
   subtopics?: MindMapNode[];
-  resources?: Resource;
+  resources?: Resource[]; // Changed from single Resource to Resource[]
 }
 
 interface NotesMap {
@@ -58,20 +58,26 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
     
     // Process each node that needs notes
     for (const nodePath of nodesToProcess) {
-      const node = getNodeByPath(clonedMindMap, nodePath);
-      if (!node || !node.resources || node.resources.type !== 'md_notes' || !node.resources.data.id) {
+      const { node, resourceIndex } = getNodeAndResourceByPath(clonedMindMap, nodePath);
+      if (!node || !node.resources || resourceIndex === -1 || !node.resources[resourceIndex] || 
+          node.resources[resourceIndex].type !== 'md_notes' || !node.resources[resourceIndex].data.id) {
         console.warn(`Skipping node - missing required data`);
         continue;
       }
 
-      const noteId = node.resources.data.id;
+      const resource = node.resources[resourceIndex];
+      const noteId = resource.data.id;
+      if (!noteId) {
+        console.warn(`Resource is missing a note ID for node "${node.title}"`);
+        continue;
+      }
       let description = '';
       
       // Check if description is at the top level or in data
-      if (node.resources.description) {
-        description = node.resources.description;
-      } else if (node.resources.data.description) {
-        description = node.resources.data.description;
+      if (resource.description) {
+        description = resource.description;
+      } else if (resource.data.description) {
+        description = resource.data.description;
       }
       
       console.log(`Generating notes for "${node.title}"`);
@@ -106,9 +112,9 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
         }
         
         // Remove the description fields as they're no longer needed
-        delete node.resources.description;
-        if (node.resources.data.description) {
-          delete node.resources.data.description;
+        delete resource.description;
+        if (resource.data.description) {
+          delete resource.data.description;
         }
         
       } catch (error) {
@@ -139,22 +145,27 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
  * Fix resources that should be notes - convert type and ensure proper ID structure
  */
 function fixNotesResources(node: MindMapNode): void {
-  if (node.resources) {
-    // Check if this is a notes resource that needs fixing
-    if (node.resources.type === 'notes') {
-      console.log(`Converting resource type from 'notes' to 'md_notes' for node: "${node.title}"`);
-      node.resources.type = 'md_notes';
+  if (node.resources && Array.isArray(node.resources)) {
+    // Process each resource in the array
+    for (let i = 0; i < node.resources.length; i++) {
+      const resource = node.resources[i];
       
-      // Ensure it has a proper ID in the data field
-      if (!node.resources.data.id) {
-        const newId = `note-${uuidv4()}`;
-        console.log(`Creating new ID for notes resource: ${newId}`);
-        node.resources.data.id = newId;
-      }
-      
-      // If the description is in the wrong place, move it
-      if (!node.resources.description && node.resources.data.description) {
-        node.resources.description = node.resources.data.description;
+      // Check if this is a notes resource that needs fixing
+      if (resource.type === 'notes') {
+        console.log(`Converting resource type from 'notes' to 'md_notes' for node: "${node.title}"`);
+        resource.type = 'md_notes';
+        
+        // Ensure it has a proper ID in the data field
+        if (!resource.data.id) {
+          const newId = `note-${uuidv4()}`;
+          console.log(`Creating new ID for notes resource: ${newId}`);
+          resource.data.id = newId;
+        }
+        
+        // If the description is in the wrong place, move it
+        if (!resource.description && resource.data.description) {
+          resource.description = resource.data.description;
+        }
       }
     }
   }
@@ -169,14 +180,25 @@ function fixNotesResources(node: MindMapNode): void {
 
 /**
  * Find all nodes in the mind map that need notes and record their paths
+ * Returns array of paths with [nodePath, resourceIndex]
  */
-function findNodesNeedingNotes(node: MindMapNode, currentPath: number[] = []): number[][] {
-  let result: number[][] = [];
+function findNodesNeedingNotes(node: MindMapNode, currentPath: number[] = []): Array<{nodePath: number[], resourceIndex: number}> {
+  let result: Array<{nodePath: number[], resourceIndex: number}> = [];
   
-  // Check if current node has a notes resource (check for both md_notes and notes for backward compatibility)
-  if (node.resources && (node.resources.type === 'md_notes' || node.resources.type === 'notes') && node.resources.data.id) {
-    console.log(`Found node needing notes: "${node.title}" at path [${currentPath.join(',')}]`);
-    result.push([...currentPath]);
+  // Check if current node has any notes resources
+  if (node.resources && Array.isArray(node.resources)) {
+    for (let i = 0; i < node.resources.length; i++) {
+      const resource = node.resources[i];
+      if ((resource.type === 'md_notes' || resource.type === 'notes')) {
+        // If there's no ID, create one
+        if (!resource.data.id) {
+          resource.data.id = `note-${uuidv4()}`;
+        }
+        
+        console.log(`Found node needing notes: "${node.title}" at path [${currentPath.join(',')}], resource index ${i}`);
+        result.push({ nodePath: [...currentPath], resourceIndex: i });
+      }
+    }
   }
   
   // Recursively check subtopics
@@ -188,6 +210,26 @@ function findNodesNeedingNotes(node: MindMapNode, currentPath: number[] = []): n
   }
   
   return result;
+}
+
+/**
+ * Get a node and specific resource by path in the mind map
+ */
+function getNodeAndResourceByPath(
+  root: MindMapNode, 
+  path: {nodePath: number[], resourceIndex: number}
+): {node: MindMapNode | null, resourceIndex: number} {
+  let currentNode = root;
+  
+  for (const index of path.nodePath) {
+    if (!currentNode.subtopics || !currentNode.subtopics[index]) {
+      console.error(`Invalid path, cannot access index ${index} at current level`);
+      return { node: null, resourceIndex: -1 };
+    }
+    currentNode = currentNode.subtopics[index];
+  }
+  
+  return { node: currentNode, resourceIndex: path.resourceIndex };
 }
 
 /**
@@ -211,12 +253,14 @@ function getNodeByPath(root: MindMapNode, path: number[]): MindMapNode | null {
  * Remove all description fields from resources in the mind map
  */
 function removeAllDescriptionFields(node: MindMapNode): void {
-  if (node.resources) {
-    if (node.resources.description) {
-      delete node.resources.description;
-    }
-    if (node.resources.data.description) {
-      delete node.resources.data.description;
+  if (node.resources && Array.isArray(node.resources)) {
+    for (const resource of node.resources) {
+      if (resource.description) {
+        delete resource.description;
+      }
+      if (resource.data.description) {
+        delete resource.data.description;
+      }
     }
   }
   
