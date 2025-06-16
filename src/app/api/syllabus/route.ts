@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
           ],
         },
       ],
-      max_completion_tokens: 3000,
+      max_completion_tokens: 100000,
     });
 
     // Process the response

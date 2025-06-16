@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import SessionWrapper from "@/components/SessionWrapper";
 import { Toaster } from "@/components/ui/sonner"
 import Navbar from "@/components/Navbar";
+import { VideoPlayerProvider } from '../context/VideoPlayerContext';
 
 
 const geistSans = Geist({
@@ -34,7 +35,9 @@ export default function RootLayout({
         
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Navbar />
-          {children}
+          <VideoPlayerProvider>
+            {children}
+          </VideoPlayerProvider>
         </ThemeProvider>
         <Toaster />
       </body>
