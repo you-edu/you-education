@@ -106,7 +106,6 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
           
           const noteData = await notesResponse.json();
           const noteId = noteData._id;
-          console.log('notes created successfully:', noteData); // remove it
 
           // Update the resource with the ID from the API
           resource.data.id = noteId;

@@ -59,7 +59,6 @@ export async function generateMindMapFromTopics(
     toast.info(`Fetching YouTube videos for ${topicList.length} topics...`);
     const topicsWithVideos: TopicWithVideo[] = await youtubeVideoAdder(topicList);
     console.log(`Successfully fetched videos for ${topicList.length} topics`);
-    console.log("Topics with videos:", topicsWithVideos); // remove it 
     
     // Step 2: Generate mind map structure with relevant content
     toast.info("Generating mind map structure...");
@@ -68,7 +67,6 @@ export async function generateMindMapFromTopics(
       throw new Error("Failed to generate mind map structure");
     }
     console.log("Mind map structure generated successfully");
-    console.log("Generated mind map structure:", JSON.stringify(mindMap, null, 2)); // remove it
     
     // Step 3: Process notes for the mind map
     toast.info("Generating notes for mind map topics...");
@@ -98,7 +96,6 @@ export async function generateMindMapFromTopics(
     const mindMapResponseData = await mindMapResponse.json();
     const mindMapId = mindMapResponseData._id;
     console.log("Mind map saved successfully with ID:", mindMapId);
-    console.log("Saved mind map content:", JSON.stringify(mindMapResponseData.content, null, 2)); // remove it
     
     // Step 6: Update the chapter with the mind map ID
     toast.info("Updating chapter with mind map reference...");
