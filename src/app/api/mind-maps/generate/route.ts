@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
                           },
                           {
                             "id": "res-uuid-2",
-                            "type": "notes",
+                            "type": "md_notes",
                             "data": {
                               "description": "Description of notes content."
                             }

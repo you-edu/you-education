@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     
     const newNotes = new Notes({ content });
     await newNotes.save();
-    
+    console.log('Notes created successfully:', newNotes);
     return NextResponse.json(newNotes.toObject(), { status: 201 });
   } catch (error) {
     console.error('Error creating notes:', error);

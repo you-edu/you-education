@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 interface Resource {
   id: string;
   type: string;
-  description?: string;
   data: {
     url?: string;
     id?: string;
@@ -16,7 +15,7 @@ interface MindMapNode {
   title: string;
   is_end_node: boolean;
   subtopics?: MindMapNode[];
-  resources?: Resource[]; // Changed from single Resource to Resource[]
+  resources?: Resource[]; 
 }
 
 interface NotesMap {
@@ -25,7 +24,6 @@ interface NotesMap {
 
 interface ProcessResult {
   updatedMindMap: MindMapNode;
-  notesMap: NotesMap;
 }
 
 /**
@@ -36,10 +34,6 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
   try {
     // Create a deep clone of the mind map so we can modify it
     const clonedMindMap = JSON.parse(JSON.stringify(mindMap)) as MindMapNode;
-    
-    // First, scan and fix any resources of type "notes" to "md_notes" and ensure they have a proper ID
-    console.log("Scanning and fixing notes resources");
-    fixNotesResources(clonedMindMap);
 
     // Now find all nodes that need notes generation
     console.log("Finding nodes that need notes");
@@ -48,7 +42,7 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
     console.log(`Found ${nodesToProcess.length} nodes that need notes`);
     if (nodesToProcess.length === 0) {
       console.log("No nodes requiring notes were found in the mind map");
-      return { updatedMindMap: clonedMindMap, notesMap: {} };
+      return { updatedMindMap: clonedMindMap};
     }
     
     // Generate notes for each relevant node
@@ -66,15 +60,8 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
       }
 
       const resource = node.resources[resourceIndex];
-      let description = '';
-      
-      // Check if description is at the top level or in data
-      if (resource.description) {
-        description = resource.description;
-      } else if (resource.data.description) {
-        description = resource.data.description;
-      }
-      
+      let description = resource.data.description;
+
       console.log(`Generating notes for "${node.title}"`);
       
       try {
@@ -96,14 +83,31 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
           console.error("API error:", data.error);
           
           // Generate a fallback ID only if API request fails and we need one
-          const noteId = resource.data.id || `note-${uuidv4()}`;
+          const noteId =  `note-${uuidv4()}`;
           resource.data.id = noteId;
           notesMap[noteId] = `# ${node.title}\n\n*Failed to generate notes: ${data.error}*`;
         } else {
           const notesContent = data.notes;
-          // Use the _id from MongoDB response if it exists, otherwise use existing ID or generate one
-          const noteId = data._id || resource.data.id || `note-${uuidv4()}`;
           
+          // Save notes in DB
+          const notesResponse = await fetch('/api/notes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: notesContent,
+            }),
+          });
+          
+          if (!notesResponse.ok) {
+            throw new Error(`Failed to save notes: ${notesResponse.status} ${notesResponse.statusText}`);
+          }
+          
+          const noteData = await notesResponse.json();
+          const noteId = noteData._id;
+          console.log('notes created successfully:', noteData); // remove it
+
           // Update the resource with the ID from the API
           resource.data.id = noteId;
           
@@ -115,12 +119,9 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
             notesMap[noteId] = notesContent;
           }
         }
-        
-        // Remove the description fields as they're no longer needed
-        delete resource.description;
-        if (resource.data.description) {
-          delete resource.data.description;
-        }
+
+        // Clean up description field after processing
+        delete resource.data.description;
         
       } catch (error) {
         console.error(`Error generating notes for topic "${node.title}":`, error);
@@ -131,59 +132,21 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
         notesMap[noteId] = `# ${node.title}\n\n*Error generating notes: ${error instanceof Error ? error.message : 'Unknown error'}*`;
       }
     }
-
-    // Clean up all description fields in the mind map
-    removeAllDescriptionFields(clonedMindMap);
     
     console.log(`Successfully generated notes for ${Object.keys(notesMap).length} topics`);
     toast.success(`Successfully generated notes for ${Object.keys(notesMap).length} topics`);
     
     return {
-      updatedMindMap: clonedMindMap,
-      notesMap: notesMap
+      updatedMindMap: clonedMindMap
     };
     
   } catch (error) {
     console.error("Error in notes generation process:", error);
     toast.error("Failed to generate notes for mind map topics");
-    return { updatedMindMap: mindMap, notesMap: {} };
+    return { updatedMindMap: mindMap };
   }
 }
 
-/**
- * Fix resources that should be notes - convert type and ensure proper ID structure
- */
-function fixNotesResources(node: MindMapNode): void {
-  if (node.resources && Array.isArray(node.resources)) {
-    // Process each resource in the array
-    for (let i = 0; i < node.resources.length; i++) {
-      const resource = node.resources[i];
-      
-      // Check if this is a notes resource that needs fixing
-      if (resource.type === 'notes') {
-        console.log(`Converting resource type from 'notes' to 'md_notes' for node: "${node.title}"`);
-        resource.type = 'md_notes';
-        
-        // If the description is in the wrong place, move it
-        if (!resource.description && resource.data.description) {
-          resource.description = resource.data.description;
-        }
-        
-        // Don't generate an ID here - we'll get it from the API response
-        if (!resource.data.id) {
-          console.log(`Note resource in node "${node.title}" needs an ID - will get from API`);
-        }
-      }
-    }
-  }
-  
-  // Recursively process subtopics
-  if (node.subtopics && node.subtopics.length > 0) {
-    node.subtopics.forEach(subtopic => {
-      fixNotesResources(subtopic);
-    });
-  }
-}
 
 /**
  * Find all nodes in the mind map that need notes and record their paths
@@ -196,7 +159,7 @@ function findNodesNeedingNotes(node: MindMapNode, currentPath: number[] = []): A
   if (node.resources && Array.isArray(node.resources)) {
     for (let i = 0; i < node.resources.length; i++) {
       const resource = node.resources[i];
-      if ((resource.type === 'md_notes' || resource.type === 'notes')) {
+      if ((resource.type === 'md_notes')) {
         // We'll get the ID from API so no need to generate here
         console.log(`Found node needing notes: "${node.title}" at path [${currentPath.join(',')}], resource index ${i}`);
         result.push({ nodePath: [...currentPath], resourceIndex: i });
@@ -233,43 +196,4 @@ function getNodeAndResourceByPath(
   }
   
   return { node: currentNode, resourceIndex: path.resourceIndex };
-}
-
-/**
- * Get a node by its path in the mind map
- */
-function getNodeByPath(root: MindMapNode, path: number[]): MindMapNode | null {
-  let currentNode = root;
-  
-  for (const index of path) {
-    if (!currentNode.subtopics || !currentNode.subtopics[index]) {
-      console.error(`Invalid path, cannot access index ${index} at current level`);
-      return null;
-    }
-    currentNode = currentNode.subtopics[index];
-  }
-  
-  return currentNode;
-}
-
-/**
- * Remove all description fields from resources in the mind map
- */
-function removeAllDescriptionFields(node: MindMapNode): void {
-  if (node.resources && Array.isArray(node.resources)) {
-    for (const resource of node.resources) {
-      if (resource.description) {
-        delete resource.description;
-      }
-      if (resource.data.description) {
-        delete resource.data.description;
-      }
-    }
-  }
-  
-  if (node.subtopics && node.subtopics.length > 0) {
-    node.subtopics.forEach(subtopic => {
-      removeAllDescriptionFields(subtopic);
-    });
-  }
 }

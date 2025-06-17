@@ -21,11 +21,10 @@ interface YoutubeVideo {
 interface Resource {
   id: string;
   type: string;
-  description?: string;
   data: {
     url?: string;
     id?: string;
-    description?: string;
+    description?: string; 
   };
 }
 
@@ -33,16 +32,11 @@ interface MindMapNode {
   title: string;
   is_end_node: boolean;
   subtopics?: MindMapNode[];
-  resources?: Resource;
-}
-
-interface NotesMap {
-  [dataId: string]: string;
+  resources?: Resource[]; 
 }
 
 interface ProcessResult {
   updatedMindMap: MindMapNode;
-  notesMap: NotesMap;
 }
 
 interface GenerateMindMapResult {
@@ -51,13 +45,7 @@ interface GenerateMindMapResult {
   error?: string;
 }
 
-/**
- * Main function to generate mind map and notes from a list of topics
- * @param topicList List of topics to include in the mind map
- * @param chapterId MongoDB ID of the chapter
- * @param chapterTitle Title of the chapter
- * @returns Object containing success status and mindMapId if successful
- */
+
 export async function generateMindMapFromTopics(
   topicList: string[],
   chapterId: string,
@@ -71,6 +59,7 @@ export async function generateMindMapFromTopics(
     toast.info(`Fetching YouTube videos for ${topicList.length} topics...`);
     const topicsWithVideos: TopicWithVideo[] = await youtubeVideoAdder(topicList);
     console.log(`Successfully fetched videos for ${topicList.length} topics`);
+    console.log("Topics with videos:", topicsWithVideos); // remove it 
     
     // Step 2: Generate mind map structure with relevant content
     toast.info("Generating mind map structure...");
@@ -79,32 +68,14 @@ export async function generateMindMapFromTopics(
       throw new Error("Failed to generate mind map structure");
     }
     console.log("Mind map structure generated successfully");
+    console.log("Generated mind map structure:", JSON.stringify(mindMap, null, 2)); // remove it
     
     // Step 3: Process notes for the mind map
     toast.info("Generating notes for mind map topics...");
     const processResult: ProcessResult = await processNotesForMindMap(mindMap);
-    console.log(`Generated notes for ${Object.keys(processResult.notesMap).length} topics`);
+  
     
-    // Step 4: Save the notes to the database
-    toast.info("Saving generated notes to database...");
-    const notesResponse = await fetch('/api/notes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        content: processResult.notesMap,
-      }),
-    });
-    
-    if (!notesResponse.ok) {
-      throw new Error(`Failed to save notes: ${notesResponse.status} ${notesResponse.statusText}`);
-    }
-    
-    const notesData = await notesResponse.json();
-    const notesId = notesData._id;
-    console.log("Notes saved successfully with ID:", notesId);
-    
+
     // Step 5: Save the mind map to the database
     toast.info("Saving mind map to database...");
     const mindMapData = {
@@ -127,6 +98,7 @@ export async function generateMindMapFromTopics(
     const mindMapResponseData = await mindMapResponse.json();
     const mindMapId = mindMapResponseData._id;
     console.log("Mind map saved successfully with ID:", mindMapId);
+    console.log("Saved mind map content:", JSON.stringify(mindMapResponseData.content, null, 2)); // remove it
     
     // Step 6: Update the chapter with the mind map ID
     toast.info("Updating chapter with mind map reference...");
