@@ -12,6 +12,7 @@ type ApiResourceData = {
   title?: string;
   length?: string;
   views?: string;
+  id?: string; // Added for notes
   // other data
 };
 
@@ -73,17 +74,23 @@ function apiToMarkdown(node: ApiNode, level = 1, path = ""): string {
   // Add resources as nodes if they exist
   if (node.resources && node.resources.length > 0) {
     node.resources.forEach(resource => {
-      const resourceTitle = resource.data.title || `Resource ${resource.id}`;
+      // Use different icons for different resource types
+      let icon = '📺'; // Default for videos
+      if (resource.type === 'md_notes') {
+        icon = '📝'; // Use note icon for notes
+      }
+      
+      const resourceTitle = resource.data.title || `${icon} Resource ${resource.id}`;
       const resourcePath = `${currentPath} > ${resourceTitle}`;
       
       // Store resource in map for later lookup
       resourceMap.set(resourcePath, { node, resource });
       
       // Store the mapping from resource content to its full path
-      nodePathMap.set(`📺 ${resourceTitle}`, resourcePath);
+      nodePathMap.set(`${icon} ${resourceTitle}`, resourcePath);
       
       // Add resource as a markdown item
-      md += `${'#'.repeat(level + 1)} 📺 ${resourceTitle}\n`;
+      md += `${'#'.repeat(level + 1)} ${icon} ${resourceTitle}\n`;
     });
   }
   
@@ -220,7 +227,7 @@ function handleNodeSelection(
   const { node, resource } = mapItem;
   
   // Check if this is a resource node (indicated by the resource property)
-  if (resource && resource.data && resource.data.url) {
+  if (resource) {
     event.stopPropagation();
     console.log("Resource node clicked:", resource);
     

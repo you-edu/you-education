@@ -60,17 +60,12 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
     for (const nodePath of nodesToProcess) {
       const { node, resourceIndex } = getNodeAndResourceByPath(clonedMindMap, nodePath);
       if (!node || !node.resources || resourceIndex === -1 || !node.resources[resourceIndex] || 
-          node.resources[resourceIndex].type !== 'md_notes' || !node.resources[resourceIndex].data.id) {
+          node.resources[resourceIndex].type !== 'md_notes') {
         console.warn(`Skipping node - missing required data`);
         continue;
       }
 
       const resource = node.resources[resourceIndex];
-      const noteId = resource.data.id;
-      if (!noteId) {
-        console.warn(`Resource is missing a note ID for node "${node.title}"`);
-        continue;
-      }
       let description = '';
       
       // Check if description is at the top level or in data
@@ -99,14 +94,24 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
         
         if (!response.ok) {
           console.error("API error:", data.error);
+          
+          // Generate a fallback ID only if API request fails and we need one
+          const noteId = resource.data.id || `note-${uuidv4()}`;
+          resource.data.id = noteId;
           notesMap[noteId] = `# ${node.title}\n\n*Failed to generate notes: ${data.error}*`;
         } else {
           const notesContent = data.notes;
+          // Use the _id from MongoDB response if it exists, otherwise use existing ID or generate one
+          const noteId = data._id || resource.data.id || `note-${uuidv4()}`;
+          
+          // Update the resource with the ID from the API
+          resource.data.id = noteId;
+          
           if (!notesContent) {
             console.error(`Failed to generate notes for topic: ${node.title}`);
             notesMap[noteId] = `# ${node.title}\n\n*Notes generation failed. Please try again later.*`;
           } else {
-            console.log(`Generated notes for "${node.title}"`);
+            console.log(`Generated notes for "${node.title}" with ID ${noteId}`);
             notesMap[noteId] = notesContent;
           }
         }
@@ -119,6 +124,10 @@ export async function processNotesForMindMap(mindMap: MindMapNode): Promise<Proc
         
       } catch (error) {
         console.error(`Error generating notes for topic "${node.title}":`, error);
+        
+        // Generate a fallback ID only in error case if needed
+        const noteId = resource.data.id || `note-${uuidv4()}`;
+        resource.data.id = noteId;
         notesMap[noteId] = `# ${node.title}\n\n*Error generating notes: ${error instanceof Error ? error.message : 'Unknown error'}*`;
       }
     }
@@ -155,16 +164,14 @@ function fixNotesResources(node: MindMapNode): void {
         console.log(`Converting resource type from 'notes' to 'md_notes' for node: "${node.title}"`);
         resource.type = 'md_notes';
         
-        // Ensure it has a proper ID in the data field
-        if (!resource.data.id) {
-          const newId = `note-${uuidv4()}`;
-          console.log(`Creating new ID for notes resource: ${newId}`);
-          resource.data.id = newId;
-        }
-        
         // If the description is in the wrong place, move it
         if (!resource.description && resource.data.description) {
           resource.description = resource.data.description;
+        }
+        
+        // Don't generate an ID here - we'll get it from the API response
+        if (!resource.data.id) {
+          console.log(`Note resource in node "${node.title}" needs an ID - will get from API`);
         }
       }
     }
@@ -190,11 +197,7 @@ function findNodesNeedingNotes(node: MindMapNode, currentPath: number[] = []): A
     for (let i = 0; i < node.resources.length; i++) {
       const resource = node.resources[i];
       if ((resource.type === 'md_notes' || resource.type === 'notes')) {
-        // If there's no ID, create one
-        if (!resource.data.id) {
-          resource.data.id = `note-${uuidv4()}`;
-        }
-        
+        // We'll get the ID from API so no need to generate here
         console.log(`Found node needing notes: "${node.title}" at path [${currentPath.join(',')}], resource index ${i}`);
         result.push({ nodePath: [...currentPath], resourceIndex: i });
       }

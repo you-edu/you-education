@@ -4,12 +4,14 @@ import { useParams } from "next/navigation";
 import MindMap from "@/components/Mindmap";
 import VideoPlayer from "@/components/VideoPlayer";
 import ChatUI from "@/components/ChatUI";
+import NotesViewer from "@/components/NotesViewer";
 
 const ChapterPage: React.FC = () => {
   const params = useParams();
   const chapterId = params.chapterId as string;
 
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [selectedNote, setSelectedNote] = useState<string | null>(null);
   const [mindMapData, setMindMapData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,47 +57,47 @@ const ChapterPage: React.FC = () => {
     fetchMindMap();
   }, [chapterId]);
 
-  // Helper function to transform the nested JSON structure into the format expected by MindMap
-  const transformData = (node: any): any => {
-    // Base case: if it's an end node with resources, create leaf nodes for each resource
-    if (node.is_end_node && node.resources) {
-      return {
-        name: node.title,
-        children: node.resources.map((resource: any) => ({
-          name: resource.data.title || resource.id,
-          url: resource.data.url,
-        })),
-      };
-    }
-
-    // For nodes with subtopics, recursively transform each subtopic
-    if (node.subtopics) {
-      return {
-        name: node.title,
-        children: node.subtopics.map(transformData),
-      };
-    }
-
-    // For end nodes without resources (shouldn't happen with given data)
-    return { name: node.title };
-  };
-
-  // Use useMemo to transform the data only when mindMapData changes
-  const memoizedData = useMemo(() => {
-    if (!mindMapData) return null;
-    return transformData(mindMapData);
-  }, [mindMapData]);
-
   // Use useCallback to prevent recreating the function on each render
   const handleLeafClick = useCallback(
     (selection: any) => {
       console.log("Leaf node clicked:", selection);
+      
+      // Reset both states when a new node is clicked
+      setSelectedVideo(null);
+      setSelectedNote(null);
+      
       if (
+        selection &&
+        selection.resource &&
+        selection.resource.type === "md_notes" &&
+        selection.resource.data &&
+        selection.resource.data.id
+      ) {
+        // Handle notes type
+        console.log("Setting selected note ID:", selection.resource.data.id);
+        setSelectedNote(selection.resource.data.id);
+      } else if (
+        selection &&
+        selection.resources &&
+        selection.resources.length > 0
+      ) {
+        // Check if the first resource is a note
+        const firstResource = selection.resources[0];
+        if (firstResource.type === "md_notes" && firstResource.data && firstResource.data.id) {
+          console.log("Setting selected note ID from resources array:", firstResource.data.id);
+          setSelectedNote(firstResource.data.id);
+        } else if (firstResource.data && firstResource.data.url) {
+          // Handle video resource
+          console.log("Setting selected video URL from resources array:", firstResource.data.url);
+          setSelectedVideo(firstResource.data.url);
+        }
+      } else if (
         selection &&
         selection.resource &&
         selection.resource.data &&
         selection.resource.data.url
       ) {
+        // Handle video resource
         console.log("Setting selected video URL:", selection.resource.data.url);
         setSelectedVideo(selection.resource.data.url);
       } else if (typeof selection === "string") {
@@ -139,34 +141,42 @@ const ChapterPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-2 min-h-screen flex flex-col">
       <div className="flex flex-col md:flex-row gap-4 flex-grow">
-        {selectedVideo && (
+        {(selectedVideo || selectedNote) && (
           <div className="w-full md:w-1/4">
             <div className="sticky top-4">
-              <VideoPlayer url={selectedVideo} />
-              <div className="mt-4">
-                <ChatUI
-                  source={{
-                    type: "youtube",
-                    content: selectedVideo,
-                    videoId:
-                      selectedVideo?.includes("youtube.com")
-                        ? new URL(selectedVideo).searchParams.get("v") || ""
-                        : selectedVideo?.split("/").pop() || "",
-                  }}
-                />
-              </div>
+              {selectedVideo && (
+                <>
+                  <VideoPlayer url={selectedVideo} />
+                  <div className="mt-4">
+                    <ChatUI
+                      source={{
+                        type: "youtube",
+                        content: selectedVideo,
+                        videoId:
+                          selectedVideo?.includes("youtube.com")
+                            ? new URL(selectedVideo).searchParams.get("v") || ""
+                            : selectedVideo?.split("/").pop() || "",
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+              
+              {selectedNote && (
+                <NotesViewer noteId={selectedNote} />
+              )}
             </div>
           </div>
         )}
         <div
           className={`w-full ${
-            selectedVideo ? "md:w-3/4" : "md:w-full"
+            selectedVideo || selectedNote ? "md:w-3/4" : "md:w-full"
           } flex-grow`}
         >
           <div className="h-full">
-            {memoizedData ? (
+            {mindMapData ? (
               <MemoizedMindMap
-                data={memoizedData}
+                data={mindMapData}
                 onLeafClick={handleLeafClick}
               />
             ) : (

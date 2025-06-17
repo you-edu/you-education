@@ -130,13 +130,6 @@ export async function POST(request: NextRequest) {
                             "data": {
                               "url": "https://www.youtube.com/watch?v=video2",
                             }
-                          },
-                          {
-                            "id": "res-uuid-4",
-                            "type": "notes",
-                            "data": {
-                              "description": "Description of notes content."
-                            }
                           }
                         ]
                       }
