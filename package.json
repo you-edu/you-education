@@ -12,6 +12,7 @@
     "@azure/identity": "^4.10.1",
     "@azure/openai": "^2.0.0",
     "@chatscope/chat-ui-kit-react": "^2.1.1",
+    "@heroicons/react": "^2.2.0",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
