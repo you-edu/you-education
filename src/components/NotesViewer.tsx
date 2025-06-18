@@ -78,29 +78,46 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
     };
   }, [isFullScreen]);
 
-  // Simple markdown to HTML converter for rendering notes
+  // markdown to HTML converter for rendering notes
   const markdownToHtml = (markdown: string): string => {
+    // First, handle horizontal rules properly
+    // We'll convert explicit horizontal rules to a specific HTML format
     let html = markdown
+      // Convert proper horizontal rules (3 or more hyphens/asterisks/underscores on their own line)
+      .replace(/^(\s*?)[-*_]{3,}(\s*?)$/gm, '<hr class="my-4 border-t border-gray-300 dark:border-zinc-600" />')
+      
       // Headers
       .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold my-4">$1</h1>')
       .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold my-3">$1</h2>')
       .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold my-2">$1</h3>')
+      
       // Bold and italic
       .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-      // Lists
+      
+      // Lists - improved to handle nesting better
       .replace(/^\*\s(.*)$/gim, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>')
       .replace(/^-\s(.*)$/gim, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>')
       .replace(/^\d+\.\s(.*)$/gim, '<ol class="list-decimal pl-5 my-2"><li>$1</li></ol>')
+      
       // Code blocks
       .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 dark:bg-zinc-800 p-3 rounded my-3 overflow-auto text-xs"><code>$1</code></pre>')
       .replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-zinc-800 px-1 rounded text-xs">$1</code>')
-      // Line breaks
-      .replace(/\n/g, '<br>');
+      
+      // Prevent any remaining standalone sequences of hyphens from being rendered as separators
+      // This is the key fix to prevent unwanted "---" from appearing
+      .replace(/^(-{1,2})(?!\s*<)/gm, '$1')
+      
+      // Line breaks - only convert actual line breaks to <br> tags
+      .replace(/\n\s*\n/g, '<br><br>') // Double line breaks become double <br>
+      .replace(/\n(?!\s*<(?:\/?(ul|ol|li|h1|h2|h3|p|div|br)))/g, '<br>'); // Single line breaks only if not before HTML tags
     
-    // Fix nested lists problem (quick and dirty solution)
-    html = html.replace(/<\/ul><br><ul class="list-disc pl-5 my-2">/g, '');
-    html = html.replace(/<\/ol><br><ol class="list-decimal pl-5 my-2">/g, '');
+    // Fix nested lists problem
+    html = html.replace(/<\/ul><br><ul class="list-disc pl-5 my-2">/g, '')
+      .replace(/<\/ol><br><ol class="list-decimal pl-5 my-2">/g, '');
+    
+    // Add paragraph tags for better semantics (optional)
+    // Note: We're not doing this right now as it would require more complex parsing
     
     return html;
   };

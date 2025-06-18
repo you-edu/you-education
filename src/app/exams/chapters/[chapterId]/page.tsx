@@ -1,10 +1,18 @@
 "use client";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import MindMap from "@/components/Mindmap";
 import VideoPlayer from "@/components/VideoPlayer";
 import ChatUI from "@/components/ChatUI";
 import NotesViewer from "@/components/NotesViewer";
+
+interface NoteData {
+  _id: string;
+  content: string;
+  title?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 const ChapterPage: React.FC = () => {
   const params = useParams();
@@ -12,9 +20,11 @@ const ChapterPage: React.FC = () => {
 
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<string | null>(null);
+  const [noteData, setNoteData] = useState<NoteData | null>(null);
   const [mindMapData, setMindMapData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"mindmap" | "chat">("mindmap");
 
   // Fetch mind map data when the component mounts
   useEffect(() => {
@@ -57,6 +67,34 @@ const ChapterPage: React.FC = () => {
     fetchMindMap();
   }, [chapterId]);
 
+  // Fetch note data when selectedNote changes
+  useEffect(() => {
+    if (!selectedNote) {
+      setNoteData(null);
+      return;
+    }
+
+    const fetchNote = async () => {
+      try {
+        console.log(`Fetching note with ID: ${selectedNote}`);
+        const response = await fetch(`/api/notes/${selectedNote}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch note: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Note data received:', data);
+        setNoteData(data);
+      } catch (err) {
+        console.error('Error fetching note:', err);
+        setNoteData(null);
+      }
+    };
+
+    fetchNote();
+  }, [selectedNote]);
+
   // Use useCallback to prevent recreating the function on each render
   const handleLeafClick = useCallback(
     (selection: any) => {
@@ -65,6 +103,7 @@ const ChapterPage: React.FC = () => {
       // Reset both states when a new node is clicked
       setSelectedVideo(null);
       setSelectedNote(null);
+      setNoteData(null);
       
       if (
         selection &&
@@ -141,25 +180,12 @@ const ChapterPage: React.FC = () => {
   return (
     <div className="h-[calc(100vh-var(--navbar-height))] flex flex-col overflow-hidden">
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        {/* Left panel for video/notes - 40% width */}
         {(selectedVideo || selectedNote) && (
           <div className="w-full md:w-[40%] overflow-y-auto border-r border-gray-200 dark:border-zinc-700">
             <div className="h-full p-2">
               {selectedVideo && (
-                <>
-                  <VideoPlayer url={selectedVideo} />
-                  <div className="mt-4">
-                    <ChatUI
-                      source={{
-                        type: "youtube",
-                        content: selectedVideo,
-                        videoId:
-                          selectedVideo?.includes("youtube.com")
-                            ? new URL(selectedVideo).searchParams.get("v") || ""
-                            : selectedVideo?.split("/").pop() || "",
-                      }}
-                    />
-                  </div>
-                </>
+                <VideoPlayer url={selectedVideo} />
               )}
               
               {selectedNote && (
@@ -168,24 +194,96 @@ const ChapterPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Right panel for mindmap/chat with custom tabs - 60% width */}
         <div
           className={`w-full ${
             selectedVideo || selectedNote ? "md:w-[60%]" : "md:w-full"
-          } flex-1 overflow-hidden`}
+          } flex-1 overflow-hidden flex flex-col`}
         >
-          <div className="h-full">
-            {mindMapData ? (
-              <MemoizedMindMap
-                data={mindMapData}
-                onLeafClick={handleLeafClick}
-              />
-            ) : (
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg shadow">
-                <p className="text-yellow-700 dark:text-yellow-400">
-                  No mind map data available for this chapter.
-                </p>
-              </div>
-            )}
+          {/* Custom tab navigation */}
+          <div className="px-4 pt-4 border-b border-gray-200 dark:border-zinc-700">
+            <div className="inline-flex h-10 items-center justify-center rounded-md bg-gray-100 dark:bg-zinc-800/80 p-1 text-gray-500 dark:text-zinc-400">
+              <button
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
+                  activeTab === "mindmap"
+                    ? "bg-white dark:bg-zinc-900 text-gray-950 dark:text-zinc-50 shadow-sm"
+                    : "hover:bg-gray-200/50 dark:hover:bg-zinc-700/50"
+                }`}
+                onClick={() => setActiveTab("mindmap")}
+              >
+                Mind Map
+              </button>
+              <button
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
+                  activeTab === "chat"
+                    ? "bg-white dark:bg-zinc-900 text-gray-950 dark:text-zinc-50 shadow-sm"
+                    : "hover:bg-gray-200/50 dark:hover:bg-zinc-700/50"
+                }`}
+                onClick={() => setActiveTab("chat")}
+              >
+                Chat
+              </button>
+            </div>
+          </div>
+
+          {/* Content area with both components always rendered but one hidden */}
+          <div className="flex-1 relative overflow-hidden">
+            {/* MindMap content - always rendered but conditionally visible */}
+            <div 
+              className={`absolute inset-0 transition-opacity duration-200 ${
+                activeTab === "mindmap" 
+                  ? "opacity-100 z-10" 
+                  : "opacity-0 z-0 pointer-events-none"
+              }`}
+            >
+              {mindMapData && (
+                <MemoizedMindMap
+                  data={mindMapData}
+                  onLeafClick={handleLeafClick}
+                />
+              )}
+            </div>
+
+            {/* Chat content - always rendered but conditionally visible */}
+            <div 
+              className={`absolute inset-0 p-4 transition-opacity duration-200 ${
+                activeTab === "chat" 
+                  ? "opacity-100 z-10" 
+                  : "opacity-0 z-0 pointer-events-none"
+              }`}
+            >
+              {selectedVideo && (
+                <ChatUI
+                  source={{
+                    type: "youtube",
+                    content: selectedVideo,
+                    videoId:
+                      selectedVideo?.includes("youtube.com")
+                        ? new URL(selectedVideo).searchParams.get("v") || ""
+                        : selectedVideo?.split("/").pop() || "",
+                  }}
+                />
+              )}
+              {selectedNote && noteData && (
+                <ChatUI
+                  source={{
+                    type: "markdown",
+                    content: noteData.content || "No content available",
+                  }}
+                />
+              )}
+              {!selectedVideo && !selectedNote && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center p-6 max-w-md bg-white/80 dark:bg-zinc-800/80 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700">
+                    <h3 className="text-lg font-medium text-gray-700 dark:text-zinc-300 mb-2">No content selected</h3>
+                    <p className="text-gray-600 dark:text-zinc-400">
+                      Select a topic from the mind map to view and chat about its content.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
