@@ -2,7 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --navbar-height: 64px; /* Adjust based on your navbar's actual height */
+}
 
+@media (max-width: 640px) {
+  :root {
+    --navbar-height: 56px; /* Smaller height for mobile */
+  }
+}
 
 @layer base {
   :root {

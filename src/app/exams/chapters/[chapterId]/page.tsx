@@ -110,7 +110,7 @@ const ChapterPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[50vh]">
+      <div className="flex justify-center items-center h-[calc(100vh-var(--navbar-height))]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-lg">Loading mind map...</p>
@@ -121,10 +121,10 @@ const ChapterPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[50vh]">
-        <div className="text-center bg-red-50 p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold text-red-600 mb-2">Error</h2>
-          <p className="text-gray-700">{error}</p>
+      <div className="flex justify-center items-center h-[calc(100vh-var(--navbar-height))]">
+        <div className="text-center bg-red-50 dark:bg-red-900/20 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Error</h2>
+          <p className="text-gray-700 dark:text-gray-300">{error}</p>
           <p className="mt-4">
             <button
               onClick={() => window.location.reload()}
@@ -139,11 +139,11 @@ const ChapterPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-2 min-h-screen flex flex-col">
-      <div className="flex flex-col md:flex-row gap-4 flex-grow">
+    <div className="h-[calc(100vh-var(--navbar-height))] flex flex-col overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {(selectedVideo || selectedNote) && (
-          <div className="w-full md:w-1/4">
-            <div className="sticky top-4">
+          <div className="w-full md:w-[40%] overflow-y-auto border-r border-gray-200 dark:border-zinc-700">
+            <div className="h-full p-2">
               {selectedVideo && (
                 <>
                   <VideoPlayer url={selectedVideo} />
@@ -170,8 +170,8 @@ const ChapterPage: React.FC = () => {
         )}
         <div
           className={`w-full ${
-            selectedVideo || selectedNote ? "md:w-3/4" : "md:w-full"
-          } flex-grow`}
+            selectedVideo || selectedNote ? "md:w-[60%]" : "md:w-full"
+          } flex-1 overflow-hidden`}
         >
           <div className="h-full">
             {mindMapData ? (
@@ -180,8 +180,8 @@ const ChapterPage: React.FC = () => {
                 onLeafClick={handleLeafClick}
               />
             ) : (
-              <div className="p-4 bg-yellow-50 rounded-lg shadow">
-                <p className="text-yellow-700">
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg shadow">
+                <p className="text-yellow-700 dark:text-yellow-400">
                   No mind map data available for this chapter.
                 </p>
               </div>

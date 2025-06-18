@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Transformer } from 'markmap-lib';
 import { Markmap } from 'markmap-view';
 import { INode } from 'markmap-common';
+import { useTheme } from 'next-themes';
 
 // Updated API response types to match new format
 type ApiResourceData = {
@@ -278,22 +279,20 @@ export default function MindMap({
   const svgRef = useRef<SVGSVGElement>(null);
   const markmapRef = useRef<Markmap | null>(null);
   const transformer = new Transformer();
+  const { theme, resolvedTheme } = useTheme();
+  const initializedRef = useRef(false);
 
   const [zoomLevel, setZoomLevel] = useState(1);
   const [is3DView, setIs3DView] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [showVideoChat, setShowVideoChat] = useState(false);
 
+  // This effect runs once to initialize the mind map
   useEffect(() => {
     console.log("MindMap component received data:", data);
     
     // Only run on client side
-    if (typeof window === 'undefined' || !svgRef.current) return;
-    
-    // Clean up any existing markmap
-    if (markmapRef.current) {
-      markmapRef.current.destroy();
-    }
+    if (typeof window === 'undefined' || !svgRef.current || initializedRef.current) return;
     
     // Prepare markdown from API data
     resourceMap.clear();
@@ -314,21 +313,27 @@ export default function MindMap({
       
       const { root } = transformer.transform(md);
       
+      // Current theme-based colors
+      const isDark = resolvedTheme === 'dark';
+      
       // Create the markmap with theme matching the app
       const mm = Markmap.create(svgRef.current, {
         autoFit: true,
         initialExpandLevel: 2,
         color: (node: INode) => {
           // Check if node is a resource node (starts with 📺)
-          const isResourceNode = node.content.includes('📺');
+          const isResourceNode = node.content.includes('📺') || node.content.includes('📝');
           
           if (isResourceNode) {
             // Use a different color for resource nodes
-            return '#10b981'; // Emerald color for resources
+            return isDark ? '#10b981' : '#059669'; // Different green shades for dark/light
           }
           
-          // Use indigo/purple gradient colors for topics
-          const colors = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#e879f9'];
+          // Use gradient colors for topics based on theme
+          const darkColors = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#e879f9'];
+          const lightColors = ['#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#d946ef'];
+          
+          const colors = isDark ? darkColors : lightColors;
           const depth = node.state?.depth || 0;
           return colors[Math.min(depth, colors.length - 1)];
         },
@@ -343,80 +348,11 @@ export default function MindMap({
       
       // Apply styles initially
       applyStyles();
+      
+      initializedRef.current = true;
 
     } catch (error) {
       console.error("Error creating mindmap:", error);
-    }
-    
-    // Function to apply styles to all nodes
-    function applyStyles() {
-      if (!svgRef.current) return;
-      
-      // Apply text styles with !important to override any existing styles
-      const styleElement = document.createElement('style');
-      styleElement.textContent = `
-        .markmap-node-text {
-          fill: #ffffff !important;
-          font-size: 14px !important;
-          font-weight: 500 !important;
-          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
-        }
-        .markmap-link {
-          stroke: #6366f1 !important;
-          stroke-width: 1.5px !important;
-          stroke-opacity: 0.75 !important;
-        }
-      `;
-      document.head.appendChild(styleElement);
-      
-      // Use proper type casting for SVG elements
-      svgRef.current.querySelectorAll('.markmap-node-text').forEach(el => {
-        const svgEl = el as SVGElement;
-        svgEl.setAttribute('fill', '#ffffff');
-        svgEl.setAttribute('font-size', '14px');
-        svgEl.setAttribute('font-weight', '500');
-        
-        // Check if this is a resource node and style it differently
-        const text = svgEl.textContent || '';
-        if (text.includes('📺')) {
-          svgEl.setAttribute('font-style', 'italic');
-        }
-        
-        // For HTML elements with style property, use type assertion
-        const htmlEl = el as unknown as HTMLElement;
-        if (htmlEl.style) {
-          htmlEl.style.textShadow = '0 1px 3px rgba(0,0,0,0.8)';
-          // Force a repaint
-          htmlEl.style.display = 'none';
-          void htmlEl.offsetHeight; // trigger reflow
-          htmlEl.style.display = '';
-        }
-      });
-
-      // Style links
-      svgRef.current.querySelectorAll('.markmap-link').forEach(el => {
-        const svgEl = el as SVGElement;
-        svgEl.setAttribute('stroke', '#6366f1');
-        svgEl.setAttribute('stroke-width', '1.5px');
-        svgEl.setAttribute('stroke-opacity', '0.75');
-      });
-    };
-
-    // Use a MutationObserver to detect changes and apply styles
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach(mutation => {
-        if (mutation.type === 'childList' && svgRef.current && svgRef.current.contains(mutation.target as Node)) {
-          applyStyles();
-        }
-      });
-    });
-
-    // Start observing the SVG element for changes
-    if (svgRef.current) {
-      observer.observe(svgRef.current, {
-        childList: true,
-        subtree: true
-      });
     }
     
     // Create and attach the enhanced click handler
@@ -447,19 +383,48 @@ export default function MindMap({
       if (svgRef.current) {
         svgRef.current.removeEventListener('click', handleNodeClick);
       }
-      if (markmapRef.current) {
-        markmapRef.current.destroy();
-      }
-      // Clean up the style element on unmount
-      document.querySelectorAll('style').forEach(style => {
-        if (style.textContent?.includes('.markmap-node-text')) {
-          style.remove();
-        }
-      });
-      // observer disconnect
-      observer.disconnect();
+      // Don't destroy the markmap when unmounting for theme switch
+      // We'll let React handle this properly
     };
-  }, [data, onLeafClick]);
+  }, [data, onLeafClick]); // Removed theme dependency
+
+  // Separate effect for theme changes that only updates styles
+  useEffect(() => {
+    // Only update styles if mindmap exists
+    if (markmapRef.current && svgRef.current) {
+      applyStyles();
+    }
+  }, [resolvedTheme]); // Only depend on theme changes
+
+  // Function to apply styles based on current theme
+  function applyStyles() {
+    if (!svgRef.current) return;
+    
+    // Get current theme state
+    const isDark = resolvedTheme === 'dark';
+    
+    // Apply text styles directly to elements
+    svgRef.current.querySelectorAll('.markmap-node-text').forEach(el => {
+      const svgEl = el as SVGElement;
+      svgEl.setAttribute('fill', isDark ? '#ffffff' : '#1e293b');
+      svgEl.setAttribute('font-size', '14px');
+      svgEl.setAttribute('font-weight', '500');
+      
+      // Check if this is a resource node and style it differently
+      const text = svgEl.textContent || '';
+      if (text.includes('📺') || text.includes('📝')) {
+        svgEl.setAttribute('font-style', 'italic');
+      }
+    });
+
+    // Style links
+    svgRef.current.querySelectorAll('.markmap-link').forEach(el => {
+      const svgEl = el as SVGElement;
+      svgEl.setAttribute('stroke', isDark ? '#6366f1' : '#4f46e5');
+      svgEl.setAttribute('stroke-width', '1.5px');
+      svgEl.setAttribute('stroke-opacity', '0.75');
+    });
+  };
 
   const handleReturnToTree = () => {
     setShowVideoChat(false);
@@ -494,11 +459,11 @@ export default function MindMap({
     <div className="relative h-full w-full flex flex-col">
       {/* 3D perspective wrapper */}
       <div 
-        className={`relative flex-1 transition-all duration-500 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-800/50 backdrop-blur-sm shadow-lg ${is3DView ? 'transform-style-3d perspective-1000' : ''}`}
+        className={`relative flex-1 transition-all duration-500 overflow-hidden rounded-xl border border-gray-300 dark:border-zinc-700 bg-gray-100/80 dark:bg-zinc-800/50 backdrop-blur-sm shadow-lg ${is3DView ? 'transform-style-3d perspective-1000' : ''}`}
       >
         {/* Animated background */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 opacity-80">
-          <div className="absolute inset-0 opacity-20 bg-grid-zinc-600/20 bg-[size:20px_20px]"></div>
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 opacity-80">
+          <div className="absolute inset-0 opacity-20 bg-grid-gray-300 dark:bg-grid-zinc-600/20 bg-[size:20px_20px]"></div>
         </div>
         
         {/* SVG container with 3D transformation when enabled */}
@@ -514,18 +479,17 @@ export default function MindMap({
               cursor: 'pointer',
               fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
               fontWeight: 500,
-              fill: '#ffffff', // White fill for all text
-              filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.5))', // Add drop shadow for better contrast
-              color: '#ffffff' // Ensure SVG text color is white
+              fill: resolvedTheme === 'dark' ? '#ffffff' : '#1e293b',
+              color: resolvedTheme === 'dark' ? '#ffffff' : '#1e293b'
             }}
           />
         </div>
         
         {/* Controls overlay */}
-        <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2 bg-zinc-800/90 p-2 rounded-lg border border-zinc-700 shadow-lg">
+        <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2 bg-white/90 dark:bg-zinc-800/90 p-2 rounded-lg border border-gray-300 dark:border-zinc-700 shadow-lg">
           <button 
             onClick={handleZoomIn} 
-            className="p-2 rounded-md hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 text-zinc-300 hover:text-white transition-colors"
+            className="p-2 rounded-md hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 text-gray-700 dark:text-zinc-300 hover:text-white transition-colors"
             aria-label="Zoom in"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -574,7 +538,7 @@ export default function MindMap({
         </div>
         
         {/* Short instruction text */}
-        <div className="absolute top-4 left-4 z-20 bg-zinc-900/80 text-xs text-zinc-400 py-1 px-2 rounded border border-zinc-700 backdrop-blur-sm">
+        <div className="absolute top-4 left-4 z-20 bg-white/80 dark:bg-zinc-900/80 text-xs text-gray-700 dark:text-zinc-400 py-1 px-2 rounded border border-gray-300 dark:border-zinc-700 backdrop-blur-sm">
           Click topics to expand/collapse. Click 📺 resource nodes to view content.
         </div>
       </div>

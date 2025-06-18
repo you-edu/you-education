@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { XMarkIcon, ArrowsPointingOutIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline';
 
 interface NotesViewerProps {
   noteId: string;
@@ -93,8 +93,8 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
       .replace(/^-\s(.*)$/gim, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>')
       .replace(/^\d+\.\s(.*)$/gim, '<ol class="list-decimal pl-5 my-2"><li>$1</li></ol>')
       // Code blocks
-      .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-3 rounded my-3 overflow-auto text-xs"><code>$1</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded text-xs">$1</code>')
+      .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 dark:bg-zinc-800 p-3 rounded my-3 overflow-auto text-xs"><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-zinc-800 px-1 rounded text-xs">$1</code>')
       // Line breaks
       .replace(/\n/g, '<br>');
     
@@ -107,10 +107,10 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
 
   if (isLoading) {
     return (
-      <div className="bg-zinc-800/80 rounded-lg p-4 border border-zinc-700 shadow-lg">
+      <div className="bg-white dark:bg-zinc-800/80 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 shadow-lg">
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
-          <span className="ml-2 text-zinc-300">Loading note...</span>
+          <span className="ml-2 text-gray-700 dark:text-zinc-300">Loading note...</span>
         </div>
       </div>
     );
@@ -118,9 +118,9 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
 
   if (error) {
     return (
-      <div className="bg-zinc-800/80 rounded-lg p-4 border border-zinc-700 shadow-lg">
-        <h3 className="text-lg font-medium text-red-400 mb-2">Error Loading Note</h3>
-        <div className="text-zinc-300">
+      <div className="bg-white dark:bg-zinc-800/80 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 shadow-lg">
+        <h3 className="text-lg font-medium text-red-600 dark:text-red-400 mb-2">Error Loading Note</h3>
+        <div className="text-gray-700 dark:text-zinc-300">
           <p>{error}</p>
           <p className="mt-2 text-sm">Note ID: {noteId}</p>
         </div>
@@ -130,9 +130,9 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
 
   if (!note) {
     return (
-      <div className="bg-zinc-800/80 rounded-lg p-4 border border-zinc-700 shadow-lg">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">Note Not Found</h3>
-        <div className="text-zinc-300">
+      <div className="bg-white dark:bg-zinc-800/80 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 shadow-lg">
+        <h3 className="text-lg font-medium text-yellow-600 dark:text-yellow-400 mb-2">Note Not Found</h3>
+        <div className="text-gray-700 dark:text-zinc-300">
           <p>The requested note could not be found.</p>
           <p className="mt-2 text-sm">Note ID: {noteId}</p>
         </div>
@@ -144,46 +144,41 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
   if (isFullScreen) {
     return (
       <>
-        {/* Portal container for fullscreen view - ensures it renders at the root level */}
+        {/* Full screen portal that covers everything including navbar */}
         <div 
-          className="fixed inset-0 bg-zinc-900 overflow-y-auto"
+          className="fixed inset-0 bg-white dark:bg-zinc-900 overflow-y-auto"
           style={{ 
-            zIndex: 99999, // Very high z-index to ensure it's on top of everything
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
-            bottom: 0
+            bottom: 0,
+            zIndex: 100000, // Extremely high z-index to cover navbar
+            paddingTop: '0px' // Start content from the very top
           }}
         >
-          <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
-            <div className="flex justify-between items-center mb-6 sticky top-0 bg-zinc-900 py-2 z-10">
-              <div className="flex items-center">
-                <button 
-                  onClick={() => setIsFullScreen(false)}
-                  className="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white transition-colors"
-                  aria-label="Back to normal view"
-                >
-                  <ArrowLeftIcon className="h-5 w-5" />
-                  <span>Back</span>
-                </button>
-              </div>
+          <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 pt-16"> {/* Add padding top to account for sticky header */}
+            <div className="flex justify-end items-center mb-6 sticky top-0 bg-white dark:bg-zinc-900 py-4 z-10">
               <button 
                 onClick={() => setIsFullScreen(false)}
-                className="p-2 rounded-full hover:bg-zinc-800 transition-colors"
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                 aria-label="Close full screen"
               >
-                <XMarkIcon className="h-6 w-6 text-zinc-300" />
+                <XMarkIcon className="h-6 w-6 text-gray-700 dark:text-zinc-300" />
               </button>
             </div>
             
-            <div className="text-zinc-300">
-              <div className="prose prose-invert prose-headings:text-zinc-100 prose-a:text-blue-400 max-w-none">
+            <div className="text-gray-800 dark:text-zinc-300">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-zinc-100 mb-4">
+                {note.title || "Note Content"}
+              </h2>
+              
+              <div className="prose dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-a:text-blue-600 dark:prose-a:text-blue-400 max-w-none">
                 <div dangerouslySetInnerHTML={{ __html: markdownToHtml(note.content) }} />
               </div>
               
               {note.updatedAt && (
-                <p className="mt-8 text-xs text-zinc-500">
+                <p className="mt-8 text-xs text-gray-500 dark:text-zinc-500">
                   Last updated: {new Date(note.updatedAt).toLocaleString()}
                 </p>
               )}
@@ -196,28 +191,31 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
 
   // Regular view
   return (
-    <div className="bg-zinc-800/80 rounded-lg p-4 border border-zinc-700 shadow-lg flex flex-col">
-      <div className="flex justify-end items-center mb-2">
+    <div className="bg-white dark:bg-zinc-800/80 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 shadow-lg flex flex-col">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-medium text-gray-800 dark:text-zinc-100 line-clamp-1">
+          {note.title || "Note Content"}
+        </h3>
         <button 
           onClick={() => setIsFullScreen(true)}
-          className="p-1 rounded hover:bg-zinc-700 transition-colors"
+          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
           aria-label="Full screen mode"
           title="View in full screen"
         >
-          <ArrowsPointingOutIcon className="h-5 w-5 text-zinc-300" />
+          <ArrowsPointingOutIcon className="h-5 w-5 text-gray-700 dark:text-zinc-300" />
         </button>
       </div>
       
-      <div className="text-zinc-300 flex flex-col">
+      <div className="text-gray-800 dark:text-zinc-300 flex flex-col">
         <div className="max-w-none overflow-y-auto h-96 markdown-content"> {/* Fixed height of 24rem (384px) */}
           <div 
-            className="prose prose-invert prose-headings:text-zinc-100 prose-a:text-blue-400"
+            className="prose dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-a:text-blue-600 dark:prose-a:text-blue-400"
             dangerouslySetInnerHTML={{ __html: markdownToHtml(note.content) }}
           />
         </div>
 
         {note.updatedAt && (
-          <p className="mt-4 text-xs text-zinc-500">
+          <p className="mt-4 text-xs text-gray-500 dark:text-zinc-500">
             Last updated: {new Date(note.updatedAt).toLocaleString()}
           </p>
         )}
