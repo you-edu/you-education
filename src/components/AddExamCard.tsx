@@ -235,7 +235,8 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
                   selected={examDate}
                   onSelect={setExamDate}
                   initialFocus
-                  disabled={isSubmitting}
+                  disabled={[isSubmitting,{before: new Date()}]} 
+                  // disabled={isSubmitting}// Disable past dates
                 />
               </PopoverContent>
             </Popover>

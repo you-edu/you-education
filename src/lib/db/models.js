@@ -21,6 +21,7 @@ const chapterSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: [String], required: true},
   mindmapId: { type: mongoose.Schema.Types.ObjectId, ref: 'MindMap' },
+  order: { type: Number, default: 0 }, // Adding order field to maintain chapter sequence
 });
 chapterSchema.index({ ExamId: 1 });
 

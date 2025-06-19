@@ -44,12 +44,6 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
         )} */}
       </div>
       
-      <div className="mb-4 h-2 w-full bg-gray-100 dark:bg-black/50 rounded-full overflow-hidden">
-        <div className={`${isCompleted ? 'bg-black dark:bg-white' : 'bg-gradient-to-r from-gray-400 to-gray-600 dark:from-white/40 dark:to-white/70'} h-2 rounded-full transition-all duration-700`} 
-             style={{ width: isCompleted ? '100%' : `${Math.floor(Math.random() * 70) + 10}%` }}>
-        </div>
-      </div>
-      
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500 dark:text-white/60 uppercase tracking-wide font-semibold">
           {isCompleted ? 'Status' : 'Progress'}

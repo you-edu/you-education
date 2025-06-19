@@ -28,8 +28,12 @@ const Page = () => {
         // Data would contain the list of all exams it can be previous or upcoming
         // Obtaining current and completed exams from the data
 
-        for( const exam of response.data) {
-          if(exam.examDate < currentDate){
+        for(const exam of response.data) {
+          // Convert the examDate string to a Date object for proper comparison
+          const examDate = new Date(exam.examDate);
+          
+          // Compare the dates correctly
+          if(examDate <= currentDate) {
             completedExamsList.push({
               _id : exam._id,
               userId: exam.userId,
@@ -38,7 +42,7 @@ const Page = () => {
               createdAt: new Date(exam.createdAt),
               examDate: new Date(exam.examDate)
             });
-          }else{
+          } else {
             currentExamsList.push({
               _id : exam._id, 
               userId: exam.userId,

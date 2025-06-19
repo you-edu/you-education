@@ -8,6 +8,7 @@ import axios from 'axios';
 import { Chapter, ExamData } from '@/lib/types';
 import { toast } from 'sonner';
 import { generateMindMapFromTopics } from '@/components/mindMapGenerator/index';
+import { DeleteExamDialog } from '@/components/dialogs/DeleteExamDialog';
 
 const ExamDetailsPage = () => {
   const params = useParams();
@@ -133,7 +134,11 @@ const ExamDetailsPage = () => {
       <div className="relative">
         <div className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-black dark:via-gray-900 dark:to-black text-gray-800 dark:text-white">
           <div className="max-w-5xl mx-auto px-8 py-12">
-            <div className="text-center">
+            <div className="text-center relative">
+              {/* Delete button positioned at the top right */}
+              <div className="absolute right-0 top-0">
+                <DeleteExamDialog examId={examId} examName={examData.subjectName} />
+              </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
                 {examData.subjectName}
               </h1>

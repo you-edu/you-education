@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'examId is required' }, { status: 400 });
         }
 
-        // Find all chapters associated with this exam
-        const chapters = await Chapter.find({ examId: examId });
+        // Find all chapters associated with this exam and sort them by order field
+        const chapters = await Chapter.find({ examId: examId }).sort({ order: 1 });
         return NextResponse.json(chapters, { status: 200 });
     } catch (error) {
         console.error('Error fetching chapters:', error);
@@ -30,10 +30,12 @@ export async function POST(request: NextRequest) {
         }
         
         // Create new chapters in the database with mindmapId explicitly set to null
-        const chaptersToCreate = chapters.map(chapter => ({
+        // and add an order property to maintain insertion order
+        const chaptersToCreate = chapters.map((chapter, index) => ({
             ...chapter,
             examId,
-            mindmapId: null 
+            mindmapId: null,
+            order: index // Add order based on the array index
         }));
         
         const createdChapters = await Chapter.insertMany(chaptersToCreate);
