@@ -25,6 +25,7 @@ const ChapterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"mindmap" | "chat">("mindmap");
+  const [currentSelection, setCurrentSelection] = useState<any>(null);
 
   // Fetch mind map data when the component mounts
   useEffect(() => {
@@ -99,6 +100,9 @@ const ChapterPage: React.FC = () => {
   const handleLeafClick = useCallback(
     (selection: any) => {
       console.log("Leaf node clicked:", selection);
+      
+      // Store the full selection for title reference
+      setCurrentSelection(selection);
       
       // Reset both states when a new node is clicked
       setSelectedVideo(null);
@@ -262,6 +266,7 @@ const ChapterPage: React.FC = () => {
                       selectedVideo?.includes("youtube.com")
                         ? new URL(selectedVideo).searchParams.get("v") || ""
                         : selectedVideo?.split("/").pop() || "",
+                    contentTitle: currentSelection?.title || "Educational Video"
                   }}
                 />
               )}
@@ -270,6 +275,7 @@ const ChapterPage: React.FC = () => {
                   source={{
                     type: "markdown",
                     content: noteData.content || "No content available",
+                    contentTitle: currentSelection?.title || noteData.title || "Study Notes"
                   }}
                 />
               )}

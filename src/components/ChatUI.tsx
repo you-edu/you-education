@@ -1,4 +1,5 @@
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import "../styles/chatUI.css";
 import {
   MainContainer,
   ChatContainer,
@@ -17,23 +18,21 @@ interface ChatUIProps {
     type: 'youtube' | 'markdown';
     content: string; // YouTube URL or markdown text
     videoId?: string;
+    contentTitle?: string;
   };
 }
 
 const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '' } }) => {
-  const [messages, setMessages] = useState<any[]>(
-    [
-      {
-        message: "Hello, how can I help you with this content?",
-        sender: "bot"
-      }
-    ]
-  );
+  const [messages, setMessages] = useState<any[]>([
+    {
+      message: "Hello, how can I help you with this content?",
+      sender: "bot"
+    }
+  ]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isLoading, setIsLoading] = useState(false);
   const [windowSize, setWindowSize] = useState(2); // Default 2 minutes before and after
   const [transcript, setTranscript] = useState("");
-  const [isTranscriptVisible, setIsTranscriptVisible] = useState(false);
   const [isTranscriptFetching, setIsTranscriptFetching] = useState(false);
   const [customTimeRange, setCustomTimeRange] = useState(false);
   const [startTime, setStartTime] = useState(0);
@@ -44,7 +43,9 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
   // For manually setting transcript time range
   const [manualStartTime, setManualStartTime] = useState(0);
   const [manualEndTime, setManualEndTime] = useState(5 * 60); // 5 minutes by default
+  const [showTimeRange, setShowTimeRange] = useState(false);
 
+  // Check theme on mount and when it changes
   useEffect(() => {
     const checkTheme = () => {
       const isDark = 
@@ -74,6 +75,15 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
       observer.disconnect();
     };
   }, []);
+
+  // Initialize time range based on current video position when component mounts
+  useEffect(() => {
+    if (source?.type === 'youtube' && currentPosition?.playedSeconds > 0) {
+      const currentTime = currentPosition.playedSeconds;
+      setManualStartTime(Math.max(0, currentTime - (2 * 60)));
+      setManualEndTime(currentTime + (2 * 60));
+    }
+  }, [source?.type, currentPosition?.playedSeconds]);
 
   // Fetch transcript when using YouTube mode and position changes
   useEffect(() => {
@@ -135,9 +145,7 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
       
       if (data.transcript) {
         console.log(`Received transcript with length: ${data.transcript.length} characters`);
-        console.log(`Transcript preview: ${data.transcript.substring(0, 100)}...`);
         setTranscript(data.transcript);
-        setIsTranscriptVisible(true);
       } else {
         console.warn("Received empty transcript");
         setTranscript("No transcript available for this section of the video.");
@@ -203,14 +211,6 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
         console.log("Using markdown context, length:", context.length);
       }
 
-      // Log what we're sending to the API
-      console.log("Sending to API:", {
-        messagesCount: lastTwoMessages.length,
-        contextLength: context.length,
-        contextPreview: context.substring(0, 100) + '...',
-        sourceType: source?.type
-      });
-
       // Call the API to get a response
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -220,7 +220,8 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
         body: JSON.stringify({
           messages: lastTwoMessages,
           context: context,
-          sourceType: source?.type || 'markdown'
+          sourceType: source?.type || 'markdown',
+          contentTitle: source?.contentTitle || ''
         }),
       });
 
@@ -246,311 +247,87 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
     }
   };
 
-  const handleInputFocus = () => {
-    if (source?.type === 'youtube' && currentPosition?.playedSeconds) {
-      const time = formatTime(currentPosition.playedSeconds);
-      console.log(`Chat input focused at video time: ${time} (${Math.floor(currentPosition.playedSeconds)} seconds)`);
+  const setCurrentContextWindow = () => {
+    if (currentPosition?.playedSeconds) {
+      const currentTime = currentPosition.playedSeconds;
+      setManualStartTime(Math.max(0, currentTime - (2 * 60)));
+      setManualEndTime(currentTime + (2 * 60));
+      setCustomTimeRange(true);
+      fetchTranscript(true);
     }
   };
 
   return (
     <div className={`chat-ui-container ${theme}`} style={{ position: "relative", height: "100%", width: "100%" }}>
-      <style jsx>{`
-        .chat-ui-container {
-          --cs-message-primary-bg: #eff6ff;
-          --cs-message-secondary-bg: #dbeafe;
-          --cs-message-primary-fg: #1e3a8a;
-          --cs-message-secondary-fg: #1e40af;
-          --cs-input-bg: #ffffff;
-          --cs-input-border: #e5e7eb;
-          --cs-main-bg: #f9fafb;
-          --cs-container-border: #e5e7eb;
-        }
-
-        .chat-ui-container.dark {
-          --cs-message-primary-bg: #1f2937;
-          --cs-message-secondary-bg: #374151;
-          --cs-message-primary-fg: #e5e7eb;
-          --cs-message-secondary-fg: #d1d5db;
-          --cs-input-bg: #111827;
-          --cs-input-border: #374151;
-          --cs-main-bg: #0f172a;
-          --cs-container-border: #1f2937;
-        }
-
-        /* Override default chat UI kit styles */
-        :global(.chat-ui-container .cs-message-list) {
-          background-color: var(--cs-main-bg);
-        }
-
-        :global(.chat-ui-container .cs-message__content) {
-          background-color: var(--cs-message-primary-bg);
-          color: var(--cs-message-primary-fg);
-        }
-
-        :global(.chat-ui-container .cs-message--outgoing .cs-message__content) {
-          background-color: var(--cs-message-secondary-bg);
-          color: var(--cs-message-secondary-fg);
-        }
-
-        :global(.chat-ui-container .cs-chat-container) {
-          border: 1px solid var(--cs-container-border);
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        :global(.chat-ui-container .cs-message-input) {
-          background-color: var(--cs-input-bg);
-          border-top: 1px solid var(--cs-input-border);
-        }
-
-        :global(.chat-ui-container .cs-message-input__content-editor) {
-          background-color: var(--cs-input-bg);
-          color: var(--cs-message-primary-fg);
-        }
-
-        :global(.chat-ui-container .cs-message-input__content-editor-wrapper) {
-          background-color: var(--cs-input-bg);
-        }
-        
-        :global(.chat-ui-container .cs-button) {
-          color: var(--cs-message-secondary-fg);
-          filter: brightness(1.2);
-        }
-
-        :global(.chat-ui-container.dark .cs-message-input__content-editor[data-placeholder]:empty:before) {
-          color: #6b7280;
-        }
-
-        .transcript-indicator {
-          padding: 10px;
-          margin-bottom: 10px;
-          border-radius: 4px;
-          background-color: var(--cs-message-secondary-bg);
-          color: var(--cs-message-secondary-fg);
-          font-size: 0.8rem;
-          cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        
-        .window-control {
-          padding: 10px;
-          margin-bottom: 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        
-        .transcript-preview {
-          padding: 12px;
-          margin: 8px 0;
-          max-height: 200px;
-          overflow-y: auto;
-          border-radius: 4px;
-          background-color: var(--cs-main-bg);
-          border: 1px solid var(--cs-container-border);
-          font-size: 0.9rem;
-          line-height: 1.5;
-          white-space: pre-wrap;
-        }
-        
-        .toggle-button {
-          background-color: var(--cs-message-secondary-bg);
-          border: none;
-          border-radius: 4px;
-          padding: 4px 8px;
-          color: var(--cs-message-secondary-fg);
-          cursor: pointer;
-          font-size: 0.8rem;
-          font-weight: bold;
-        }
-        
-        .toggle-button:hover {
-          opacity: 0.9;
-        }
-        
-        .loading-indicator {
-          display: inline-block;
-          margin-left: 8px;
-          width: 12px;
-          height: 12px;
-          border: 2px solid rgba(0, 0, 0, 0.1);
-          border-top-color: var(--cs-message-secondary-fg);
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        .range-controls {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-top: 12px;
-          padding: 10px;
-          border-radius: 4px;
-          background-color: var(--cs-main-bg);
-          border: 1px solid var(--cs-container-border);
-        }
-        
-        .time-inputs {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-        }
-        
-        .time-input {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        
-        .time-input input {
-          padding: 6px 8px;
-          border-radius: 4px;
-          border: 1px solid var(--cs-container-border);
-          background-color: var(--cs-input-bg);
-          color: var(--cs-message-primary-fg);
-          width: 80px;
-        }
-        
-        .range-buttons {
-          display: flex;
-          gap: 10px;
-          margin-top: 8px;
-        }
-        
-        .range-button {
-          padding: 8px 12px;
-          border-radius: 4px;
-          border: none;
-          background-color: var(--cs-message-secondary-bg);
-          color: var(--cs-message-secondary-fg);
-          cursor: pointer;
-          font-weight: bold;
-        }
-        
-        .range-button:hover {
-          opacity: 0.9;
-        }
-        
-        .range-status {
-          font-size: 0.8rem;
-          color: var(--cs-message-primary-fg);
-          margin-top: 8px;
-          padding: 4px 8px;
-          background-color: var(--cs-message-primary-bg);
-          border-radius: 4px;
-          opacity: 0.8;
-        }
-      `}</style>
-
-      <MainContainer style={{ height: "100%" }}>
-        <ChatContainer style={{ height: "100%" }}>
-          {source?.type === 'youtube' && (
-            <div className="window-control">
-              {!customTimeRange ? (
-                <>
-                  <p>Auto context window: {windowSize} minutes before and after current position</p>
-                  <Slider 
-                    min={1}
-                    max={2.5}
-                    step={0.5}
-                    value={windowSize}
-                    onChange={(value) => setWindowSize(value as number)}
-                  />
-                </>
-              ) : (
-                <div className="range-status">
-                  Using custom time range: {formatTime(manualStartTime)} - {formatTime(manualEndTime)}
+      {source?.type === 'youtube' && (
+        <div className="time-range-toggle-container">
+          <button 
+            className="toggle-button"
+            onClick={() => setShowTimeRange(!showTimeRange)}
+          >
+            {showTimeRange ? 'Hide Range' : 'Set Range'} {showTimeRange ? '▲' : '▼'}
+          </button>
+          
+          {showTimeRange && (
+            <div className="time-range-control compact">
+              <div className="slider-container">
+                <Slider
+                  range
+                  min={0}
+                  max={currentPosition?.duration || 600}
+                  value={[manualStartTime, manualEndTime]}
+                  onChange={(value: number | number[]) => {
+                    if (Array.isArray(value) && value.length === 2) {
+                      const [start, end] = value;
+                      const maxEnd = Math.min(start + 300, currentPosition?.duration || 600);
+                      setManualStartTime(start);
+                      setManualEndTime(end > maxEnd ? maxEnd : end);
+                    }
+                  }}
+                  trackStyle={{ backgroundColor: '#3b82f6', height: 4 }}
+                  railStyle={{ backgroundColor: 'var(--cs-container-border)', height: 4 }}
+                  handleStyle={[
+                    { backgroundColor: '#3b82f6', borderColor: '#fff', height: 14, width: 14, marginTop: -5 },
+                    { backgroundColor: '#3b82f6', borderColor: '#fff', height: 14, width: 14, marginTop: -5 }
+                  ]}
+                />
+                
+                <div className="slider-labels">
+                  <span>{formatTime(manualStartTime)}</span>
+                  <span>{formatTime(manualEndTime)}</span>
+                </div>
+                
+                <div className="time-range-values">
+                  <span>{((manualEndTime - manualStartTime) / 60).toFixed(1)} min</span>
                   <button 
-                    className="range-button" 
-                    style={{ marginLeft: '10px', padding: '2px 6px' }}
-                    onClick={resetToAutoRange}
+                    className="range-button-small"
+                    onClick={setCurrentContextWindow}
                   >
-                    Reset to Auto
+                    Current ±2min
+                  </button>
+                  <button 
+                    className="range-button-small primary"
+                    onClick={fetchCustomRangeTranscript}
+                    disabled={isTranscriptFetching}
+                  >
+                    {isTranscriptFetching ? '⏳' : 'Apply'}
                   </button>
                 </div>
-              )}
-              
-              <div 
-                className="transcript-indicator"
-                onClick={() => setIsTranscriptVisible(!isTranscriptVisible)}
-              >
-                <span>
-                  {customTimeRange ? 
-                    `Using custom range: ${formatTime(startTime)} to ${formatTime(endTime)}` : 
-                    `Using context from video at ${formatTime(currentPosition?.playedSeconds || 0)}`
-                  }
-                  {isTranscriptFetching && <span className="loading-indicator"></span>}
-                </span>
-                <button className="toggle-button">
-                  {isTranscriptVisible ? 'Hide Transcript' : 'Show Transcript'}
-                </button>
               </div>
-              
-              {isTranscriptVisible && (
-                <div className="range-controls">
-                  <h4>Custom Transcript Range</h4>
-                  <div className="time-inputs">
-                    <div className="time-input">
-                      <label>Start time (seconds):</label>
-                      <input 
-                        type="number" 
-                        value={manualStartTime}
-                        min="0"
-                        onChange={(e) => setManualStartTime(Math.max(0, parseInt(e.target.value) || 0))}
-                      />
-                    </div>
-                    <div className="time-input">
-                      <label>End time (seconds):</label>
-                      <input 
-                        type="number"
-                        value={manualEndTime}
-                        min={manualStartTime + 60}
-                        max={manualStartTime + 300} // Max 5 min window
-                        onChange={(e) => setManualEndTime(Math.min(
-                          manualStartTime + 300, 
-                          Math.max(manualStartTime + 60, parseInt(e.target.value) || 0)
-                        ))}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="range-buttons">
-                    <button 
-                      className="range-button"
-                      onClick={fetchCustomRangeTranscript}
-                      disabled={isTranscriptFetching}
-                    >
-                      Fetch Custom Range
-                    </button>
-                    
-                    <button 
-                      className="range-button"
-                      onClick={() => {
-                        setManualStartTime(Math.max(0, (currentPosition?.playedSeconds || 0) - 60));
-                        setManualEndTime((currentPosition?.playedSeconds || 0) + 240);
-                      }}
-                    >
-                      Set From Current Position
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {isTranscriptVisible && transcript && (
-                <div className="transcript-preview">
-                  {transcript}
-                </div>
-              )}
             </div>
           )}
           
+          {customTimeRange && (
+            <div className="range-status-small">
+              Context: <span className="time-display">{formatTime(startTime)}</span> - <span className="time-display">{formatTime(endTime)}</span>
+              {isTranscriptFetching && <div className="loading-indicator-small"></div>}
+            </div>
+          )}
+        </div>
+      )}
+
+      <MainContainer style={{ height: "100%" }}>
+        <ChatContainer style={{ height: "100%" }}>
           <MessageList>
             {messages.map((msg, i) => (
               <Message 
@@ -568,8 +345,8 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
           </MessageList>
           <MessageInput 
             placeholder="Ask a question about the content..." 
-            onSend={handleSend} 
-            onFocus={handleInputFocus}
+            onSend={handleSend}
+            attachButton={false}
           />
         </ChatContainer>
       </MainContainer>
