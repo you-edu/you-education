@@ -80,8 +80,13 @@ function apiToMarkdown(node: ApiNode, level = 1, path = ""): string {
       if (resource.type === 'md_notes') {
         icon = '📝'; // Use note icon for notes
       }
-      
-      const resourceTitle = resource.data.title || `${icon} Resource ${resource.id}`;
+      let resourceTitle
+      if(resource.type === 'md_notes') {
+        resourceTitle = "Notes"
+      }else{
+        resourceTitle = "Youtube Video"
+      }
+       
       const resourcePath = `${currentPath} > ${resourceTitle}`;
       
       // Store resource in map for later lookup
