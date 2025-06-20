@@ -182,18 +182,20 @@ const ChapterPage: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-var(--navbar-height))] flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-var(--navbar-height)-var(--footer-height))] flex flex-col overflow-hidden">
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left panel for video/notes - 40% width */}
         {(selectedVideo || selectedNote) && (
-          <div className="w-full md:w-[40%] overflow-y-auto border-r border-gray-200 dark:border-zinc-700">
-            <div className="h-full p-2">
+          <div className="w-full md:w-[40%] overflow-hidden border-r border-gray-200 dark:border-zinc-700">
+            <div className="h-full p-2 flex flex-col">
               {selectedVideo && (
                 <VideoPlayer url={selectedVideo} />
               )}
               
               {selectedNote && (
-                <NotesViewer noteId={selectedNote} />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <NotesViewer noteId={selectedNote} />
+                </div>
               )}
             </div>
           </div>
@@ -206,10 +208,10 @@ const ChapterPage: React.FC = () => {
           } flex-1 overflow-hidden flex flex-col`}
         >
           {/* Custom tab navigation */}
-          <div className="px-4 pt-4 border-b border-gray-200 dark:border-zinc-700">
-            <div className="inline-flex h-10 items-center justify-center rounded-md bg-gray-100 dark:bg-zinc-800/80 p-1 text-gray-500 dark:text-zinc-400">
+          <div className="px-4 pt-2 pb-2 border-b border-gray-200 dark:border-zinc-700">
+            <div className="inline-flex h-8 items-center justify-center rounded-md bg-gray-100 dark:bg-zinc-800/80 p-1 text-gray-500 dark:text-zinc-400">
               <button
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
                   activeTab === "mindmap"
                     ? "bg-white dark:bg-zinc-900 text-gray-950 dark:text-zinc-50 shadow-sm"
                     : "hover:bg-gray-200/50 dark:hover:bg-zinc-700/50"
@@ -219,7 +221,7 @@ const ChapterPage: React.FC = () => {
                 Mind Map
               </button>
               <button
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
                   activeTab === "chat"
                     ? "bg-white dark:bg-zinc-900 text-gray-950 dark:text-zinc-50 shadow-sm"
                     : "hover:bg-gray-200/50 dark:hover:bg-zinc-700/50"
@@ -245,6 +247,9 @@ const ChapterPage: React.FC = () => {
                 <MemoizedMindMap
                   data={mindMapData}
                   onLeafClick={handleLeafClick}
+                  height="100%"
+                  width="100%"
+                  autoFit={true}
                 />
               )}
             </div>

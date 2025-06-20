@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --navbar-height: 64px; /* Adjust based on your navbar's actual height */
+  --navbar-height: 65px; /* adjust based on your navbar's actual height */
+  --footer-height: 56px; /* adjust based on your footer's actual height */
 }
 
 @media (max-width: 640px) {

@@ -208,7 +208,7 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
 
   // Regular view
   return (
-    <div className="bg-white dark:bg-zinc-800/80 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 shadow-lg flex flex-col">
+    <div className="bg-white dark:bg-zinc-800/80 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 shadow-lg flex flex-col h-full">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-medium text-gray-800 dark:text-zinc-100 line-clamp-1">
           {note.title || "Note Content"}
@@ -223,8 +223,8 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
         </button>
       </div>
       
-      <div className="text-gray-800 dark:text-zinc-300 flex flex-col">
-        <div className="max-w-none overflow-y-auto h-96 markdown-content"> {/* Fixed height of 24rem (384px) */}
+      <div className="text-gray-800 dark:text-zinc-300 flex flex-col flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto markdown-content"> {/* Changed from fixed height to flex-1 */}
           <div 
             className="prose dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-zinc-100 prose-a:text-blue-600 dark:prose-a:text-blue-400"
             dangerouslySetInnerHTML={{ __html: markdownToHtml(note.content) }}
@@ -232,7 +232,7 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
         </div>
 
         {note.updatedAt && (
-          <p className="mt-4 text-xs text-gray-500 dark:text-zinc-500">
+          <p className="mt-2 text-xs text-gray-500 dark:text-zinc-500">
             Last updated: {new Date(note.updatedAt).toLocaleString()}
           </p>
         )}

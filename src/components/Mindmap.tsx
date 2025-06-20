@@ -274,13 +274,22 @@ function handleNodeSelection(
   }
 }
 
-export default function MindMap({ 
-  onLeafClick, 
-  data 
-}: { 
-  onLeafClick: (selection: { type?: string; title: string; resources: ApiResource[]; resource?: ApiResource }) => void;
-  data?: ApiNode | any; // Accept either ApiNode or TreeNode structure
-}) {
+// Add these props to your MindMap component interface
+interface MindMapProps {
+  data: any;
+  onLeafClick: (selection: any) => void;
+  height?: string | number;
+  width?: string | number;
+  autoFit?: boolean;
+}
+
+const MindMap: React.FC<MindMapProps> = ({ 
+  data, 
+  onLeafClick,
+  height = "100%",
+  width = "100%",
+  autoFit = false
+}) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const markmapRef = useRef<Markmap | null>(null);
   const transformer = new Transformer();
@@ -550,3 +559,5 @@ export default function MindMap({
     </div>
   );
 }
+
+export default MindMap
