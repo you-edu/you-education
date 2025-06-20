@@ -181,19 +181,25 @@ const ChapterPage: React.FC = () => {
     );
   }
 
+  function getYouTubeVideoId(selectedVideo: string): string | undefined {
+    throw new Error("Function not implemented.");
+  }
+
   return (
-    <div className="h-[calc(100vh-var(--navbar-height)-var(--footer-height))] flex flex-col overflow-hidden">
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+    <div className="h-[calc(100vh-var(--navbar-height))] flex flex-col">
+      <div className="flex flex-col md:flex-row h-full">
         {/* Left panel for video/notes - 40% width */}
         {(selectedVideo || selectedNote) && (
-          <div className="w-full md:w-[40%] overflow-hidden border-r border-gray-200 dark:border-zinc-700">
+          <div className="w-full md:w-[40%] h-full">
             <div className="h-full p-2 flex flex-col">
               {selectedVideo && (
-                <VideoPlayer url={selectedVideo} />
+                <div className="h-full">
+                  <VideoPlayer url={selectedVideo} />
+                </div>
               )}
               
               {selectedNote && (
-                <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="h-full">
                   <NotesViewer noteId={selectedNote} />
                 </div>
               )}
@@ -205,9 +211,9 @@ const ChapterPage: React.FC = () => {
         <div
           className={`w-full ${
             selectedVideo || selectedNote ? "md:w-[60%]" : "md:w-full"
-          } flex-1 overflow-hidden flex flex-col bg-white dark:bg-zinc-900`}
+          } h-full flex flex-col bg-white dark:bg-zinc-900`}
         >
-          {/* Integrated tab navigation - updated to match theme */}
+          {/* Tab navigation */}
           <div className="border-b border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/90">
             <div className="flex">
               <button
@@ -239,68 +245,31 @@ const ChapterPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Content area remains the same */}
-          <div className="flex-1 relative overflow-hidden">
-            {/* MindMap content */}
-            <div 
-              className={`absolute inset-0 transition-opacity duration-200 ${
-                activeTab === "mindmap" 
-                  ? "opacity-100 z-10" 
-                  : "opacity-0 z-0 pointer-events-none"
-              }`}
-            >
-              {mindMapData && (
+          {/* Tab content area - make sure this takes up remaining height */}
+          <div className="flex-1 relative">
+            {activeTab === "mindmap" && mindMapData && (
+              <div className="h-full">
                 <MemoizedMindMap
                   data={mindMapData}
                   onLeafClick={handleLeafClick}
-                  height="100%"
-                  width="100%"
-                  autoFit={true}
                 />
-              )}
-            </div>
-
-            {/* Chat content */}
-            <div 
-              className={`absolute inset-0 p-4 transition-opacity duration-200 ${
-                activeTab === "chat" 
-                  ? "opacity-100 z-10" 
-                  : "opacity-0 z-0 pointer-events-none"
-              }`}
-            >
-              {selectedVideo && (
+              </div>
+            )}
+            
+            {activeTab === "chat" && currentSelection && (
+              <div className="h-full">
                 <ChatUI
                   source={{
-                    type: "youtube",
-                    content: selectedVideo,
-                    videoId:
-                      selectedVideo?.includes("youtube.com")
-                        ? new URL(selectedVideo).searchParams.get("v") || ""
-                        : selectedVideo?.split("/").pop() || "",
-                    contentTitle: currentSelection?.title || "Educational Video"
+                    type: selectedVideo ? "youtube" : "markdown",
+                    content: selectedVideo || (noteData ? noteData.content : ""),
+                    videoId: selectedVideo
+                      ? getYouTubeVideoId(selectedVideo)
+                      : undefined,
+                    contentTitle: currentSelection.title || "Selected Content"
                   }}
                 />
-              )}
-              {selectedNote && noteData && (
-                <ChatUI
-                  source={{
-                    type: "markdown",
-                    content: noteData.content || "No content available",
-                    contentTitle: currentSelection?.title || noteData.title || "Study Notes"
-                  }}
-                />
-              )}
-              {!selectedVideo && !selectedNote && (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center p-6 max-w-md bg-white/80 dark:bg-zinc-800/80 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700">
-                    <h3 className="text-lg font-medium text-gray-700 dark:text-zinc-300 mb-2">No content selected</h3>
-                    <p className="text-gray-600 dark:text-zinc-400">
-                      Select a topic from the mind map to view and chat about its content.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
