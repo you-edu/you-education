@@ -4,6 +4,7 @@ import { AddExamCard } from '@/components/AddExamCard'
 import ExamsList from '@/components/Examlist'
 import axios from 'axios'
 import { ExamData } from '@/lib/types' // Adjust the import path as necessary
+import { Footer } from '@/components/Footer';
 
 const Page = () => {
   const [showAddExamCard, setShowAddExamCard] = useState(false);
@@ -198,6 +199,7 @@ const Page = () => {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   )
 }

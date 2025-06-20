@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner"
 import Navbar from "@/components/Navbar";
 import { VideoPlayerProvider } from '../context/VideoPlayerContext';
 import React from 'react';
-import { Footer } from '@/components/Footer';
+
 
 
 const geistSans = Geist({
@@ -43,7 +43,6 @@ export default function RootLayout({
             </main>
           </VideoPlayerProvider>
         </ThemeProvider>
-        <Footer />
         <Toaster />
       </body>
       </SessionWrapper>

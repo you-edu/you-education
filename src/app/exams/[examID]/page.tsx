@@ -9,6 +9,7 @@ import { Chapter, ExamData } from '@/lib/types';
 import { toast } from 'sonner';
 import { generateMindMapFromTopics } from '@/components/mindMapGenerator/index';
 import { DeleteExamDialog } from '@/components/dialogs/DeleteExamDialog';
+import { Footer } from '@/components/Footer';
 
 const ExamDetailsPage = () => {
   const params = useParams();
@@ -334,6 +335,7 @@ const ExamDetailsPage = () => {
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };
