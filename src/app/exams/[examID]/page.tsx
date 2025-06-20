@@ -136,8 +136,12 @@ const ExamDetailsPage = () => {
           <div className="max-w-5xl mx-auto px-8 py-12">
             <div className="text-center relative">
               {/* Delete button positioned at the top right */}
-              <div className="absolute right-0 top-0">
-                <DeleteExamDialog examId={examId} examName={examData.subjectName} />
+              <div className="absolute right-0 top-0 m-4">
+                <DeleteExamDialog
+                  examId={examId}
+                  examName={examData.subjectName}
+                  triggerClassName="group relative overflow-hidden flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
+                />
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
                 {examData.subjectName}

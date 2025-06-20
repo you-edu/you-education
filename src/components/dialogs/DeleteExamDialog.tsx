@@ -24,9 +24,10 @@ const CONFIRMATION_WORDS = [
 interface DeleteExamDialogProps {
   examId: string;
   examName: string;
+  triggerClassName?: string;
 }
 
-export function DeleteExamDialog({ examId, examName }: DeleteExamDialogProps) {
+export function DeleteExamDialog({ examId, examName, triggerClassName }: DeleteExamDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmationWord, setConfirmationWord] = useState('');
@@ -68,36 +69,45 @@ export function DeleteExamDialog({ examId, examName }: DeleteExamDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="icon" className="h-8 w-8">
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <button className={triggerClassName || "flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl"}>
+          <Trash2 className="h-5 w-5 text-gray-600 dark:text-gray-400 group-hover:text-red-500 transition-colors duration-200" />
+          <span className="text-gray-700 dark:text-gray-300 group-hover:text-red-500 transition-colors duration-200">Delete</span>
+        </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-red-500">Delete Exam</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. This will permanently delete {examName} and all its associated data.
+      <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Delete Exam</DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base mt-2">
+            This action cannot be undone. This will permanently delete <span className="font-medium text-gray-800 dark:text-gray-200">{examName}</span> and all its associated data.
           </DialogDescription>
         </DialogHeader>
-        <div className="p-4 border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/50 rounded-md my-2">
-          <p className="text-sm text-center">
-            Type <span className="font-bold text-red-600">{confirmationWord}</span> to confirm
+        
+        <div className="p-4 border border-red-200 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 dark:border-red-900/50 rounded-lg my-2">
+          <p className="text-sm text-center text-gray-700 dark:text-gray-300">
+            Type <span className="font-bold text-red-600 dark:text-red-400">{confirmationWord}</span> to confirm
           </p>
         </div>
+        
         <Input
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           placeholder={`Type "${confirmationWord}" here`}
-          className="mt-2"
+          className="mt-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-1 focus:ring-red-300 dark:focus:ring-red-700"
         />
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        
+        <DialogFooter className="mt-6 flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => setOpen(false)}
+            className="flex-1 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+          >
             Cancel
           </Button>
           <Button 
             variant="destructive" 
             onClick={handleDelete} 
             disabled={isDeleting || userInput.toLowerCase() !== confirmationWord.toLowerCase()}
+            className="flex-1 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 dark:from-red-600 dark:to-red-700 dark:hover:from-red-700 dark:hover:to-red-800 text-white disabled:opacity-50"
           >
             {isDeleting ? 'Deleting...' : 'Delete Exam'}
           </Button>

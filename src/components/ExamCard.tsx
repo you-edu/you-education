@@ -44,11 +44,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
         )} */}
       </div>
       
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500 dark:text-white/60 uppercase tracking-wide font-semibold">
-          {isCompleted ? 'Status' : 'Progress'}
-        </span>
-        <span className="text-sm font-bold bg-gray-100 dark:bg-black/70 px-3 py-1 rounded-full">
+        <span className="text-sm font-bold ">
           {isCompleted ? (
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-black dark:bg-white"></span>
@@ -56,7 +52,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
             </span>
           ) : 'In Progress'}
         </span>
-      </div>
+      
     </div>
   );
 };

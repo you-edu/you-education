@@ -37,16 +37,10 @@ export default function Navbar() {
           {session && (
             <>
               <Link 
-                href="/dashboard" 
+                href="/" 
                 className="text-sm text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
               >
                 Dashboard
-              </Link>
-              <Link 
-                href="/exams" 
-                className="text-sm text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
-              >
-                Exams
               </Link>
             </>
           )}
