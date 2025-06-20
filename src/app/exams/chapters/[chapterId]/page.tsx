@@ -205,37 +205,43 @@ const ChapterPage: React.FC = () => {
         <div
           className={`w-full ${
             selectedVideo || selectedNote ? "md:w-[60%]" : "md:w-full"
-          } flex-1 overflow-hidden flex flex-col`}
+          } flex-1 overflow-hidden flex flex-col bg-white dark:bg-zinc-900`}
         >
-          {/* Custom tab navigation */}
-          <div className="px-4 pt-2 pb-2 border-b border-gray-200 dark:border-zinc-700">
-            <div className="inline-flex h-8 items-center justify-center rounded-md bg-gray-100 dark:bg-zinc-800/80 p-1 text-gray-500 dark:text-zinc-400">
+          {/* Integrated tab navigation - updated to match theme */}
+          <div className="border-b border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/90">
+            <div className="flex">
               <button
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
-                  activeTab === "mindmap"
-                    ? "bg-white dark:bg-zinc-900 text-gray-950 dark:text-zinc-50 shadow-sm"
-                    : "hover:bg-gray-200/50 dark:hover:bg-zinc-700/50"
-                }`}
+                className={`px-5 py-3 text-sm font-medium transition-all relative
+                  ${activeTab === "mindmap"
+                    ? "text-gray-900 dark:text-white bg-white dark:bg-zinc-900"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
                 onClick={() => setActiveTab("mindmap")}
               >
                 Mind Map
+                {activeTab === "mindmap" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-black dark:bg-white"></div>
+                )}
               </button>
               <button
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
-                  activeTab === "chat"
-                    ? "bg-white dark:bg-zinc-900 text-gray-950 dark:text-zinc-50 shadow-sm"
-                    : "hover:bg-gray-200/50 dark:hover:bg-zinc-700/50"
-                }`}
+                className={`px-5 py-3 text-sm font-medium transition-all relative
+                  ${activeTab === "chat"
+                    ? "text-gray-900 dark:text-white bg-white dark:bg-zinc-900"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
                 onClick={() => setActiveTab("chat")}
               >
                 Chat
+                {activeTab === "chat" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-black dark:bg-white"></div>
+                )}
               </button>
             </div>
           </div>
 
-          {/* Content area with both components always rendered but one hidden */}
+          {/* Content area remains the same */}
           <div className="flex-1 relative overflow-hidden">
-            {/* MindMap content - always rendered but conditionally visible */}
+            {/* MindMap content */}
             <div 
               className={`absolute inset-0 transition-opacity duration-200 ${
                 activeTab === "mindmap" 
@@ -254,7 +260,7 @@ const ChapterPage: React.FC = () => {
               )}
             </div>
 
-            {/* Chat content - always rendered but conditionally visible */}
+            {/* Chat content */}
             <div 
               className={`absolute inset-0 p-4 transition-opacity duration-200 ${
                 activeTab === "chat" 
