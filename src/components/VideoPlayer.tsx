@@ -33,7 +33,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url }) => {
       height: '0' /* Height will be determined by the aspect ratio */,
       width: '100%',
       background: '#000',
-      marginBottom: '1rem' /* Add some spacing below the video */
+      marginBottom: '1rem', /* Add some spacing below the video */
+      overflow: 'hidden', /* Ensure content doesn't overflow rounded corners */
+      boxShadow: '0 6px 12px rgba(0,0,0,0.15)', /* Optional: add subtle shadow for depth */
+      borderRadius: '8px', /* Reduced curviness from 16px to 8px */
     }}>
       <ReactPlayer
         ref={playerRef}
