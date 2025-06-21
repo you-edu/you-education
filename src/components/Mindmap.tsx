@@ -80,9 +80,9 @@ function apiToMarkdown(node: ApiNode, level = 1, path = ""): string {
   if (node.resources && node.resources.length > 0) {
     node.resources.forEach(resource => {
       // Use different icons for different resource types
-      let icon = '📺'; // Default for videos
+      let icon = '🍿 '; // Default for videos
       if (resource.type === 'md_notes') {
-        icon = '📝'; // Use note icon for notes
+        icon = '📚 '; // Use note icon for notes
       }
       let resourceTitle
       if(resource.type === 'md_notes') {
