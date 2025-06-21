@@ -509,7 +509,7 @@ const MindMap: React.FC<MindMapProps> = ({
         <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2 bg-white/90 dark:bg-zinc-800/90 p-2 rounded-lg border border-gray-300 dark:border-zinc-700 shadow-lg">
           <button 
             onClick={handleZoomIn} 
-            className="p-2 rounded-md hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 text-gray-700 dark:text-zinc-300 hover:text-white transition-colors"
+            className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors"
             aria-label="Zoom in"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -521,7 +521,7 @@ const MindMap: React.FC<MindMapProps> = ({
           </button>
           <button 
             onClick={handleZoomOut}
-            className="p-2 rounded-md hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 text-zinc-300 hover:text-white transition-colors"
+            className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors"
             aria-label="Zoom out"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -532,7 +532,7 @@ const MindMap: React.FC<MindMapProps> = ({
           </button>
           <button 
             onClick={handleReset}
-            className="p-2 rounded-md hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 text-zinc-300 hover:text-white transition-colors"
+            className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-colors"
             aria-label="Reset view"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -540,21 +540,8 @@ const MindMap: React.FC<MindMapProps> = ({
               <path d="M3 3v5h5"></path>
             </svg>
           </button>
-          <div className="border-t border-zinc-700 my-1"></div>
-          <button 
-            onClick={toggle3DView}
-            className={`p-2 rounded-md transition-colors ${
-              is3DView 
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white' 
-                : 'text-zinc-300 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white'
-            }`}
-            aria-label="Toggle 3D view"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3L2 12h3v8h14v-8h3L12 3z"></path>
-              <path d="M12 8v13"></path>
-            </svg>
-          </button>
+          <div className="border-t border-gray-300 dark:border-zinc-700 my-1"></div>
+          
         </div>
         
         {/* Short instruction text */}
