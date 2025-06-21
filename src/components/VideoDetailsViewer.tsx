@@ -82,32 +82,37 @@ const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => 
   }, [videoUrl]);
 
   if (loading) {
-    return <div>Loading video details...</div>;
+    return <div className="w-full h-full flex items-center justify-center">Loading video details...</div>;
   }
 
   if (error) {
-    return <div className="error">{error}</div>;
+    return <div className="error w-full h-full flex items-center justify-center">{error}</div>;
   }
+  
   return (
-    <div className="video-details p-4 bg-gray-50 dark:bg-zinc-800/50 rounded-lg">
-      {title && (
-        <h2 className="video-title text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 pb-3 border-b border-gray-300 dark:border-gray-600">
-          {title}
-        </h2>
-      )}
-  {description && (
-        <div className="video-description text-sm text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap">
-          <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Description:</h3>
-          {description.split('\n').map((line, index) => (
-            <p key={index} className="mb-2">
-              <Linkify options={linkifyOptions}>{line}</Linkify>
-            </p>
-          ))}
-        </div>
-      )}
-      {!title && !description && !loading && (
-        <p className="text-gray-500 dark:text-gray-400 italic">Enter a valid YouTube URL to see video details.</p>
-      )}
+    <div className="video-details bg-gray-50 dark:bg-zinc-800/50 rounded-lg w-full h-full overflow-y-auto p-0 m-0">
+      <div className="px-2">
+        {title && (
+          <h2 className="video-title text-2xl font-bold text-gray-800 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-2 break-words">
+            {title}
+          </h2>
+        )}
+        {description && (
+          <div className="video-description text-base text-gray-600 dark:text-gray-300 whitespace-pre-wrap overflow-hidden">
+            <h3 className="text-lg font-semibold mt-1 mb-1 text-gray-700 dark:text-gray-200">Description:</h3>
+            <div className="break-words">
+              {description.split('\n').map((line, index) => (
+                <p key={index} className="mb-1">
+                  <Linkify options={linkifyOptions}>{line}</Linkify>
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+        {!title && !description && !loading && (
+          <p className="text-gray-500 dark:text-gray-400 italic">Enter a valid YouTube URL to see video details.</p>
+        )}
+      </div>
     </div>
   );
 };

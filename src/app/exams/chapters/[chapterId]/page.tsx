@@ -209,7 +209,7 @@ const ChapterPage: React.FC = () => {
                   <div className="flex-shrink-0">
                     <VideoPlayer url={selectedVideo} />
                   </div>
-                  <div className="flex-1 overflow-y-auto mt-4 px-3">
+                  <div className="flex-1 overflow-hidden">
                     <VideoDetailsViewer videoUrl={selectedVideo} />
                   </div>
                 </div>
