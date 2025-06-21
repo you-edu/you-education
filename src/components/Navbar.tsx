@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Logo } from "./Logo";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
@@ -26,9 +27,8 @@ export default function Navbar() {
       <div className="container mx-auto flex items-center justify-between px-4">
         <div className="text-xl font-bold tracking-tight">
           <Link href="/" className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-md bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-bold">
-              YE
-            </span>
+            
+            <Logo size={48} />
             <span className="hidden sm:inline dark:text-white">You Education</span>
           </Link>
         </div>
