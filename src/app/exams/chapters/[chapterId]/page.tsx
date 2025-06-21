@@ -5,6 +5,7 @@ import MindMap from "@/components/Mindmap";
 import VideoPlayer from "@/components/VideoPlayer";
 import ChatUI from "@/components/ChatUI";
 import NotesViewer from "@/components/NotesViewer";
+import VideoDetailsViewer from "@/components/VideoDetailsViewer";
 
 interface NoteData {
   _id: string;
@@ -26,47 +27,8 @@ const ChapterPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"mindmap" | "chat">("mindmap");
   const [currentSelection, setCurrentSelection] = useState<any>(null);
-
-  // Fetch mind map data when the component mounts
-  useEffect(() => {
-    const fetchMindMap = async () => {
-      if (!chapterId) {
-        setError("Chapter ID not found");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        console.log(`Fetching mind map for chapterId: ${chapterId}`);
-
-        const response = await fetch(
-          `/api/mind-maps?chapterId=${encodeURIComponent(chapterId)}`
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch mind map: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("Mind map data received:", data);
-
-        if (data && data.content) {
-          setMindMapData(data.content);
-        } else {
-          setError("No mind map content found");
-        }
-
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching mind map:", err);
-        setError("Failed to load mind map data. Please try again later.");
-        setIsLoading(false);
-      }
-    };
-
-    fetchMindMap();
-  }, [chapterId]);
+  const [initialMindMapLoaded, setInitialMindMapLoaded] = useState(false);
+  const [mindmapTransitioning, setMindmapTransitioning] = useState(false);
 
   // Fetch note data when selectedNote changes
   useEffect(() => {
@@ -95,6 +57,54 @@ const ChapterPage: React.FC = () => {
 
     fetchNote();
   }, [selectedNote]);
+  // Prevent mindmap data from reloading when switching tabs
+  // Fetch mind map data when the component mounts
+  useEffect(() => {
+    const fetchMindMap = async () => {
+      if (!chapterId) {
+        setError("Chapter ID not found");
+        setIsLoading(false);
+        return;
+      }
+
+      // Don't refetch if already loaded - this is crucial for preventing reloads on tab switches
+      if (initialMindMapLoaded && mindMapData) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        console.log(`Fetching mind map for chapterId: ${chapterId}`);
+
+        const response = await fetch(
+          `/api/mind-maps?chapterId=${encodeURIComponent(chapterId)}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch mind map: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Mind map data received:", data);
+
+        if (data && data.content) {
+          setMindMapData(data.content);
+          setInitialMindMapLoaded(true);
+        } else {
+          setError("No mind map content found");
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error fetching mind map:", err);
+        setError("Failed to load mind map data. Please try again later.");
+        setIsLoading(false);
+      }
+    };
+
+    fetchMindMap();
+  }, [chapterId]);
 
   // Use useCallback to prevent recreating the function on each render
   const handleLeafClick = useCallback(
@@ -151,6 +161,12 @@ const ChapterPage: React.FC = () => {
     []
   );
 
+  // Handle tab switching
+  const handleTabChange = (tab: "mindmap" | "chat") => {
+    // Simply switch the tab without any reconstruction
+    setActiveTab(tab);
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-var(--navbar-height))]">
@@ -189,8 +205,13 @@ const ChapterPage: React.FC = () => {
           <div className="w-full md:w-[40%] h-full">
             <div className="h-full p-2 flex flex-col">
               {selectedVideo && (
-                <div className="h-full">
-                  <VideoPlayer url={selectedVideo} />
+                <div className="h-full flex flex-col">
+                  <div className="flex-shrink-0">
+                    <VideoPlayer url={selectedVideo} />
+                  </div>
+                  <div className="flex-1 overflow-y-auto mt-4 px-3">
+                    <VideoDetailsViewer videoUrl={selectedVideo} />
+                  </div>
                 </div>
               )}
               
@@ -218,7 +239,7 @@ const ChapterPage: React.FC = () => {
                     ? "text-gray-900 dark:text-white bg-white dark:bg-zinc-900"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                   }`}
-                onClick={() => setActiveTab("mindmap")}
+                onClick={() => handleTabChange("mindmap")}
               >
                 Mind Map
                 {activeTab === "mindmap" && (
@@ -231,7 +252,7 @@ const ChapterPage: React.FC = () => {
                     ? "text-gray-900 dark:text-white bg-white dark:bg-zinc-900"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                   }`}
-                onClick={() => setActiveTab("chat")}
+                onClick={() => handleTabChange("chat")}
               >
                 Chat
                 {activeTab === "chat" && (
@@ -240,29 +261,39 @@ const ChapterPage: React.FC = () => {
               </button>
             </div>
           </div>
-
+          
           {/* Tab content area - make sure this takes up remaining height */}
           <div className="flex-1 relative">
-            {activeTab === "mindmap" && mindMapData && (
-              <div className="h-full">
-                <MemoizedMindMap
-                  data={mindMapData}
-                  onLeafClick={handleLeafClick}
-                />
-              </div>
-            )}
+            {/* Always render both components side by side with absolute positioning, but hide/show based on active tab */}            <div className="absolute inset-0 w-full h-full" 
+                 style={{ 
+                   visibility: activeTab === "mindmap" ? "visible" : "hidden", 
+                   opacity: activeTab === "mindmap" ? 1 : 0,
+                   transition: "opacity 0.3s ease-in-out" 
+                 }}>
+              {mindMapData && (
+                <div className="h-full w-full">                  <MemoizedMindMap
+                    key={chapterId} /* Using chapterId as key ensures it only changes when chapter changes */
+                    data={mindMapData}
+                    onLeafClick={handleLeafClick}
+                    /* No need to pass tabActive if component doesn't support it */
+                  />
+                </div>
+              )}
+            </div>
             
-            {activeTab === "chat" && currentSelection && (
-              <div className="h-full">
-                <ChatUI
-                  source={{
-                    type: selectedVideo ? "youtube" : "markdown",
-                    content: selectedVideo || (noteData ? noteData.content : ""),
-                    contentTitle: currentSelection.title || "Selected Content"
-                  }}
-                />
-              </div>
-            )}
+            <div className="absolute inset-0 w-full h-full" style={{ visibility: activeTab === "chat" ? "visible" : "hidden", opacity: activeTab === "chat" ? 1 : 0 }}>
+              {currentSelection && (
+                <div className="h-full w-full">
+                  <ChatUI
+                    source={{
+                      type: selectedVideo ? "youtube" : "markdown",
+                      content: selectedVideo || (noteData ? noteData.content : ""),
+                      contentTitle: currentSelection.title || "Selected Content"
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -271,7 +302,11 @@ const ChapterPage: React.FC = () => {
 };
 
 // Create a memoized version of the MindMap component
-const MemoizedMindMap = React.memo(MindMap);
+// Use custom equality function to prevent unnecessary re-renders
+const MemoizedMindMap = React.memo(MindMap, (prevProps, nextProps) => {
+  // Only re-render if the data is different
+  return JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data);
+});
 
 export default ChapterPage;
 

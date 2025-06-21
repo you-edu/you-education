@@ -5,6 +5,7 @@ import { Transformer } from 'markmap-lib';
 import { Markmap } from 'markmap-view';
 import { INode } from 'markmap-common';
 import { useTheme } from 'next-themes';
+import { count } from 'console';
 
 // Updated API response types to match new format
 type ApiResourceData = {
@@ -34,6 +35,9 @@ type ApiNode = {
 const resourceMap = new Map<string, { node: ApiNode; resource?: ApiResource }>();
 // Map to store node paths by their content (for reverse lookup)
 const nodePathMap = new Map<string, string>();
+
+let count_videos = 1;
+let count_notes = 1;
 
 // Function to decode HTML entities and normalize text
 function normalizeText(text: string): string {
@@ -82,9 +86,11 @@ function apiToMarkdown(node: ApiNode, level = 1, path = ""): string {
       }
       let resourceTitle
       if(resource.type === 'md_notes') {
-        resourceTitle = "Notes"
+        resourceTitle = `${count_notes}. Notes`
+        count_notes++;
       }else{
-        resourceTitle = "Youtube Video"
+        resourceTitle = `${count_videos}. Youtube Video`
+        count_videos++;
       }
        
       const resourcePath = `${currentPath} > ${resourceTitle}`;
