@@ -4,8 +4,7 @@ import { useVideoPlayer } from '@/context/VideoPlayerContext';
 interface ChatUIProps {
   source: {
     type: 'youtube' | 'markdown';
-    content: string;
-    videoId?: string;
+    content: string;  // YouTube URL or markdown text
     contentTitle?: string;
   };
 }
@@ -59,9 +58,24 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
     }
   }, [source?.type, currentPosition?.playedSeconds]);
 
+  // Extract YouTube video ID from URL if needed
+  const getYouTubeVideoId = (url: string): string => {
+    try {
+      if (url.includes('youtube.com')) {
+        return new URL(url).searchParams.get('v') || '';
+      } else if (url.includes('youtu.be')) {
+        return url.split('/').pop() || '';
+      }
+      return '';
+    } catch (e) {
+      console.error('Error parsing YouTube URL:', e);
+      return '';
+    }
+  };
+
   // Fetch transcript when using YouTube mode and position changes
   useEffect(() => {
-    if (source?.type === 'youtube' && source?.videoId && currentPosition?.playedSeconds > 0) {
+    if (source?.type === 'youtube' && source?.content && currentPosition?.playedSeconds > 0) {
       if (
         Math.abs(currentPosition?.playedSeconds - lastFetchedPosition.current) > 30 ||
         lastFetchedPosition.current === 0
@@ -73,7 +87,7 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
         }
       }
     }
-  }, [currentPosition?.playedSeconds, source?.type, source?.videoId, windowSize, customTimeRange]);
+  }, [currentPosition?.playedSeconds, source?.type, source?.content, windowSize, customTimeRange]);
 
   const formatTime = (timeInSeconds: number): string => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -82,8 +96,10 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
   };
 
   const fetchTranscript = async (useCustomRange = false) => {
-    if (!source?.videoId) {
-      console.log("No video ID available, skipping transcript fetch");
+    const videoId = source?.type === 'youtube' ? getYouTubeVideoId(source.content) : '';
+    
+    if (!videoId) {
+      console.log("No valid YouTube video ID available, skipping transcript fetch");
       return;
     }
     
@@ -109,8 +125,8 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
       setStartTime(fetchStart);
       setEndTime(fetchEnd);
       
-      console.log(`Fetching transcript for video ${source.videoId} from ${formatTime(fetchStart)} to ${formatTime(fetchEnd)}`);
-      const res = await fetch(`/api/transcript?videoId=${source.videoId}&start=${fetchStart}&end=${fetchEnd}`);
+      console.log(`Fetching transcript for video ${videoId} from ${formatTime(fetchStart)} to ${formatTime(fetchEnd)}`);
+      const res = await fetch(`/api/transcript?videoId=${videoId}&start=${fetchStart}&end=${fetchEnd}`);
       
       if (!res.ok) {
         throw new Error(`Failed to fetch transcript: ${res.status} ${res.statusText}`);

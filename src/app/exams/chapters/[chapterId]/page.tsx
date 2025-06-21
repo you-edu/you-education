@@ -181,10 +181,6 @@ const ChapterPage: React.FC = () => {
     );
   }
 
-  function getYouTubeVideoId(selectedVideo: string): string | undefined {
-    throw new Error("Function not implemented.");
-  }
-
   return (
     <div className="h-[calc(100vh-var(--navbar-height))] flex flex-col">
       <div className="flex flex-col md:flex-row h-full">
@@ -262,9 +258,6 @@ const ChapterPage: React.FC = () => {
                   source={{
                     type: selectedVideo ? "youtube" : "markdown",
                     content: selectedVideo || (noteData ? noteData.content : ""),
-                    videoId: selectedVideo
-                      ? getYouTubeVideoId(selectedVideo)
-                      : undefined,
                     contentTitle: currentSelection.title || "Selected Content"
                   }}
                 />
