@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
@@ -231,7 +232,7 @@ const ChapterPage: React.FC = () => {
           } h-full flex flex-col bg-white dark:bg-zinc-900`}
         >
           {/* Tab navigation */}
-          <div className="border-b border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/90">
+          <div className="border-b border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/90 ">
             <div className="flex">
               <button
                 className={`px-5 py-3 text-sm font-medium transition-all relative
@@ -247,7 +248,7 @@ const ChapterPage: React.FC = () => {
                 )}
               </button>
               <button
-                className={`px-5 py-3 text-sm font-medium transition-all relative
+                className={`px-5 py-2.5 text-sm font-medium transition-all relative
                   ${activeTab === "chat"
                     ? "text-gray-900 dark:text-white bg-white dark:bg-zinc-900"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
@@ -282,7 +283,7 @@ const ChapterPage: React.FC = () => {
             </div>
             
             <div className="absolute inset-0 w-full h-full" style={{ visibility: activeTab === "chat" ? "visible" : "hidden", opacity: activeTab === "chat" ? 1 : 0 }}>
-              {currentSelection && (
+              {currentSelection ? (
                 <div className="h-full w-full">
                   <ChatUI
                     source={{
@@ -291,6 +292,25 @@ const ChapterPage: React.FC = () => {
                       contentTitle: currentSelection.title || "Selected Content"
                     }}
                   />
+                </div>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-white dark:bg-zinc-900">
+                  <div className="text-center max-w-md mx-auto p-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      No Resource Selected
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">
+                      Select a topic from the mind map to start chatting about the content.
+                    </p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                      Click on any node in the mind map to load its associated video or notes for discussion.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -309,5 +329,6 @@ const MemoizedMindMap = React.memo(MindMap, (prevProps, nextProps) => {
 });
 
 export default ChapterPage;
+
 
 
