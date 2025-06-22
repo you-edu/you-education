@@ -1,7 +1,8 @@
-
 # YouEducation 🎓
 
-A comprehensive educational platform that transforms traditional learning through AI-powered mind maps, interactive video content, and intelligent note generation. YouEducation makes complex subjects accessible by organizing educational content into visual, hierarchical structures with integrated YouTube videos and automatically generated study notes.
+A comprehensive educational platform that transforms traditional learning through **AI-powered mind maps**, interactive video content, and intelligent note generation. YouEducation makes complex subjects accessible by organizing educational content into visual, hierarchical structures with integrated YouTube videos and automatically generated study notes.
+
+---
 
 ## 🌟 Features
 
@@ -34,6 +35,8 @@ A comprehensive educational platform that transforms traditional learning throug
 - **Session Management**: Persistent user sessions across devices
 - **Personalized Experience**: User-specific content and progress tracking
 
+---
+
 ## 🚀 Tech Stack
 
 ### Frontend
@@ -55,9 +58,11 @@ A comprehensive educational platform that transforms traditional learning throug
 - **YouTube API**: Video content integration
 - **Vercel**: Deployment and hosting platform
 
+---
+
 ## 📁 Project Structure
 
-
+```
 src/
 ├── app/                          # Next.js App Router
 │   ├── api/                      # API routes
@@ -87,18 +92,20 @@ src/
 │   ├── db/                       # Database models and connection
 │   └── utils.ts                  # Helper functions
 └── types/                        # TypeScript type definitions
+```
 
+---
 
 ## 🛠 Installation
 
 1. **Clone the repository**
-   bash
+   ```bash
    git clone https://github.com/yourusername/you-education.git
    cd you-education
-   
+   ```
 
 2. **Install dependencies**
-   bash
+   ```bash
    npm install
    # or
    yarn install
@@ -106,31 +113,33 @@ src/
    pnpm install
    # or
    bun install
-   
+   ```
 
 3. **Environment Setup**
+
    Create a `.env.local` file in the root directory:
-   env
+
+   ```env
    # Database
    MONGODB_URI=your_mongodb_connection_string
-   
+
    # Azure OpenAI
    AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
    AZURE_OPENAI_API_KEY=your_azure_openai_api_key
    AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
    OPENAI_API_VERSION=2024-12-01-preview
-   
+
    # NextAuth
    NEXTAUTH_SECRET=your_nextauth_secret
    NEXTAUTH_URL=http://localhost:3000
-   
+
    # Authentication Providers (configure as needed)
    GOOGLE_CLIENT_ID=your_google_client_id
    GOOGLE_CLIENT_SECRET=your_google_client_secret
-   
+   ```
 
 4. **Run the development server**
-   bash
+   ```bash
    npm run dev
    # or
    yarn dev
@@ -138,14 +147,18 @@ src/
    pnpm dev
    # or
    bun dev
-   
+   ```
 
 5. **Open your browser**
+
    Navigate to [http://localhost:3000](http://localhost:3000) to see the result.
+
+---
 
 ## 🎯 Usage
 
 ### Creating a Mind Map
+
 1. **Upload Syllabus**: Upload an image of your course syllabus
 2. **Automatic Processing**: The system extracts chapters and topics using AI
 3. **Content Generation**: YouTube videos are automatically curated for each topic
@@ -153,33 +166,40 @@ src/
 5. **Notes Generation**: AI creates comprehensive study notes for complex topics
 
 ### Exploring Content
+
 - **Navigate Mind Maps**: Click on topics to expand/collapse sections
 - **Watch Videos**: Click on video nodes to open the integrated player
 - **Read Notes**: Click on note nodes to view AI-generated study materials
 - **Interactive Chat**: Ask questions about specific content using the AI chat feature
 
 ### Managing Studies
+
 - **Save Progress**: All generated content is automatically saved
 - **Full-Screen Mode**: Use distraction-free mode for focused study
 - **Cross-Device Sync**: Access your content across all devices
+
+---
 
 ## 🧪 Testing
 
 The project includes comprehensive testing utilities:
 
-bash
+```bash
 # Run the mind map generation test
 npm run test:mindmap
 
 # Test notes generation functionality
 npm run test:notes
-
+```
 
 Visit `/checker` in your browser for interactive testing of core functionality.
+
+---
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 1. Connect your GitHub repository to Vercel
@@ -189,10 +209,13 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 ### Manual Deployment
-bash
+
+```bash
 npm run build
 npm start
+```
 
+---
 
 ## 🤝 Contributing
 
@@ -204,34 +227,45 @@ We welcome contributions! Please follow these steps:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+---
+
 ## 📝 API Reference
 
 ### Mind Map Generation
+
 - `POST /api/mind-maps` - Create a new mind map
 - `GET /api/mind-maps/[id]` - Retrieve a specific mind map
 - `POST /api/mind-maps/generate` - Generate mind map from topics
 
 ### Notes Management
+
 - `POST /api/notes` - Create new notes
 - `GET /api/notes/[id]` - Retrieve specific notes
 - `POST /api/mind-maps/notes` - Generate AI notes
 
 ### Content Processing
+
 - `POST /api/syllabus` - Process syllabus images
 - `GET /api/transcript` - Generate video transcripts
 - `POST /api/chat` - AI chat functionality
 
+---
+
 ## 🔧 Configuration
 
 ### Azure OpenAI Setup
+
 1. Create an Azure OpenAI resource
 2. Deploy a GPT-4 model
 3. Configure API keys and endpoints in environment variables
 
 ### Database Setup
+
 1. Create a MongoDB database (MongoDB Atlas recommended)
 2. Configure connection string in environment variables
 3. Models will be automatically created on first run
+
+---
 
 ## 📊 Performance Features
 
@@ -240,17 +274,23 @@ We welcome contributions! Please follow these steps:
 - **Responsive Design**: Optimized for all screen sizes
 - **Error Handling**: Comprehensive error handling and recovery
 
+---
+
 ## 🎨 Customization
 
 ### Themes
+
 - Built-in dark/light mode support
 - Customizable color schemes
 - Responsive design patterns
 
 ### Mind Map Styling
+
 - Modify `styles/MindMap.module.css` for custom styling
 - Configurable node colors and animations
 - Customizable interaction patterns
+
+---
 
 ## 📚 Learn More
 
@@ -264,6 +304,8 @@ To learn more about the technologies used in this project:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - feedback and contributions are welcome!
 
+---
+
 ## 📚 Educational Benefits
 
 - **Visual Learning**: Mind maps cater to visual learners
@@ -272,12 +314,16 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 - **AI-Powered Insights**: Intelligent content curation and generation
 - **Personalized Experience**: Adaptive learning based on user interactions
 
+---
+
 ## 🔒 Security
 
 - Secure authentication with NextAuth.js
 - Environment variable protection
 - API rate limiting
 - Input validation and sanitization
+
+---
 
 ## 📱 Mobile Support
 
@@ -286,16 +332,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 - Mobile-first approach
 - Progressive Web App features
 
+---
+
 ## 🆘 Support
 
 If you encounter any issues or have questions:
+
 1. Check the [Issues](https://github.com/yourusername/you-education/issues) section
 2. Create a new issue with detailed information
 3. Join our community discussions
 
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -309,7 +362,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤ for better education**
 
-Transform your learning experience with YouEducation - where AI meets education to create personalized, visual, and interactive
+Transform your learning experience with YouEducation - where AI meets education to create personalized, visual, and interactive learning.
 
 
 
