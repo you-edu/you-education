@@ -540,13 +540,11 @@ const MindMap: React.FC<MindMapProps> = ({
               <path d="M3 3v5h5"></path>
             </svg>
           </button>
-          <div className="border-t border-gray-300 dark:border-zinc-700 my-1"></div>
-          
         </div>
         
         {/* Short instruction text */}
         <div className="absolute top-4 left-4 z-20 bg-white/80 dark:bg-zinc-900/80 text-xs text-gray-700 dark:text-zinc-400 py-1 px-2 rounded border border-gray-300 dark:border-zinc-700 backdrop-blur-sm">
-          Click topics to expand/collapse. Click 📺 resource nodes to view content.
+          Click topics to expand/collapse. Click resource nodes to view content.
         </div>
       </div>
     </div>
