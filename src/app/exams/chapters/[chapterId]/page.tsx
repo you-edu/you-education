@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
@@ -29,7 +28,6 @@ const ChapterPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"mindmap" | "chat">("mindmap");
   const [currentSelection, setCurrentSelection] = useState<any>(null);
   const [initialMindMapLoaded, setInitialMindMapLoaded] = useState(false);
-  const [mindmapTransitioning, setMindmapTransitioning] = useState(false);
 
   // Fetch note data when selectedNote changes
   useEffect(() => {

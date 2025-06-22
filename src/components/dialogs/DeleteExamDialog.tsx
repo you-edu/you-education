@@ -14,6 +14,7 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react'; // Add this import
 
 // Random words for confirmation
 const CONFIRMATION_WORDS = [
@@ -33,6 +34,7 @@ export function DeleteExamDialog({ examId, examName, triggerClassName }: DeleteE
   const [confirmationWord, setConfirmationWord] = useState('');
   const [userInput, setUserInput] = useState('');
   const router = useRouter();
+  const { data: session } = useSession(); // Get user session
 
   // Generate a random confirmation word when dialog opens
   useEffect(() => {
@@ -49,9 +51,16 @@ export function DeleteExamDialog({ examId, examName, triggerClassName }: DeleteE
       return;
     }
 
+    if (!session?.user?.id) {
+      toast.error('You must be logged in to delete an exam');
+      return;
+    }
+
     try {
       setIsDeleting(true);
-      await axios.delete(`/api/exams/${examId}`);
+      await axios.delete(`/api/exams/${examId}`, {
+        data: { userId: session.user.id } // Send userId with the DELETE request
+      });
       
       toast.success('Exam deleted successfully');
       setOpen(false);
@@ -60,7 +69,11 @@ export function DeleteExamDialog({ examId, examName, triggerClassName }: DeleteE
       router.refresh();
     } catch (error) {
       console.error('Error deleting exam:', error);
-      toast.error('Failed to delete exam. Please try again.');
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        toast.error('You do not have permission to delete this exam');
+      } else {
+        toast.error('Failed to delete exam. Please try again.');
+      }
     } finally {
       setIsDeleting(false);
     }
