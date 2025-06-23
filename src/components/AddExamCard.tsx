@@ -13,9 +13,8 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
-import { ExamData } from "@/lib/types"
 import { AddExamCardProps } from "@/lib/types"
-import { extractAndSaveChaptersFromImage } from "@/lib/syllabusExtraction"
+
 
 
 // Helper component for required field label
@@ -125,24 +124,23 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       // Set submitting state to true to disable the button
       setIsSubmitting(true);
       
-      // First save the exam data
-      const examData = {
-        userId: session.data?.user.id || "", 
-        subjectName: subjectName,
-        description: description,
-        examDate: examDate || new Date(),
-      };
+      // Show loading toast immediately
+      toast.loading("Creating your exam and processing syllabus...");
       
-      // Show loading toast
-      toast.loading("Creating your exam...");
-      
-      // Save exam data using the API route
-      const response = await fetch('/api/exams', {
+      // Create FormData to send the file directly
+      const formData = new FormData();
+      formData.append('userId', session.data?.user.id || "");
+      formData.append('subjectName', subjectName.trim());
+      formData.append('description', description.trim());
+      formData.append('examDate', examDate ? examDate.toISOString() : '');
+      if (syllabus) {
+        formData.append('syllabusFile', syllabus); // Send the actual file
+      }
+    
+      // IMMEDIATE API CALL - This will persist even if user leaves the page
+      const response = await fetch('/api/exams/create-with-syllabus', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(examData),
+        body: formData, // Send FormData instead of JSON
       });
       
       if (!response.ok) {
@@ -150,20 +148,15 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
         throw new Error(errorData.error || 'Failed to create exam');
       }
       
-      // Get the saved exam data with ID
-      const savedExam = await response.json();
-      
-      // Now process the syllabus with the exam ID
-      if (syllabus) {
-        await extractAndSaveChaptersFromImage(syllabus, savedExam._id);
-      }
+      // Get the complete exam data
+      const result = await response.json();
       
       // Notify success
       toast.dismiss();
-      toast.success("Exam created successfully!");
+      toast.success("Exam created and syllabus processed successfully!");
       
       // Pass the saved exam data back to the parent component
-      onSave(savedExam);
+      onSave(result.exam);
       
       // Close the modal
       onCancel();
@@ -172,7 +165,8 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       toast.dismiss();
       toast.error(error instanceof Error ? error.message : "Failed to create exam");
       console.error("Error creating exam:", error);
-      // Reset submitting state on error
+    } finally {
+      // Reset submitting state
       setIsSubmitting(false);
     }
   }
