@@ -28,6 +28,8 @@ const ChapterPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"mindmap" | "chat">("mindmap");
   const [currentSelection, setCurrentSelection] = useState<any>(null);
   const [initialMindMapLoaded, setInitialMindMapLoaded] = useState(false);
+  // Add a counter to force remounting
+  const [renderKey, setRenderKey] = useState(0);
 
   // Fetch note data when selectedNote changes
   useEffect(() => {
@@ -118,6 +120,9 @@ const ChapterPage: React.FC = () => {
       setSelectedNote(null);
       setNoteData(null);
       
+      // Increment render key to force remounting
+      setRenderKey(prev => prev + 1);
+      
       if (
         selection &&
         selection.resource &&
@@ -206,17 +211,19 @@ const ChapterPage: React.FC = () => {
               {selectedVideo && (
                 <div className="h-full flex flex-col">
                   <div className="flex-shrink-0">
-                    <VideoPlayer url={selectedVideo} />
+                    {/* Use renderKey to force remounting */}
+                    <VideoPlayer key={`${selectedVideo}-${renderKey}`} url={selectedVideo} />
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <VideoDetailsViewer videoUrl={selectedVideo} />
+                    <VideoDetailsViewer key={`details-${selectedVideo}-${renderKey}`} videoUrl={selectedVideo} />
                   </div>
                 </div>
               )}
               
               {selectedNote && (
                 <div className="h-full">
-                  <NotesViewer noteId={selectedNote} />
+                  {/* Use renderKey to force remounting */}
+                  <NotesViewer key={`${selectedNote}-${renderKey}`} noteId={selectedNote} />
                 </div>
               )}
             </div>
@@ -263,14 +270,16 @@ const ChapterPage: React.FC = () => {
           
           {/* Tab content area - make sure this takes up remaining height */}
           <div className="flex-1 relative">
-            {/* Always render both components side by side with absolute positioning, but hide/show based on active tab */}            <div className="absolute inset-0 w-full h-full" 
+            {/* Always render both components side by side with absolute positioning, but hide/show based on active tab */}
+            <div className="absolute inset-0 w-full h-full" 
                  style={{ 
                    visibility: activeTab === "mindmap" ? "visible" : "hidden", 
                    opacity: activeTab === "mindmap" ? 1 : 0,
                    transition: "opacity 0.3s ease-in-out" 
                  }}>
               {mindMapData && (
-                <div className="h-full w-full">                  <MemoizedMindMap
+                <div className="h-full w-full">
+                  <MemoizedMindMap
                     key={chapterId} /* Using chapterId as key ensures it only changes when chapter changes */
                     data={mindMapData}
                     onLeafClick={handleLeafClick}
