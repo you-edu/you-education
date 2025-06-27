@@ -30,6 +30,23 @@ type ApiNode = {
 const resourceMap = new Map<string, { node: ApiNode; resource?: ApiResource }>();
 const nodePathMap = new Map<string, string>();
 
+function normalizeText(text: string): string {
+  // Create a temporary DOM element to decode HTML entities
+  const tempElement = document.createElement('div');
+  tempElement.innerHTML = text;
+  const decoded = tempElement.textContent || tempElement.innerText || text;
+  
+  // Additional normalization for common issues
+  return decoded
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .trim();
+}
+
 function apiToMarkdown(node: ApiNode, level = 1, path = "", count_videos= 1, count_notes = 1): { markdown: string; count_videos: number; count_notes: number } {
   // Handle null or undefined node
   if (!node) {
@@ -83,10 +100,57 @@ function apiToMarkdown(node: ApiNode, level = 1, path = "", count_videos= 1, cou
 }
 
 function buildPathFromNode(nodeData: INode): string {
-  const normalizedContent = nodeData.content;
+  const normalizedContent = normalizeText(nodeData.content);
   console.log("Original content:", nodeData.content, "Normalized:", normalizedContent);
+  
+  // Method 1: Try to use the stored path mapping with normalized content
   const directPath = nodePathMap.get(normalizedContent);
-  return directPath || '';
+  if (directPath) {
+    console.log("Found direct path mapping:", directPath);
+    return directPath;
+  }
+  
+  // Also try with original content in case normalization isn't needed
+  const originalDirectPath = nodePathMap.get(nodeData.content);
+  if (originalDirectPath) {
+    console.log("Found direct path mapping with original content:", originalDirectPath);
+    return originalDirectPath;
+  }
+  
+  // Method 2: Build path by traversing ancestors if available
+  const pathParts: string[] = [];
+  let currentNode: INode | undefined = nodeData;
+  
+  // Collect all ancestors
+  while (currentNode) {
+    pathParts.unshift(normalizeText(currentNode.content));
+    // Try different ways to access parent
+    currentNode = (currentNode as any).parent || 
+                  (currentNode as any).data?.parent ||
+                  (currentNode as any).state?.parent;
+  }
+  
+  const builtPath = pathParts.join(' > ');
+  console.log("Built path from traversal:", builtPath);
+  
+  // Method 3: If traversal doesn't work, try to find by content matching
+  if (builtPath === normalizedContent) {
+    // Single node, try to find it in our resource map
+    for (const [mapPath, mapItem] of resourceMap.entries()) {
+      const normalizedMapPath = normalizeText(mapPath);
+      const cleanContent = normalizedContent.replace('🍿 ', '');
+      
+      if (normalizedMapPath.endsWith(normalizedContent) || 
+          normalizedMapPath.endsWith(cleanContent) ||
+          mapPath.endsWith(nodeData.content) || 
+          mapPath.endsWith(nodeData.content.replace('🍿 ', ''))) {
+        console.log("Found path by content matching:", mapPath);
+        return mapPath;
+      }
+    }
+  }
+  
+  return builtPath;
 }
 
 function createClickHandler(onLeafClick: (selection: any) => void) {
