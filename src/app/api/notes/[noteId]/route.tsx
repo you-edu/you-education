@@ -34,20 +34,36 @@ export async function DELETE(request: NextRequest, {params}: { params: { noteId:
 }
 
 // Update
-// not sure if this is correct, but it should work
-export async function PUT(request: NextRequest, {params}: { params: { noteId: string } }) {
-    try {
-        const noteId = params.noteId;
-        const updateData = await request.json();
-        const updatedNote = await Notes.findByIdAndUpdate(noteId, updateData, {new: true});
-        if (updatedNote) {
-            return NextResponse.json(updatedNote.toObject(), {status: 200});
-        }
-        return NextResponse.json({error: 'Note not found'}, {status: 404});
-    } catch (error) {
-        console.error('Error updating note:', error);
-        return NextResponse.json({error: 'Failed to update note'}, {status: 500});
+export async function PUT(request: NextRequest, { params }: { params: { noteId: string } }) {
+  try {
+    await connectToDatabase();
+    
+    const noteId = params.noteId;
+    const { content } = await request.json();
+    
+    if (!content) {
+      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
+    
+    const updatedNotes = await Notes.findByIdAndUpdate(
+      noteId,
+      { content },
+      { new: true }
+    );
+    
+    if (!updatedNotes) {
+      return NextResponse.json({ error: 'Notes not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json(updatedNotes.toObject(), { status: 200 });
+    
+  } catch (error) {
+    console.error("Error updating notes:", error);
+    return NextResponse.json(
+      { error: "Failed to update notes" },
+      { status: 500 }
+    );
+  }
 }
 
 // Connect to the database

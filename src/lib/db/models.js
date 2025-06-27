@@ -26,8 +26,14 @@ const chapterSchema = new mongoose.Schema({
 chapterSchema.index({ ExamId: 1 });
 
 const notesSchema = new mongoose.Schema({
-  content: { type: mongoose.Schema.Types.Mixed, required: true },
-  createdAt: { type: Date, default: Date.now }
+  content: { 
+    type: mongoose.Schema.Types.Mixed, 
+    required: false, 
+    default: null  
+  }, 
+  description: { type: String, required: true }, // Description is required
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
 const mindMapSchema = new mongoose.Schema({

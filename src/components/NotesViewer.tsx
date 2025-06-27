@@ -6,9 +6,10 @@ interface NotesViewerProps {
 }
 
 interface NoteData {
+  title: string;
   _id: string;
-  content: string;
-  title?: string;
+  content: string | null;
+  description: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -79,7 +80,9 @@ const NotesViewer: React.FC<NotesViewerProps> = ({ noteId }) => {
   }, [isFullScreen]);
 
   // markdown to HTML converter for rendering notes
-  const markdownToHtml = (markdown: string): string => {
+  const markdownToHtml = (markdown: string | null): string => {
+    if (!markdown) return '';
+    
     // First, handle horizontal rules properly
     // We'll convert explicit horizontal rules to a specific HTML format
     let html = markdown

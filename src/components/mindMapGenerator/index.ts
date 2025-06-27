@@ -2,7 +2,6 @@
 
 import { youtubeVideoAdder } from './youtubeVideoAdder';
 import { generateMindMapWithRelevantContent } from './releventVideoSelector';
-import { processNotesForMindMap } from './notesAdder';
 import { toast } from 'sonner';
 
 interface TopicWithVideo {
@@ -35,16 +34,11 @@ interface MindMapNode {
   resources?: Resource[]; 
 }
 
-interface ProcessResult {
-  updatedMindMap: MindMapNode;
-}
-
 interface GenerateMindMapResult {
   success: boolean;
   mindMapId?: string;
   error?: string;
 }
-
 
 export async function generateMindMapFromTopics(
   topicList: string[],
@@ -60,7 +54,7 @@ export async function generateMindMapFromTopics(
     const topicsWithVideos: TopicWithVideo[] = await youtubeVideoAdder(topicList);
     console.log(`Successfully fetched videos for ${topicList.length} topics`);
     
-    // Step 2: Generate mind map structure with relevant content
+    // Step 2: Generate mind map structure with relevant content and create notes records
     toast.info("Generating mind map structure...");
     const mindMap = await generateMindMapWithRelevantContent(topicsWithVideos, chapterTitle);
     if (!mindMap) {
@@ -68,17 +62,11 @@ export async function generateMindMapFromTopics(
     }
     console.log("Mind map structure generated successfully");
     
-    // Step 3: Process notes for the mind map
-    toast.info("Generating notes for mind map topics...");
-    const processResult: ProcessResult = await processNotesForMindMap(mindMap);
-  
-    
-
-    // Step 5: Save the mind map to the database
+    // Step 3: Save the mind map to the database
     toast.info("Saving mind map to database...");
     const mindMapData = {
       chapterId: chapterId,
-      content: processResult.updatedMindMap,
+      content: mindMap,
     };
     
     const mindMapResponse = await fetch('/api/mind-maps', {
@@ -97,7 +85,7 @@ export async function generateMindMapFromTopics(
     const mindMapId = mindMapResponseData._id;
     console.log("Mind map saved successfully with ID:", mindMapId);
     
-    // Step 6: Update the chapter with the mind map ID
+    // Step 4: Update the chapter with the mind map ID
     toast.info("Updating chapter with mind map reference...");
     const updateChapterResponse = await fetch(`/api/exams/chapters/${chapterId}`, {
       method: 'PUT',

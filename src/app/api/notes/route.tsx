@@ -8,17 +8,40 @@ export async function POST(request: NextRequest) {
     // Connect to the database
     await connectToDatabase();
     
-    const { content } = await request.json();
-    if (!content) {
-      return NextResponse.json({ error: 'Notes content is required' }, { status: 400 });
+    const body = await request.json();
+    const { content, description } = body;
+    
+    // Log the incoming request for debugging
+    console.log('Notes API - Received request:', { content, description });
+    
+    if (!description) {
+      console.log('Notes API - Missing description');
+      return NextResponse.json({ error: 'Notes description is required' }, { status: 400 });
     }
     
-    const newNotes = new Notes({ content });
-    await newNotes.save();
-    console.log('Notes created successfully:', newNotes);
-    return NextResponse.json(newNotes.toObject(), { status: 201 });
+    // Create the notes document
+    const newNotes = new Notes({ 
+      content: content || null, 
+      description
+    });
+    
+    // Save to database
+    const savedNotes = await newNotes.save();
+    console.log('Notes API - Successfully created notes:', savedNotes._id);
+    
+    return NextResponse.json(savedNotes.toObject(), { status: 201 });
+    
   } catch (error) {
-    console.error('Error creating notes:', error);
+    console.error('Notes API - Error creating notes:', error);
+    
+    // Return more detailed error information
+    if (error instanceof Error) {
+      return NextResponse.json({ 
+        error: 'Failed to create notes',
+        details: error.message 
+      }, { status: 500 });
+    }
+    
     return NextResponse.json({ error: 'Failed to create notes' }, { status: 500 });
   }
 }
@@ -32,18 +55,23 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
+    console.log('Notes API - GET request for ID:', id);
+    
     if (!id) {
       return NextResponse.json({ error: 'Notes ID is required' }, { status: 400 });
     }
     
     const notes = await Notes.findById(id);
     if (!notes) {
+      console.log('Notes API - Notes not found for ID:', id);
       return NextResponse.json({ error: 'Notes not found' }, { status: 404 });
     }
     
+    console.log('Notes API - Successfully retrieved notes:', notes._id);
     return NextResponse.json(notes.toObject(), { status: 200 });
+    
   } catch (error) {
-    console.error('Error fetching notes:', error);
+    console.error('Notes API - Error fetching notes:', error);
     return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 });
   }
 }

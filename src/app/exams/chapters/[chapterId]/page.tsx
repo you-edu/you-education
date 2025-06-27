@@ -9,8 +9,8 @@ import VideoDetailsViewer from "@/components/VideoDetailsViewer";
 
 interface NoteData {
   _id: string;
-  content: string;
-  title?: string;
+  content: string | null;
+  description: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -28,6 +28,7 @@ const ChapterPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"mindmap" | "chat">("mindmap");
   const [currentSelection, setCurrentSelection] = useState<any>(null);
   const [initialMindMapLoaded, setInitialMindMapLoaded] = useState(false);
+  const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
   // Add a counter to force remounting
   const [renderKey, setRenderKey] = useState(0);
 
@@ -41,7 +42,7 @@ const ChapterPage: React.FC = () => {
     const fetchNote = async () => {
       try {
         console.log(`Fetching note with ID: ${selectedNote}`);
-        const response = await fetch(`/api/notes/${selectedNote}`);
+        const response = await fetch(`/api/notes?id=${selectedNote}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch note: ${response.statusText}`);
@@ -50,6 +51,11 @@ const ChapterPage: React.FC = () => {
         const data = await response.json();
         console.log('Note data received:', data);
         setNoteData(data);
+
+        // Check if content is null and generate if needed
+        if (!data.content) {
+          await generateNotesContent(selectedNote, data.description);
+        }
       } catch (err) {
         console.error('Error fetching note:', err);
         setNoteData(null);
@@ -58,7 +64,62 @@ const ChapterPage: React.FC = () => {
 
     fetchNote();
   }, [selectedNote]);
-  // Prevent mindmap data from reloading when switching tabs
+
+  // Generate notes content when needed
+  const generateNotesContent = async (noteId: string, description: string) => {
+    try {
+      setIsGeneratingNotes(true);
+      console.log(`Generating notes content for ID: ${noteId}`);
+
+      const response = await fetch('/api/mind-maps/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: currentSelection?.title || 'Educational Topic',
+          description: description
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate notes: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const notesContent = data.notes;
+
+      // Update the notes record in database
+      const updateResponse = await fetch(`/api/notes/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: notesContent
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error(`Failed to save notes: ${updateResponse.statusText}`);
+      }
+
+      // Update local state
+      setNoteData(prev => prev ? { ...prev, content: notesContent } : null);
+      console.log('Notes generated and saved successfully');
+
+    } catch (err) {
+      console.error('Error generating notes:', err);
+      // Set error content
+      setNoteData(prev => prev ? { 
+        ...prev, 
+        content: `# Error\n\nFailed to generate notes: ${err instanceof Error ? err.message : 'Unknown error'}`
+      } : null);
+    } finally {
+      setIsGeneratingNotes(false);
+    }
+  };
+
   // Fetch mind map data when the component mounts
   useEffect(() => {
     const fetchMindMap = async () => {
@@ -68,7 +129,7 @@ const ChapterPage: React.FC = () => {
         return;
       }
 
-      // Don't refetch if already loaded - this is crucial for preventing reloads on tab switches
+      // Don't refetch if already loaded
       if (initialMindMapLoaded && mindMapData) {
         setIsLoading(false);
         return;
@@ -107,7 +168,26 @@ const ChapterPage: React.FC = () => {
     fetchMindMap();
   }, [chapterId]);
 
-  // Use useCallback to prevent recreating the function on each render
+  // Add this effect to keep chat content in sync with note content
+  useEffect(() => {
+    const refreshNoteData = async () => {
+      if (activeTab === "chat" && selectedNote && !selectedVideo) {
+        try {
+          const response = await fetch(`/api/notes?id=${selectedNote}`);
+          if (response.ok) {
+            const data = await response.json();
+            setNoteData(data);
+          }
+        } catch (error) {
+          console.error("Error refreshing note data for chat:", error);
+        }
+      }
+    };
+    
+    refreshNoteData();
+  }, [activeTab, selectedNote, selectedVideo]);
+
+  // Handle leaf click
   const handleLeafClick = useCallback(
     (selection: any) => {
       console.log("Leaf node clicked:", selection);
@@ -167,7 +247,6 @@ const ChapterPage: React.FC = () => {
 
   // Handle tab switching
   const handleTabChange = (tab: "mindmap" | "chat") => {
-    // Simply switch the tab without any reconstruction
     setActiveTab(tab);
   }
 
@@ -222,8 +301,17 @@ const ChapterPage: React.FC = () => {
               
               {selectedNote && (
                 <div className="h-full">
-                  {/* Use renderKey to force remounting */}
-                  <NotesViewer key={`${selectedNote}-${renderKey}`} noteId={selectedNote} />
+                  {isGeneratingNotes ? (
+                    <div className="flex justify-center items-center h-full">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+                        <p className="mt-2 text-sm text-gray-600">Generating notes...</p>
+                        <p className="mt-1 text-xs text-gray-500">This may take a few moments</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <NotesViewer key={`${selectedNote}-${renderKey}`} noteId={selectedNote} />
+                  )}
                 </div>
               )}
             </div>
@@ -268,9 +356,9 @@ const ChapterPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Tab content area - make sure this takes up remaining height */}
+          {/* Tab content area */}
           <div className="flex-1 relative">
-            {/* Always render both components side by side with absolute positioning, but hide/show based on active tab */}
+
             <div className="absolute inset-0 w-full h-full" 
                  style={{ 
                    visibility: activeTab === "mindmap" ? "visible" : "hidden", 
@@ -280,10 +368,9 @@ const ChapterPage: React.FC = () => {
               {mindMapData && (
                 <div className="h-full w-full">
                   <MemoizedMindMap
-                    key={chapterId} /* Using chapterId as key ensures it only changes when chapter changes */
+                    key={chapterId}
                     data={mindMapData}
                     onLeafClick={handleLeafClick}
-                    /* No need to pass tabActive if component doesn't support it */
                   />
                 </div>
               )}
@@ -295,7 +382,7 @@ const ChapterPage: React.FC = () => {
                   <ChatUI
                     source={{
                       type: selectedVideo ? "youtube" : "markdown",
-                      content: selectedVideo || (noteData ? noteData.content : ""),
+                      content: selectedVideo || (noteData?.content || ""),
                       contentTitle: currentSelection.title || "Selected Content"
                     }}
                   />
@@ -329,9 +416,7 @@ const ChapterPage: React.FC = () => {
 };
 
 // Create a memoized version of the MindMap component
-// Use custom equality function to prevent unnecessary re-renders
 const MemoizedMindMap = React.memo(MindMap, (prevProps, nextProps) => {
-  // Only re-render if the data is different
   return JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data);
 });
 
