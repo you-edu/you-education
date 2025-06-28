@@ -31,6 +31,8 @@ const ChapterPage: React.FC = () => {
   const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
   // Add a counter to force remounting
   const [renderKey, setRenderKey] = useState(0);
+  // Replace the single isGeneratingNotes boolean with a map of note IDs
+  const [generatingNotesIds, setGeneratingNotesIds] = useState<Set<string>>(new Set());
 
   // Fetch note data when selectedNote changes
   useEffect(() => {
@@ -68,7 +70,8 @@ const ChapterPage: React.FC = () => {
   // Generate notes content when needed
   const generateNotesContent = async (noteId: string, description: string) => {
     try {
-      setIsGeneratingNotes(true);
+      // Track this specific note ID as generating
+      setGeneratingNotesIds(prev => new Set(prev).add(noteId));
       console.log(`Generating notes content for ID: ${noteId}`);
 
       const response = await fetch(`/api/notes/generate/${noteId}`, {
@@ -100,7 +103,12 @@ const ChapterPage: React.FC = () => {
         content: `# Error\n\nFailed to generate notes: ${err instanceof Error ? err.message : 'Unknown error'}`
       } : null);
     } finally {
-      setIsGeneratingNotes(false);
+      // Remove this note ID from the generating set
+      setGeneratingNotesIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(noteId);
+        return updated;
+      });
     }
   };
 
@@ -285,7 +293,8 @@ const ChapterPage: React.FC = () => {
               
               {selectedNote && (
                 <div className="h-full">
-                  {isGeneratingNotes ? (
+                  {/* Check if this specific note ID is being generated */}
+                  {selectedNote && generatingNotesIds.has(selectedNote) ? (
                     <div className="flex justify-center items-center h-full">
                       <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
