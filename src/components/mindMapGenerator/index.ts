@@ -1,38 +1,7 @@
 "use client"
 
-import { youtubeVideoAdder } from './youtubeVideoAdder';
-import { generateMindMapWithRelevantContent } from './releventVideoSelector';
+import axios from 'axios';
 import { toast } from 'sonner';
-
-interface TopicWithVideo {
-  title: string;
-  youtubeVideos: YoutubeVideo[];
-}
-
-interface YoutubeVideo {
-  title: string;
-  url: string;
-  length: string;
-  views: string;
-  likes: string;
-}
-
-interface Resource {
-  id: string;
-  type: string;
-  data: {
-    url?: string;
-    id?: string;
-    description?: string; 
-  };
-}
-
-interface MindMapNode {
-  title: string;
-  is_end_node: boolean;
-  subtopics?: MindMapNode[];
-  resources?: Resource[]; 
-}
 
 interface GenerateMindMapResult {
   success: boolean;
@@ -40,6 +9,9 @@ interface GenerateMindMapResult {
   error?: string;
 }
 
+/**
+ * @deprecated Use the consolidated API endpoint directly via axios or fetch
+ */
 export async function generateMindMapFromTopics(
   topicList: string[],
   chapterId: string,
@@ -47,67 +19,15 @@ export async function generateMindMapFromTopics(
 ): Promise<GenerateMindMapResult> {
   try {
     toast.info(`Starting mind map generation process for ${chapterTitle}...`);
-    console.log(`Starting mind map generation for ${topicList.length} topics`);
     
-    // Step 1: Fetch YouTube videos for each topic
-    toast.info(`Fetching YouTube videos for ${topicList.length} topics...`);
-    const topicsWithVideos: TopicWithVideo[] = await youtubeVideoAdder(topicList);
-    console.log(`Successfully fetched videos for ${topicList.length} topics`);
-    
-    // Step 2: Generate mind map structure with relevant content and create notes records
-    toast.info("Generating mind map structure...");
-    const mindMap = await generateMindMapWithRelevantContent(topicsWithVideos, chapterTitle);
-    if (!mindMap) {
-      throw new Error("Failed to generate mind map structure");
-    }
-    console.log("Mind map structure generated successfully");
-    
-    // Step 3: Save the mind map to the database
-    toast.info("Saving mind map to database...");
-    const mindMapData = {
-      chapterId: chapterId,
-      content: mindMap,
-    };
-    
-    const mindMapResponse = await fetch('/api/mind-maps', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(mindMapData),
+    // Call the consolidated API endpoint
+    const response = await axios.post('/api/mind-maps/generate-from-topics', {
+      topics: topicList,
+      chapterId,
+      chapterTitle
     });
     
-    if (!mindMapResponse.ok) {
-      throw new Error(`Failed to save mind map: ${mindMapResponse.status} ${mindMapResponse.statusText}`);
-    }
-    
-    const mindMapResponseData = await mindMapResponse.json();
-    const mindMapId = mindMapResponseData._id;
-    console.log("Mind map saved successfully with ID:", mindMapId);
-    
-    // Step 4: Update the chapter with the mind map ID
-    toast.info("Updating chapter with mind map reference...");
-    const updateChapterResponse = await fetch(`/api/exams/chapters/${chapterId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        mindmapId: mindMapId,
-      }),
-    });
-    
-    if (!updateChapterResponse.ok) {
-      throw new Error(`Failed to update chapter: ${updateChapterResponse.status} ${updateChapterResponse.statusText}`);
-    }
-    
-    console.log("Chapter updated successfully with mind map ID");
-    toast.success(`Mind map for "${chapterTitle}" generated and saved successfully!`);
-    
-    return {
-      success: true,
-      mindMapId: mindMapId,
-    };
+    return response.data;
     
   } catch (error) {
     console.error("Error in mind map generation process:", error);

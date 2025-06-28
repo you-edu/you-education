@@ -4,7 +4,7 @@ import {NextResponse, NextRequest} from 'next/server';
 
 export async function GET(request: NextRequest, {params}: { params: { noteId: string } }) {
     try {
-        const noteId = params.noteId;
+        const noteId = await params.noteId;
         const note = await Notes.findOne({_id: noteId});
         if (note) {
             // return note data as JSON with status 200

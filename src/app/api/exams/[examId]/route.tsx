@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 
 export async function GET(request: NextRequest, { params }: { params: { examId: string } }) {
     try {
-        const examId = params.examId;
+        const examId = await params.examId;
         const exam = await Exam.findOne({ _id: examId });
 
         if (exam) {

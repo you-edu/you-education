@@ -7,7 +7,6 @@ import { useParams } from 'next/navigation';
 import axios from 'axios';
 import { Chapter, ExamData } from '@/lib/types';
 import { toast } from 'sonner';
-import { generateMindMapFromTopics } from '@/components/mindMapGenerator/index';
 import { DeleteExamDialog } from '@/components/dialogs/DeleteExamDialog';
 import { Footer } from '@/components/Footer';
 
@@ -64,20 +63,21 @@ const ExamDetailsPage = () => {
 
     // Start the generation process
     try {
-      const result = await generateMindMapFromTopics(
-        chapter.content,
-        chapter._id,
-        chapter.title
-      );
+      // Call the consolidated API endpoint
+      const result = await axios.post('/api/mind-maps/generate-from-topics', {
+        topics: chapter.content,
+        chapterId: chapter._id,
+        chapterTitle: chapter.title
+      });
       
-      if (result.success) {
+      if (result.data.success) {
         toast.success(`Mind map for "${chapter.title}" generated successfully!`);
         
         // Refresh the chapter data to update the UI
         const chaptersResponse = await axios.get(`/api/exams/chapters?examId=${examId}`);
         setChapters(chaptersResponse.data);
       } else {
-        toast.error(`Failed to generate mind map: ${result.error}`);
+        toast.error(`Failed to generate mind map: ${result.data.error}`);
       }
     } catch (error) {
       console.error('Error generating mind map:', error);
