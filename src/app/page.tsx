@@ -139,7 +139,7 @@ const Page = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-16 gap-6">
           <div>
             <h1 className="text-4xl font-bold mb-3 tracking-tight">Dashboard</h1>
-            <p className="text-gray-500 dark:text-white/70 text-lg">Manage your exams and track your progress with precision.</p>
+            <p className="text-gray-500 dark:text-white/70 text-lg">Organize and keep track of all your upcoming and completed exams in one place.</p>
           </div>
           
           <div className="flex items-center self-start md:self-auto">

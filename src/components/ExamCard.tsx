@@ -45,12 +45,9 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, type }) => {
       </div>
       
         <span className="text-sm font-bold ">
-          {isCompleted ? (
-            <span className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-black dark:bg-white"></span>
-              Completed
-            </span>
-          ) : 'In Progress'}
+          {isCompleted ? 
+            'Completed'
+          : 'In Progress'}
         </span>
       
     </div>

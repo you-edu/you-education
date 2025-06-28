@@ -52,7 +52,9 @@ export async function POST(request: NextRequest, { params }: { params: { noteId:
           content: `You are a specialized AI for creating comprehensive educational notes.
           Your task is to generate clear, well-structured notes on a given topic for study purposes.
           Create notes suitable for students that include key concepts, definitions, explanations, examples, 
-          and important points to remember. Format the notes with markdown.`
+          and important points to remember. Format the notes with markdown.
+          
+          IMPORTANT: Return ONLY the notes content with markdown formatting. Do not include any additional text, explanations about your process, or comments outside the notes themselves.`
         },
         {
           role: "user",
@@ -70,10 +72,11 @@ export async function POST(request: NextRequest, { params }: { params: { noteId:
           7. Highlight important concepts or definitions with bold or italics
           8. Provide a summary or key takeaways at the end
           
-          Only use Markdown formatting for structure.`
+          Only use Markdown formatting for structure.
+          Do not include any other text outside the notes content itself.`
         },
       ],
-      max_completion_tokens: 10000,
+      max_completion_tokens: 3000,
     });
 
     const notesContent = completion.choices[0].message.content;

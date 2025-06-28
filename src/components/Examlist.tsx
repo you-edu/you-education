@@ -16,12 +16,6 @@ const ExamsList: React.FC<ExamsListProps> = ({ title, exams, type, onAddExam }) 
     <section className="mb-16">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold">{title}</h2>
-        <button className="text-gray-500 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors flex items-center gap-2 font-medium">
-          View all
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
       </div>
       
       {exams && exams.length > 0 ? (
@@ -74,7 +68,7 @@ const ExamsList: React.FC<ExamsListProps> = ({ title, exams, type, onAddExam }) 
           </p>
           <p className="text-gray-500 dark:text-white/60 mb-6">
             {type === 'current' 
-              ? 'Start by adding your first exam to get organized' 
+              ? 'Start by adding exam to get organized' 
               : 'Complete your first exam to see results here'}
           </p>
           {type === 'current' && onAddExam && (
@@ -82,7 +76,7 @@ const ExamsList: React.FC<ExamsListProps> = ({ title, exams, type, onAddExam }) 
               className="bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium"
               onClick={onAddExam}
             >
-              Add your first exam
+              Add Exam
             </button>
           )}
         </div>

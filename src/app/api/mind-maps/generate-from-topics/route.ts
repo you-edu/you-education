@@ -220,7 +220,9 @@ async function generateMindMapStructure(topicsWithVideos: TopicWithVideo[], chap
         
         Create deep, multi-level hierarchies when appropriate for complex topics. Don't limit yourself to a 
         shallow hierarchy - create as many nested levels as needed for a comprehensive understanding of the subject.
-        Your goal is to produce the most educationally valuable structure with a balanced mix of resources.`
+        Your goal is to produce the most educationally valuable structure with a balanced mix of resources.
+        
+        IMPORTANT INSTRUCTION: Your response must contain ONLY the JSON structure with no additional text. Do not include any explanations, comments, code blocks or markdown formatting. Your entire output should be valid JSON that can be parsed directly.`
       },
       {
         role: "user",
@@ -315,10 +317,12 @@ async function generateMindMapStructure(topicsWithVideos: TopicWithVideo[], chap
         - Aim for approximately 1/3 of the end nodes to have notes resources and 2/3 to have video resources
         - Choose topics for notes resources strategically based on content complexity and learning needs
         - Create deep hierarchical structures to comprehensively cover the subject matter
-        - The structure should serve as an in-depth study guide that helps students navigate the material in a logical progression`
+        - The structure should serve as an in-depth study guide that helps students navigate the material in a logical progression
+        
+        CRITICAL: Respond with ONLY the JSON structure and nothing else. No explanations, markdown formatting, or additional text.`
       },
     ],
-    max_completion_tokens: 100000,
+    max_completion_tokens: 4000,
   });
 
   // Process the response
