@@ -71,7 +71,7 @@ const ChapterPage: React.FC = () => {
       setIsGeneratingNotes(true);
       console.log(`Generating notes content for ID: ${noteId}`);
 
-      const response = await fetch('/api/mind-maps/notes', {
+      const response = await fetch(`/api/notes/generate/${noteId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,26 +86,10 @@ const ChapterPage: React.FC = () => {
         throw new Error(`Failed to generate notes: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      const notesContent = data.notes;
-
-      // Update the notes record in database
-      const updateResponse = await fetch(`/api/notes/${noteId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: notesContent
-        }),
-      });
-
-      if (!updateResponse.ok) {
-        throw new Error(`Failed to save notes: ${updateResponse.statusText}`);
-      }
-
+      const updatedNote = await response.json();
+      
       // Update local state
-      setNoteData(prev => prev ? { ...prev, content: notesContent } : null);
+      setNoteData(updatedNote);
       console.log('Notes generated and saved successfully');
 
     } catch (err) {
