@@ -60,47 +60,12 @@ A comprehensive educational platform that transforms traditional learning throug
 
 ---
 
-## 📁 Project Structure
-
-```
-src/
-├── app/                          # Next.js App Router
-│   ├── api/                      # API routes
-│   │   ├── auth/                 # Authentication endpoints
-│   │   ├── chat/                 # AI chat functionality
-│   │   ├── mind-maps/            # Mind map CRUD operations
-│   │   ├── notes/                # Notes management
-│   │   ├── syllabus/             # Syllabus processing
-│   │   └── transcript/           # Video transcript generation
-│   ├── exams/                    # Exam management pages
-│   ├── login/                    # Authentication pages
-│   └── signup/
-├── components/                   # Reusable React components
-│   ├── mindMapGenerator/         # Mind map generation logic
-│   │   ├── index.ts              # Main orchestration
-│   │   ├── youtubeVideoAdder.ts  # YouTube integration
-│   │   ├── releventVideoSelector.ts # Video curation
-│   │   ├── notesAdder.ts         # Notes generation
-│   │   └── testNotesAdder.ts     # Testing utilities
-│   ├── ui/                       # UI components
-│   ├── Mindmap.tsx               # Mind map visualization
-│   ├── NotesViewer.tsx           # Notes display component
-│   ├── VideoPlayer.tsx           # Custom video player
-│   └── ChatUI.tsx                # AI chat interface
-├── context/                      # React contexts
-├── lib/                          # Utility functions and database
-│   ├── db/                       # Database models and connection
-│   └── utils.ts                  # Helper functions
-└── types/                        # TypeScript type definitions
-```
-
----
 
 ## 🛠 Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/you-education.git
+   git clone https://github.com/you-edu/you-education
    cd you-education
    ```
 
@@ -127,15 +92,17 @@ src/
    AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
    AZURE_OPENAI_API_KEY=your_azure_openai_api_key
    AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
-   OPENAI_API_VERSION=2024-12-01-preview
+   OPENAI_API_VERSION=2024-02-01-preview
 
    # NextAuth
    NEXTAUTH_SECRET=your_nextauth_secret
    NEXTAUTH_URL=http://localhost:3000
 
-   # Authentication Providers (configure as needed)
+   # Authentication Providers
    GOOGLE_CLIENT_ID=your_google_client_id
    GOOGLE_CLIENT_SECRET=your_google_client_secret
+   GITHUB_ID=your_github_client_id
+   GITHUB_SECRET=your_github_client_secret
    ```
 
 4. **Run the development server**
@@ -180,43 +147,6 @@ src/
 
 ---
 
-## 🧪 Testing
-
-The project includes comprehensive testing utilities:
-
-```bash
-# Run the mind map generation test
-npm run test:mindmap
-
-# Test notes generation functionality
-npm run test:notes
-```
-
-Visit `/checker` in your browser for interactive testing of core functionality.
-
----
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in the Vercel dashboard
-3. Deploy automatically on git push
-
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-### Manual Deployment
-
-```bash
-npm run build
-npm start
-```
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Please follow these steps:
@@ -229,53 +159,6 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📝 API Reference
-
-### Mind Map Generation
-
-- `POST /api/mind-maps` - Create a new mind map
-- `GET /api/mind-maps/[id]` - Retrieve a specific mind map
-- `POST /api/mind-maps/generate` - Generate mind map from topics
-
-### Notes Management
-
-- `POST /api/notes` - Create new notes
-- `GET /api/notes/[id]` - Retrieve specific notes
-- `POST /api/mind-maps/notes` - Generate AI notes
-
-### Content Processing
-
-- `POST /api/syllabus` - Process syllabus images
-- `GET /api/transcript` - Generate video transcripts
-- `POST /api/chat` - AI chat functionality
-
----
-
-## 🔧 Configuration
-
-### Azure OpenAI Setup
-
-1. Create an Azure OpenAI resource
-2. Deploy a GPT-4 model
-3. Configure API keys and endpoints in environment variables
-
-### Database Setup
-
-1. Create a MongoDB database (MongoDB Atlas recommended)
-2. Configure connection string in environment variables
-3. Models will be automatically created on first run
-
----
-
-## 📊 Performance Features
-
-- **Optimized Loading**: Lazy loading of mind map components
-- **Caching**: Intelligent caching of generated content
-- **Responsive Design**: Optimized for all screen sizes
-- **Error Handling**: Comprehensive error handling and recovery
-
----
-
 ## 🎨 Customization
 
 ### Themes
@@ -283,14 +166,6 @@ We welcome contributions! Please follow these steps:
 - Built-in dark/light mode support
 - Customizable color schemes
 - Responsive design patterns
-
-### Mind Map Styling
-
-- Modify `styles/MindMap.module.css` for custom styling
-- Configurable node colors and animations
-- Customizable interaction patterns
-
----
 
 ## 📚 Learn More
 
@@ -301,8 +176,6 @@ To learn more about the technologies used in this project:
 - [Azure OpenAI Documentation](https://docs.microsoft.com/en-us/azure/cognitive-services/openai/)
 - [MongoDB Documentation](https://docs.mongodb.com/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - feedback and contributions are welcome!
 
 ---
 
@@ -316,20 +189,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ---
 
-## 🔒 Security
-
-- Secure authentication with NextAuth.js
-- Environment variable protection
-- API rate limiting
-- Input validation and sanitization
-
----
-
 ## 📱 Mobile Support
 
 - Fully responsive design
 - Touch-optimized interactions
-- Mobile-first approach
 - Progressive Web App features
 
 ---
@@ -338,25 +201,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 If you encounter any issues or have questions:
 
-1. Check the [Issues](https://github.com/yourusername/you-education/issues) section
+1. Check the [Issues](https://github.com/you-edu/you-education/issues) section
 2. Create a new issue with detailed information
 3. Join our community discussions
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](L    ICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Azure OpenAI** for advanced AI capabilities
-- **Markmap** for mind map visualization
-- **Next.js** team for the excellent framework
-- **Vercel** for deployment platform
-- All contributors and users of the platform
 
 ---
 
