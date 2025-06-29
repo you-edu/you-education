@@ -54,6 +54,9 @@ const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => 
         
         // Call the backend API if no valid cache exists
         const response = await fetch(`/api/youtube?videoUrl=${encodeURIComponent(videoUrl)}`);
+
+        console.log(`Fetching video details for URL: ${videoUrl}`, response);
+        
         
         if (!response.ok) {
           const errorData = await response.json();
