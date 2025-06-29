@@ -20,11 +20,11 @@ export const Logo: React.FC<LogoProps> = ({ className, size = 40 }) => {
     
     // Check system preference immediately on client side
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setLogoSrc(prefersDark ? '/dark_logo.png' : '/bright_logo.png');
+    setLogoSrc(prefersDark ? 'https://res.cloudinary.com/drdt8dznr/image/upload/v1751210151/dark_logo_b7ox1b.png' : 'https://res.cloudinary.com/drdt8dznr/image/upload/v1751210150/bright_logo_pttpeu.png');
     
     // Update logo when theme changes
     if (resolvedTheme) {
-      setLogoSrc(resolvedTheme === 'dark' ? '/dark_logo.png' : '/bright_logo.png');
+      setLogoSrc(resolvedTheme === 'dark' ? 'https://res.cloudinary.com/drdt8dznr/image/upload/v1751210151/dark_logo_b7ox1b.png' : 'https://res.cloudinary.com/drdt8dznr/image/upload/v1751210150/bright_logo_pttpeu.png');
     }
   }, [resolvedTheme]);
 
