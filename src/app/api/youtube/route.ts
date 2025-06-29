@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Innertube } from 'youtubei.js';
+import { Innertube, UniversalCache } from 'youtubei.js';
 
 export async function GET(request: Request) {
   try {
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     console.log(`Fetching video details for ID: ${videoId}`);
       
     // Remove caching completely
-    const youtube = await Innertube.create();
+    const youtube = await Innertube.create({ cache: new UniversalCache(false) });
     const videoInfo = await youtube.getInfo(videoId);
     
     console.log(`Successfully fetched video info for: ${videoInfo.basic_info.title}`);
