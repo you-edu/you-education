@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 
 // These interfaces should match the schema definitions in models.js
 export interface ExamData {

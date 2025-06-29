@@ -84,7 +84,7 @@ function apiToMarkdown(node: ApiNode, level = 1, path = "", count_videos= 1, cou
   
   // Add subtopics
   if (node.subtopics) {
-    let subtopicResults = { markdown: "", count_videos, count_notes };
+    const subtopicResults = { markdown: "", count_videos, count_notes };
     node.subtopics.forEach(child => {
       const childResult = apiToMarkdown(child, level + 1, currentPath, subtopicResults.count_videos, subtopicResults.count_notes);
       subtopicResults.markdown += childResult.markdown;
@@ -136,7 +136,7 @@ function buildPathFromNode(nodeData: INode): string {
   // Method 3: If traversal doesn't work, try to find by content matching
   if (builtPath === normalizedContent) {
     // Single node, try to find it in our resource map
-    for (const [mapPath, mapItem] of resourceMap.entries()) {
+    for (const [mapPath] of resourceMap.entries()) {
       const normalizedMapPath = normalizeText(mapPath);
       const cleanContent = normalizedContent.replace('🍿 ', '');
       

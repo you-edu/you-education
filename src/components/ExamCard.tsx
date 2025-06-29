@@ -1,5 +1,5 @@
 import React from 'react';
-import {ExamData, ExamCardProps} from '@/lib/types'; // Adjust the import path as necessary
+import {ExamCardProps} from '@/lib/types'; // Adjust the import path as necessary
 import { useRouter } from 'next/navigation'; // Import router for navigation
 
 

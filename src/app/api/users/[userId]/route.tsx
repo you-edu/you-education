@@ -2,11 +2,11 @@ import { User } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { NextResponse, NextRequest } from 'next/server';
 
-export async function GET(request: NextRequest, {params} : {params: { userId: string }}) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const userId = params.userId; 
+        const {userId} = await params; 
         const user = await User.findOne({_id: userId});
         console.log(user);
         

@@ -26,7 +26,7 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
   
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [windowSize, setWindowSize] = useState(2);
+  const [windowSize] = useState(2);
   const [transcript, setTranscript] = useState("");
   const [isTranscriptFetching, setIsTranscriptFetching] = useState(false);
   const [customTimeRange, setCustomTimeRange] = useState(false);
@@ -227,22 +227,6 @@ const ChatUI: React.FC<ChatUIProps> = ({ source = { type: 'markdown', content: '
       e.preventDefault();
       handleSend();
     }
-  };
-
-  // Add this new function to ensure range doesn't exceed 5 minutes
-  const validateTimeRange = (start: number, end: number) => {
-    const videoDuration = currentPosition?.duration || 600;
-    
-    // Make sure start time is within video bounds
-    const validStart = Math.max(0, Math.min(start, videoDuration - 10));
-    
-    // Ensure the range doesn't exceed 5 minutes (300 seconds)
-    let validEnd = Math.min(end, videoDuration);
-    if (validEnd - validStart > 300) { // 5 minutes = 300 seconds
-      validEnd = validStart + 300;
-    }
-    
-    return [validStart, validEnd];
   };
 
   // Update the manual time range setters

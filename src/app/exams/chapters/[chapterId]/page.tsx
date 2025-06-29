@@ -28,7 +28,6 @@ const ChapterPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"mindmap" | "chat">("mindmap");
   const [currentSelection, setCurrentSelection] = useState<any>(null);
   const [initialMindMapLoaded, setInitialMindMapLoaded] = useState(false);
-  const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
   // Add a counter to force remounting
   const [renderKey, setRenderKey] = useState(0);
   // Replace the single isGeneratingNotes boolean with a map of note IDs

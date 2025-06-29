@@ -2,11 +2,11 @@ import { Chapter } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { NextResponse, NextRequest } from 'next/server';
 
-export async function GET(request: NextRequest, {params}: { params: { chapterId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ chapterId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const chapterId = params.chapterId;
+        const {chapterId} = await params;
         const chapter = await Chapter.findOne({_id: chapterId});
         if (chapter) {
             // return chapter data as JSON with status 200     
@@ -20,11 +20,11 @@ export async function GET(request: NextRequest, {params}: { params: { chapterId:
 }
 
 // Delete
-export async function DELETE(request: NextRequest, {params}: { params: { chapterId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ chapterId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const chapterId = params.chapterId;
+        const {chapterId} = await params;
         const deletedChapter = await Chapter.findByIdAndDelete(chapterId);
         if (deletedChapter) {
             return NextResponse.json({message: 'Chapter deleted successfully'}, {status: 200});
@@ -37,11 +37,11 @@ export async function DELETE(request: NextRequest, {params}: { params: { chapter
 }
 
 // Update
-export async function PUT(request: NextRequest, {params}: { params: { chapterId: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ chapterId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const chapterId = params.chapterId;
+        const {chapterId} = await params;
         const updateData = await request.json();
         const updatedChapter = await Chapter.findByIdAndUpdate(chapterId, updateData, {new: true});
         if (updatedChapter) {

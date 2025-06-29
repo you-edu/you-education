@@ -2,11 +2,11 @@ import {Notes} from '@/lib/db/models';
 import {connectToDatabase} from '@/lib/db/mongoose';
 import {NextResponse, NextRequest} from 'next/server';
 
-export async function GET(request: NextRequest, {params}: { params: { noteId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ noteId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const noteId = await params.noteId;
+        const {noteId} = await params;
         const note = await Notes.findOne({_id: noteId});
         if (note) {
             // return note data as JSON with status 200
@@ -20,11 +20,11 @@ export async function GET(request: NextRequest, {params}: { params: { noteId: st
 }
 
 // Delete
-export async function DELETE(request: NextRequest, {params}: { params: { noteId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ noteId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const noteId = params.noteId;
+        const {noteId} = await params;
         const deletedNote = await Notes.findByIdAndDelete(noteId);
         if (deletedNote) {
             return NextResponse.json({message: 'Note deleted successfully'}, {status: 200});
@@ -37,11 +37,11 @@ export async function DELETE(request: NextRequest, {params}: { params: { noteId:
 }
 
 // Update
-export async function PUT(request: NextRequest, { params }: { params: { noteId: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ noteId: string }>}) {
   try {
     await connectToDatabase(); // Connect inside the handler
     
-    const noteId = params.noteId;
+    const {noteId} = await params;
     const { content } = await request.json();
     
     if (!content) {

@@ -2,11 +2,11 @@ import {MindMap} from '@/lib/db/models';
 import {connectToDatabase} from '@/lib/db/mongoose';
 import {NextResponse, NextRequest} from 'next/server';
 
-export async function GET(request: NextRequest, {params}: { params: { mindMapId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ mindMapId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const mindMapId = params.mindMapId;
+        const {mindMapId} = await params;
         const mindMap = await MindMap.findOne({_id: mindMapId});
         if (mindMap) {  
             return NextResponse.json(mindMap.toObject(), {status: 200, headers: {'Content-Type': 'application/json'}});
@@ -19,11 +19,11 @@ export async function GET(request: NextRequest, {params}: { params: { mindMapId:
 }
 
 // Delete
-export async function DELETE(request: NextRequest, {params}: { params: { mindMapId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ mindMapId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const mindMapId = params.mindMapId;
+        const {mindMapId} = await params;
         const deletedMindMap = await MindMap.findByIdAndDelete(mindMapId);
         if (deletedMindMap) {
             return NextResponse.json({message: 'Mind map deleted successfully'}, {status: 200});
@@ -36,11 +36,11 @@ export async function DELETE(request: NextRequest, {params}: { params: { mindMap
 }
 
 // Update
-export async function PUT(request: NextRequest, {params}: { params: { mindMapId: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ mindMapId: string }>}) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const mindMapId = params.mindMapId;
+        const {mindMapId} = await params;
         const updateData = await request.json();
         const updatedMindMap = await MindMap.findByIdAndUpdate(mindMapId, updateData, {new: true});
         if (updatedMindMap) {

@@ -51,7 +51,7 @@ export function DeleteExamDialog({ examId, examName, triggerClassName }: DeleteE
       return;
     }
 
-    if (!session?.user?.id) {
+    if (!session?.user || !(session.user as { id?: string }).id) {
       toast.error('You must be logged in to delete an exam');
       return;
     }
@@ -59,7 +59,7 @@ export function DeleteExamDialog({ examId, examName, triggerClassName }: DeleteE
     try {
       setIsDeleting(true);
       await axios.delete(`/api/exams/${examId}`, {
-        data: { userId: session.user.id } // Send userId with the DELETE request
+        data: { userId: (session.user as { id?: string })?.id } // Send userId with the DELETE request
       });
       
       toast.success('Exam deleted successfully');

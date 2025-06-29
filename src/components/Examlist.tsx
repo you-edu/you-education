@@ -1,6 +1,6 @@
 import React from 'react';
 import ExamCard from './ExamCard';
-import { ExamData, ExamsListProps} from '@/lib/types'; // Adjust the import path as necessary
+import {ExamsListProps} from '@/lib/types'; // Adjust the import path as necessary
 
 // Import Shadcn Carousel components
 import {

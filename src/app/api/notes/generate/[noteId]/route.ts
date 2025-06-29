@@ -3,11 +3,11 @@ import { AzureOpenAI } from "openai";
 import { Notes } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/mongoose';
 
-export async function POST(request: NextRequest, { params }: { params: { noteId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ noteId: string }>}) {
   try {
     await connectToDatabase();
     
-    const noteId = params.noteId;
+    const {noteId} = await params;
     const { title, description } = await request.json();
 
     if (!title) {

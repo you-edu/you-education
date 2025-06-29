@@ -3,11 +3,11 @@ import { connectToDatabase } from '@/lib/db/mongoose';
 import { NextResponse, NextRequest } from 'next/server';
 import mongoose from 'mongoose';
 
-export async function GET(request: NextRequest, { params }: { params: { examId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ examId: string }> }) {
     try {
         await connectToDatabase(); // Connect inside the handler
         
-        const examId = await params.examId;
+        const { examId } = await params
         const exam = await Exam.findOne({ _id: examId });
 
         if (exam) {
@@ -23,11 +23,11 @@ export async function GET(request: NextRequest, { params }: { params: { examId: 
 }
 
 // Delete
-export async function DELETE(request: NextRequest, { params }: { params: { examId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ examId: string }>}) {
     await connectToDatabase();
     
     try {
-        const examId = params.examId;
+        const { examId } = await params
         const requestData = await request.json();
         const userId = requestData.userId;
         
@@ -96,9 +96,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { examI
 }
 
 // Update
-export async function PUT(request: NextRequest, { params }: { params: { examId: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ examId: string }>}) {
     try {
-        const examId = params.examId;
+        const { examId } = await params
         const updateData = await request.json();
         const updatedExam = await Exam.findByIdAndUpdate(examId, updateData, { new: true });
         if (updatedExam) {

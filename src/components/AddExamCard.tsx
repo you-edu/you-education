@@ -11,7 +11,6 @@ import { Calendar as CalendarIcon, Upload, File as FileIcon, X, Loader2 } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
-import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { AddExamCardProps } from "@/lib/types"
 
@@ -28,7 +27,6 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
   const [subjectName, setSubjectName] = useState("")
   const [description, setDescription] = useState("")
   const [examDate, setExamDate] = useState<Date>()
-  const session = useSession() 
   const [syllabus, setSyllabus] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [filePreview, setFilePreview] = useState<string | null>(null)
@@ -129,7 +127,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       
       // Create FormData to send the file directly
       const formData = new FormData();
-      formData.append('userId', session.data?.user.id || "");
+      // formData.append('userId', session.data?.user.id || "");
       formData.append('subjectName', subjectName.trim());
       formData.append('description', description.trim());
       formData.append('examDate', examDate ? examDate.toISOString() : '');
