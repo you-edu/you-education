@@ -4,10 +4,11 @@ import {NextResponse, NextRequest} from 'next/server';
 
 export async function GET(request: NextRequest, {params}: { params: { mindMapId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const mindMapId = params.mindMapId;
         const mindMap = await MindMap.findOne({_id: mindMapId});
-        if (mindMap) {
-            // return mind map data as JSON with status 200     
+        if (mindMap) {  
             return NextResponse.json(mindMap.toObject(), {status: 200, headers: {'Content-Type': 'application/json'}});
         }
         return NextResponse.json({error: 'Mind map not found'}, {status: 404});
@@ -17,11 +18,11 @@ export async function GET(request: NextRequest, {params}: { params: { mindMapId:
     }
 }
 
-
 // Delete
 export async function DELETE(request: NextRequest, {params}: { params: { mindMapId: string } }) {
-
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const mindMapId = params.mindMapId;
         const deletedMindMap = await MindMap.findByIdAndDelete(mindMapId);
         if (deletedMindMap) {
@@ -35,9 +36,10 @@ export async function DELETE(request: NextRequest, {params}: { params: { mindMap
 }
 
 // Update
-// not sure if this is correct, but it should work
 export async function PUT(request: NextRequest, {params}: { params: { mindMapId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const mindMapId = params.mindMapId;
         const updateData = await request.json();
         const updatedMindMap = await MindMap.findByIdAndUpdate(mindMapId, updateData, {new: true});
@@ -50,9 +52,5 @@ export async function PUT(request: NextRequest, {params}: { params: { mindMapId:
         return NextResponse.json({error: 'Failed to update mind map'}, {status: 500});
     }
 }
-
-connectToDatabase()
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((error) => console.error('MongoDB connection error:', error));
 
 

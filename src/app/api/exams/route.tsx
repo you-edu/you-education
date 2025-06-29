@@ -4,17 +4,16 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getToken } from "next-auth/jwt";
 import mongoose from "mongoose";
 
-
-
 export async function GET(request: NextRequest) {
   try {
+    await connectToDatabase(); // Connect inside the handler
 
     // This will extract and verify the session token from cookies/headers
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!token || !token.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (!token || !token.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Fetch exams for this user only
     const Exams = await Exam.find({ userId: token.id });
@@ -27,6 +26,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {  
     try {
+        await connectToDatabase();
+
         const { userId, subjectName, description, examDate} = await request.json();
 
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
@@ -48,8 +49,3 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create exam' }, { status: 500 });
     }
 }
-
-// Connect to the database
-connectToDatabase()
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((error) => console.error('MongoDB connection error:', error));

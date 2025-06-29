@@ -404,8 +404,3 @@ async function processMindMapWithModels(rootNode: any): Promise<any> {
   return clonedMindMap;
 }
 
-// Initialize the database connection
-connectToDatabase()
-  .then(() => console.log('Connected to MongoDB for mind map generation'))
-  .catch((error) => console.error('MongoDB connection error in mind map generation:', error));
-

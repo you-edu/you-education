@@ -5,6 +5,8 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 // POST: Create a new mind map
 export async function POST(request: NextRequest) {
   try {
+    await connectToDatabase(); // Connect inside the handler
+    
     const { chapterId, content } = await request.json();
     const newMindMap = new MindMap({ chapterId, content });
 
@@ -31,6 +33,8 @@ export async function POST(request: NextRequest) {
 // GET: Fetch a mind map by chapterId
 export async function GET(request: NextRequest) {
   try {
+    await connectToDatabase(); // Connect inside the handler
+    
     const { searchParams } = new URL(request.url);
     const chapterId = searchParams.get("chapterId");
 
@@ -59,10 +63,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-// Connect to the database
-connectToDatabase()
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((error) => console.error("MongoDB connection error:", error));
 
 

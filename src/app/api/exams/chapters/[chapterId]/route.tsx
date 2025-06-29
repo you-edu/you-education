@@ -1,9 +1,11 @@
-import {Chapter} from '@/lib/db/models';
-import {connectToDatabase} from '@/lib/db/mongoose';
-import {NextResponse, NextRequest} from 'next/server';
+import { Chapter } from '@/lib/db/models';
+import { connectToDatabase } from '@/lib/db/mongoose';
+import { NextResponse, NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest, {params}: { params: { chapterId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const chapterId = params.chapterId;
         const chapter = await Chapter.findOne({_id: chapterId});
         if (chapter) {
@@ -20,6 +22,8 @@ export async function GET(request: NextRequest, {params}: { params: { chapterId:
 // Delete
 export async function DELETE(request: NextRequest, {params}: { params: { chapterId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const chapterId = params.chapterId;
         const deletedChapter = await Chapter.findByIdAndDelete(chapterId);
         if (deletedChapter) {
@@ -35,6 +39,8 @@ export async function DELETE(request: NextRequest, {params}: { params: { chapter
 // Update
 export async function PUT(request: NextRequest, {params}: { params: { chapterId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const chapterId = params.chapterId;
         const updateData = await request.json();
         const updatedChapter = await Chapter.findByIdAndUpdate(chapterId, updateData, {new: true});
@@ -47,10 +53,5 @@ export async function PUT(request: NextRequest, {params}: { params: { chapterId:
         return NextResponse.json({error: 'Failed to update chapter'}, {status: 500});
     }
 }
-
-// Connect to the database
-connectToDatabase()
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((error) => console.error('MongoDB connection error:', error));
 
 // This file handles the API routes for chapters, allowing for fetching and creating chapters.

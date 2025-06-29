@@ -5,6 +5,8 @@ import mongoose from 'mongoose';
 
 export async function GET(request: NextRequest, { params }: { params: { examId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const examId = await params.examId;
         const exam = await Exam.findOne({ _id: examId });
 
@@ -19,7 +21,6 @@ export async function GET(request: NextRequest, { params }: { params: { examId: 
         return NextResponse.json({ error: 'Failed to fetch exam' }, { status: 500 });
     }
 }
-
 
 // Delete
 export async function DELETE(request: NextRequest, { params }: { params: { examId: string } }) {
@@ -95,7 +96,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { examI
 }
 
 // Update
-// not sure if this is correct, but it should work
 export async function PUT(request: NextRequest, { params }: { params: { examId: string } }) {
     try {
         const examId = params.examId;
@@ -110,10 +110,3 @@ export async function PUT(request: NextRequest, { params }: { params: { examId: 
         return NextResponse.json({ error: 'Failed to update exam' }, { status: 500 });
     }
 }
-
-
-
-// Connect to the database
-connectToDatabase()
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((error) => console.error('MongoDB connection error:', error));

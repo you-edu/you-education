@@ -5,11 +5,13 @@ import { NextResponse, NextRequest } from 'next/server';
 // GET all chapters for a specific exam
 export async function GET(request: NextRequest) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const { searchParams } = new URL(request.url);
         const examId = searchParams.get('examId');
         
         if (!examId) {
-            return NextResponse.json({ error: 'examId is required' }, { status: 400 });
+            return NextResponse.json({error: 'Exam ID is required'}, {status: 400});
         }
 
         // Find all chapters associated with this exam and sort them by order field
@@ -24,6 +26,8 @@ export async function GET(request: NextRequest) {
 // POST request to create a new chapters for an exam
 export async function POST(request: NextRequest) {
     try {
+        await connectToDatabase(); 
+        
         const {examId, chapters} = await request.json();
         if (!examId || !chapters || !Array.isArray(chapters)) {
             return NextResponse.json({error: 'Invalid request data'}, {status: 400});
@@ -46,8 +50,3 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({error: 'Failed to create chapters'}, {status: 500});
     }
 }
-
-// Connect to the database
-connectToDatabase()
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((error) => console.error('MongoDB connection error:', error));

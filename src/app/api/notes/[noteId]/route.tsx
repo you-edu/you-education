@@ -4,6 +4,8 @@ import {NextResponse, NextRequest} from 'next/server';
 
 export async function GET(request: NextRequest, {params}: { params: { noteId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const noteId = await params.noteId;
         const note = await Notes.findOne({_id: noteId});
         if (note) {
@@ -18,9 +20,10 @@ export async function GET(request: NextRequest, {params}: { params: { noteId: st
 }
 
 // Delete
-
 export async function DELETE(request: NextRequest, {params}: { params: { noteId: string } }) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const noteId = params.noteId;
         const deletedNote = await Notes.findByIdAndDelete(noteId);
         if (deletedNote) {
@@ -36,7 +39,7 @@ export async function DELETE(request: NextRequest, {params}: { params: { noteId:
 // Update
 export async function PUT(request: NextRequest, { params }: { params: { noteId: string } }) {
   try {
-    await connectToDatabase();
+    await connectToDatabase(); // Connect inside the handler
     
     const noteId = params.noteId;
     const { content } = await request.json();
@@ -65,8 +68,3 @@ export async function PUT(request: NextRequest, { params }: { params: { noteId: 
     );
   }
 }
-
-// Connect to the database
-connectToDatabase()
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((error) => console.error('MongoDB connection error:', error));

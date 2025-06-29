@@ -4,6 +4,8 @@ import { NextResponse, NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
+        await connectToDatabase(); // Connect inside the handler
+        
         const { name, email, image } = await request.json();
         const newUser = new User({ name, email, image });
         // check if user already exists
@@ -19,6 +21,3 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
     }
 }
-connectToDatabase()
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((error) => console.error('MongoDB connection error:', error));
