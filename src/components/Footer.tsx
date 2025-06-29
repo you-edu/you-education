@@ -9,9 +9,8 @@ export function Footer() {
   useEffect(() => {
     // 50/50 probability to select between the two images
     const images = [
-      'https://res.cloudinary.com/drdt8dznr/image/upload/v1751218404/WhatsApp_Image_2025-06-29_at_23.02.09_2a0c723b_tvoa70.jpg',
+      'https://res.cloudinary.com/drdt8dznr/image/upload/c_fill,w_326,h_307/v1751218404/WhatsApp_Image_2025-06-29_at_23.02.09_2a0c723b_tvoa70.jpg',
       'https://res.cloudinary.com/drdt8dznr/image/upload/v1751218075/Screenshot_2025-06-19_220857_ygfark.png',
-      'https://res.cloudinary.com/drdt8dznr/image/upload/v1751218404/WhatsApp_Image_2025-06-29_at_23.02.09_2a0c723b_tvoa70.jpg'
     ];
     
     const randomIndex = Math.floor(Math.random() * 2);
