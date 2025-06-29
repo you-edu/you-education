@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     
     // Create response with data
     const response = NextResponse.json({
-      title: videoInfo.basic_info.title || 'Nothing found',
+      title: videoInfo.basic_info.title || `${videoId}`,
       description: videoInfo.basic_info.short_description || 'No idea',
     });
     
