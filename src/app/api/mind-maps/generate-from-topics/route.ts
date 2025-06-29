@@ -322,7 +322,7 @@ async function generateMindMapStructure(topicsWithVideos: TopicWithVideo[], chap
         CRITICAL: Respond with ONLY the JSON structure and nothing else. No explanations, markdown formatting, or additional text.`
       },
     ],
-    max_completion_tokens: 4000,
+    max_completion_tokens: 10000,
   });
 
   // Process the response
