@@ -6,13 +6,13 @@ interface VideoDetailsViewerProps {
 }
 
 // Cache interface
-interface CacheItem {
-  title: string;
-  description: string;
-  timestamp: number;
-}
+// interface CacheItem {
+//   title: string;
+//   description: string;
+//   timestamp: number;
+// }
 
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+// const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Options for Linkify library
 const linkifyOptions = {
