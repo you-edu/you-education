@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { AddExamCardProps } from "@/lib/types"
+import { useSession } from "next-auth/react"
 
 
 
@@ -24,6 +25,7 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 );
 
 export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
+  const { data: session } = useSession();
   const [subjectName, setSubjectName] = useState("")
   const [description, setDescription] = useState("")
   const [examDate, setExamDate] = useState<Date>()
@@ -127,7 +129,7 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       
       // Create FormData to send the file directly
       const formData = new FormData();
-      // formData.append('userId', session.data?.user.id || "");
+      formData.append('userId', (session?.user as any)?.id || "");
       formData.append('subjectName', subjectName.trim());
       formData.append('description', description.trim());
       formData.append('examDate', examDate ? examDate.toISOString() : '');
