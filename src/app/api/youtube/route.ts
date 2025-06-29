@@ -19,16 +19,57 @@ export async function GET(request: Request) {
     
     console.log(`Fetching video details for ID: ${videoId}`);
       
-    // Remove caching completely
+    // Use the same configuration that works in mind maps
     const youtube = await Innertube.create({ cache: new UniversalCache(false) });
-    const videoInfo = await youtube.getInfo(videoId);
     
-    console.log(`Successfully fetched video info for: ${videoInfo.basic_info.title}`);
+    // Instead of getInfo, search for the video by ID which works in Vercel
+    const search = await youtube.search(videoId);
     
-    // Create response with data
+    // Find the video in search results
+    let videoData = null;
+    for (const item of search.videos) {
+      if (item && (item as any).id === videoId) {
+        videoData = item as any;
+        break;
+      }
+    }
+    
+    if (!videoData) {
+      // If not found by ID, try searching by the full URL
+      const urlSearch = await youtube.search(videoUrl);
+      for (const item of urlSearch.videos) {
+        if (item && (item as any).id === videoId) {
+          videoData = item as any;
+          break;
+        }
+      }
+    }
+    
+    if (!videoData) {
+      throw new Error('Video not found');
+    }
+    
+    console.log(`Successfully found video: ${videoData.title?.text || 'Unknown title'}`);
+    console.log('Video data structure:', JSON.stringify(videoData, null, 2));
+    
+    // Try multiple possible paths for description like in mind maps route
+    let description = 'No description available';
+    if (videoData.description_snippet?.text) {
+      description = videoData.description_snippet.text;
+    } else if (videoData.short_description?.text) {
+      description = videoData.short_description.text;
+    } else if (videoData.snippet?.text) {
+      description = videoData.snippet.text;
+    } else if (videoData.description?.text) {
+      description = videoData.description.text;
+    } else if (typeof videoData.description === 'string') {
+      description = videoData.description;
+    }
+    
+    // Create response with data from search results
     const response = NextResponse.json({
-      title: videoInfo.basic_info.title || `${videoId}`,
-      description: videoInfo.basic_info.short_description || 'No idea',
+      title: videoData.title?.text || videoId,
+      description: description,
     });
     
     // Add cache-control headers for browsers and CDNs
