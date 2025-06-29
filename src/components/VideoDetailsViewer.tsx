@@ -36,21 +36,21 @@ const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => 
       setError(null);
       
       try {
-        // Check cache first
-        const cacheKey = `video-details-${videoUrl}`;
-        const cachedData = localStorage.getItem(cacheKey);
+        // // Check cache first
+        // const cacheKey = `video-details-${videoUrl}`;
+        // const cachedData = localStorage.getItem(cacheKey);
         
-        if (cachedData) {
-          const parsedData = JSON.parse(cachedData) as CacheItem;
+        // if (cachedData) {
+        //   const parsedData = JSON.parse(cachedData) as CacheItem;
           
-          // Check if cache is still valid
-          if (Date.now() - parsedData.timestamp < CACHE_EXPIRY) {
-            setTitle(parsedData.title);
-            setDescription(parsedData.description);
-            setLoading(false);
-            return;
-          }
-        }
+        //   // Check if cache is still valid
+        //   if (Date.now() - parsedData.timestamp < CACHE_EXPIRY) {
+        //     setTitle(parsedData.title);
+        //     setDescription(parsedData.description);
+        //     setLoading(false);
+        //     return;
+        //   }
+        // }
         
         // Call the backend API if no valid cache exists
         const response = await fetch(`/api/youtube?videoUrl=${encodeURIComponent(videoUrl)}`);
@@ -65,11 +65,11 @@ const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => 
         setDescription(data.description);
         
         // Save to cache
-        localStorage.setItem(cacheKey, JSON.stringify({
-          title: data.title,
-          description: data.description,
-          timestamp: Date.now()
-        }));
+        // localStorage.setItem(cacheKey, JSON.stringify({
+        //   title: data.title,
+        //   description: data.description,
+        //   timestamp: Date.now()
+        // }));
       } catch (err) {
         setError(`Error fetching video details: ${err instanceof Error ? err.message : 'Unknown error'}`);
         console.error('Error fetching video details:', err);

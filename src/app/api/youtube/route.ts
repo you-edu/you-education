@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Innertube, UniversalCache } from 'youtubei.js';
+import { Innertube } from 'youtubei.js';
 
 export async function GET(request: Request) {
   try {
@@ -18,9 +18,9 @@ export async function GET(request: Request) {
     }
     
     console.log(`Fetching video details for ID: ${videoId}`);
-    
-    // Disable caching like in the working mind maps route
-    const youtube = await Innertube.create({ cache: new UniversalCache(false) });
+      
+    // Remove caching completely
+    const youtube = await Innertube.create();
     const videoInfo = await youtube.getInfo(videoId);
     
     console.log(`Successfully fetched video info for: ${videoInfo.basic_info.title}`);
