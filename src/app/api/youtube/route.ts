@@ -27,8 +27,8 @@ export async function GET(request: Request) {
     
     // Create response with data
     const response = NextResponse.json({
-      title: videoInfo.basic_info.title || '',
-      description: videoInfo.basic_info.short_description || '',
+      title: videoInfo.basic_info.title || 'Nothing found',
+      description: videoInfo.basic_info.short_description || 'No idea',
     });
     
     // Add cache-control headers for browsers and CDNs
