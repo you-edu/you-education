@@ -17,9 +17,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
     }
     
-    // Enable caching in Innertube by setting the parameter to true
-    const youtube = await Innertube.create({ cache: new UniversalCache(true) });
+    console.log(`Fetching video details for ID: ${videoId}`);
+    
+    // Disable caching like in the working mind maps route
+    const youtube = await Innertube.create({ cache: new UniversalCache(false) });
     const videoInfo = await youtube.getInfo(videoId);
+    
+    console.log(`Successfully fetched video info for: ${videoInfo.basic_info.title}`);
     
     // Create response with data
     const response = NextResponse.json({
@@ -33,6 +37,16 @@ export async function GET(request: Request) {
     return response;
   } catch (error) {
     console.error('API error:', error);
+    
+    // More detailed error logging for debugging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    
     return NextResponse.json({ 
       error: 'Failed to fetch video details',
       message: error instanceof Error ? error.message : 'Unknown error'
