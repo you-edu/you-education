@@ -36,27 +36,10 @@ const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => 
       setError(null);
       
       try {
-        // // Check cache first
-        // const cacheKey = `video-details-${videoUrl}`;
-        // const cachedData = localStorage.getItem(cacheKey);
-        
-        // if (cachedData) {
-        //   const parsedData = JSON.parse(cachedData) as CacheItem;
-          
-        //   // Check if cache is still valid
-        //   if (Date.now() - parsedData.timestamp < CACHE_EXPIRY) {
-        //     setTitle(parsedData.title);
-        //     setDescription(parsedData.description);
-        //     setLoading(false);
-        //     return;
-        //   }
-        // }
-        
         // Call the backend API if no valid cache exists
         const response = await fetch(`/api/youtube?videoUrl=${encodeURIComponent(videoUrl)}`);
 
-        console.log(`Fetching video details for URL: ${videoUrl}`, response);
-        
+        console.log(`Fetching video details for URL: ${videoUrl}`, response.status, response.ok);
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -64,6 +47,7 @@ const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => 
         }
         
         const data = await response.json();
+        console.log('Received data:', data);
         setTitle(data.title);
         setDescription(data.description);
         
