@@ -84,7 +84,6 @@ export default function Navbar() {
                   </div>
                   <div className="h-px bg-gray-200 dark:bg-gray-800 my-1"></div>
                   <div className="grid gap-1">
-                    <div className="h-px bg-gray-200 dark:bg-gray-800 my-1"></div>
                     <button
                       onClick={() => signOut()}
                       className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
