@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface TactiqCaption {
+  start: string;
+  dur: string;
+  text: string;
+}
+
+interface TactiqResponse {
+  title: string;
+  captions: TactiqCaption[];
+}
+
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
@@ -11,10 +22,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Video ID is required' }, { status: 400 });
     }
 
-    console.log(`Generating transcript for video: ${videoId}, time range: ${formatTime(start)}-${formatTime(end)}`);
+    console.log(`Fetching transcript for video: ${videoId}, time range: ${formatTime(start)}-${formatTime(end)}`);
     
-    // Generate a mock transcript with better context
-    const transcriptText = generateMockTranscript(videoId, start, end);
+    // Get transcript from Tactiq.io API
+    const transcriptText = await fetchRealTranscript(videoId, start, end);
     
     return NextResponse.json({ transcript: transcriptText });
     
@@ -27,70 +38,93 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Fetch real transcript from Tactiq.io API
+async function fetchRealTranscript(videoId: string, start: number, end: number): Promise<string> {
+  try {
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    
+    const response = await fetch('https://tactiq-apps-prod.tactiq.io/transcript', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        videoUrl: videoUrl,
+        langCode: 'en'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Tactiq API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data: TactiqResponse = await response.json();
+    // console.log(`Fetched transcript for video ${videoId}:`, data.title);
+    
+    // Convert captions to readable transcript format
+    const fullTranscript = convertCaptionsToTranscript(data.captions);
+    
+    // Filter transcript by time range if specified
+    if (start > 0 || end > 0) {
+      const filteredTranscript = filterTranscriptByTime(data.captions, start, end);;
+      
+      if (filteredTranscript === '') {
+        return `No transcript content found for time range ${formatTime(start)}-${formatTime(end)}`;
+      }
+      return filteredTranscript;
+    }
+    
+    return fullTranscript;
+    
+  } catch (error) {
+    console.error('Error fetching from Tactiq API:', error);
+    return "Transcript not available";
+  }
+}
+
+// Convert captions array to readable transcript
+function convertCaptionsToTranscript(captions: TactiqCaption[]): string {
+  return captions.map(caption => {
+    const startTime = parseFloat(caption.start);
+    const formattedTime = formatTimeFromSeconds(startTime);
+    return `${formattedTime} ${caption.text}`;
+  }).join('\n');
+}
+
+// Filter captions by time range and convert to transcript
+function filterTranscriptByTime(captions: TactiqCaption[], start: number, end: number): string {
+  const filteredCaptions = captions.filter(caption => {
+    const startTime = parseFloat(caption.start);
+    const endTime = startTime + parseFloat(caption.dur);
+    
+    // Include caption if it overlaps with the requested time range
+    if (start === 0 && end === 0) return true; // No filtering
+    if (start === 0) return startTime <= end; // Only end time specified
+    if (end === 0) return endTime >= start; // Only start time specified
+    return startTime <= end && endTime >= start; // Both start and end specified
+  });
+  
+  if (filteredCaptions.length === 0) {
+    return `No transcript content found for time range ${formatTime(start)}-${formatTime(end)}`;
+  }
+  
+  return filteredCaptions.map(caption => {
+    const startTime = parseFloat(caption.start);
+    const formattedTime = formatTimeFromSeconds(startTime);
+    return `${formattedTime} ${caption.text}`;
+  }).join('\n');
+}
+
+// Format seconds to MM:SS format
+function formatTimeFromSeconds(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = Math.floor(totalSeconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 // Format time for logging
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-// Enhanced mock transcript generator
-function generateMockTranscript(videoId: string, start: number, end: number): string {
-  const duration = end - start;
-  const segments = Math.ceil(duration / 10); // One segment every 10 seconds
-  
-  let transcript = `Transcript for YouTube video (ID: ${videoId}) from ${formatTime(start)} to ${formatTime(end)}.\n\n`;
-  
-  // More realistic content based on common educational topics
-  const topics = {
-    "computerScience": [
-      "This section covers the fundamental concepts of algorithms and data structures.",
-      "The instructor explains how compilers translate high-level code to machine instructions.",
-      "This part demonstrates practical examples of recursive functions and their applications.",
-      "Here the video covers important optimization techniques for improving algorithm efficiency.",
-      "The lecture discusses time and space complexity analysis using Big O notation.",
-      "This segment explains how memory management works in modern programming languages."
-    ],
-    "mathematics": [
-      "The instructor is explaining the concept of differential calculus and its applications.",
-      "In this part, the video covers integration techniques and practical examples.",
-      "This section demonstrates how to solve complex equations using substitution methods.",
-      "The lecturer is explaining matrix operations and their applications in linear algebra.",
-      "This segment covers probability theory and statistical analysis techniques.",
-      "Here the instructor shows how to apply mathematical concepts to real-world problems."
-    ],
-    "physics": [
-      "This section explains the fundamental principles of quantum mechanics.",
-      "The video demonstrates practical applications of Newton's laws of motion.",
-      "Here the instructor covers electromagnetic field theory and Maxwell's equations.",
-      "This part explains thermodynamic principles and energy conservation.",
-      "The lecture discusses relativistic effects and Einstein's theory of relativity.",
-      "This segment shows experimental results that confirm theoretical predictions."
-    ]
-  };
-  
-  // Choose a random subject area for consistency
-  const subjects = Object.keys(topics);
-  const selectedSubject = subjects[Math.floor(Math.random() * subjects.length)];
-  const selectedTopics = topics[selectedSubject as keyof typeof topics];
-  
-  for (let i = 0; i < segments; i++) {
-    const segmentTime = start + (i * 10);
-    const minutes = Math.floor(segmentTime/60);
-    const seconds = Math.floor(segmentTime%60).toString().padStart(2, '0');
-    const topicIndex = i % selectedTopics.length;
-    
-    transcript += `[${minutes}:${seconds}] ${selectedTopics[topicIndex]} `;
-    
-    // Add some filler content for realism
-    if (i % 2 === 0) {
-      transcript += "The instructor provides examples to clarify these concepts. ";
-    } else {
-      transcript += "Students are encouraged to think about how this applies to different scenarios. ";
-    }
-    
-    transcript += "\n\n";
-  }
-  
-  return transcript;
 }
