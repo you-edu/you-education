@@ -1,20 +1,29 @@
-import { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect } from "react";
 import Linkify from 'linkify-react';
+
+interface VideoInfo {
+  id: string;
+  title: string;
+  description: string;
+  channelTitle: string;
+  channelId: string;
+  lengthSeconds: string;
+  viewCount: string;
+  publishDate: string;
+  thumbnail: Array<{
+    url: string;
+    width: number;
+    height: number;
+  }>;
+  keywords?: string[];
+  category?: string;
+}
 
 interface VideoDetailsViewerProps {
   videoUrl: string;
 }
 
-// Cache interface
-// interface CacheItem {
-//   title: string;
-//   description: string;
-//   timestamp: number;
-// }
-
-// const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-// Options for Linkify library
 const linkifyOptions = {
   defaultProtocol: 'https',
   target: '_blank',
@@ -23,82 +32,173 @@ const linkifyOptions = {
 };
 
 const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => {
-  const [title, setTitle] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Extract video ID from YouTube URL
+  const extractVideoId = (url: string): string | null => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
   useEffect(() => {
-    const fetchVideoDetails = async () => {
+    const fetchVideoInfo = async () => {
       if (!videoUrl) return;
-      
+
+      const videoId = extractVideoId(videoUrl);
+      if (!videoId) {
+        setError("Invalid YouTube URL");
+        return;
+      }
+
       setLoading(true);
       setError(null);
-      
-      try {
-        // Call the backend API if no valid cache exists
-        const response = await fetch(`/api/youtube?videoUrl=${encodeURIComponent(videoUrl)}`);
 
-        console.log(`Fetching video details for URL: ${videoUrl}`, response.status, response.ok);
+      try {
+        console.log(`Fetching video info for video ID: ${videoId}`);
+        
+        // Using local API route instead of direct external API call
+        const response = await fetch(`/api/youtube/info?videoId=${videoId}`);
         
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch video details');
+          throw new Error(errorData.error || `Failed to fetch video info: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
-        console.log('Received data:', data);
-        setTitle(data.title);
-        setDescription(data.description);
-        
-        // Save to cache
-        // localStorage.setItem(cacheKey, JSON.stringify({
-        //   title: data.title,
-        //   description: data.description,
-        //   timestamp: Date.now()
-        // }));
+        console.log('Video info received:', data);
+        setVideoInfo(data);
+
+        // Previous direct API call commented out:
+        /*
+        const response = await fetch(`https://chattube.io/api/get-youtube-info?videoId=${videoId}`);
+        */
+
       } catch (err) {
-        setError(`Error fetching video details: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        console.error('Error fetching video details:', err);
+        console.error("Error fetching video info:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch video information");
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchVideoDetails();
+
+    fetchVideoInfo();
   }, [videoUrl]);
 
+  // Format duration from seconds to readable format
+  const formatDuration = (seconds: string): string => {
+    const totalSeconds = parseInt(seconds);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Format view count
+  const formatViewCount = (count: string): string => {
+    const num = parseInt(count);
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M views`;
+    } else if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K views`;
+    }
+    return `${num} views`;
+  };
+
+  // Format publish date
+  const formatPublishDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   if (loading) {
-    return <div className="w-full h-full flex items-center justify-center">Loading video details...</div>;
+    return (
+      <div className="p-4 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+        <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading video details...</span>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error w-full h-full flex items-center justify-center">{error}</div>;
+    return (
+      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+        <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+      </div>
+    );
   }
-  
+
+  if (!videoInfo) {
+    return (
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+        <p className="text-sm">No video information available</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="video-details bg-gray-50 dark:bg-zinc-800/50 rounded-lg w-full h-full overflow-y-auto p-0 m-0">
-      <div className="px-2">
-        {title && (
-          <h2 className="video-title text-2xl font-bold text-gray-800 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-2 break-words">
-            {title}
-          </h2>
-        )}
-        {description && (
-          <div className="video-description text-base text-gray-600 dark:text-gray-300 whitespace-pre-wrap overflow-hidden">
-            <h3 className="text-lg font-semibold mt-1 mb-1 text-gray-700 dark:text-gray-200">Description:</h3>
-            <div className="break-words">
-              {description.split('\n').map((line, index) => (
-                <p key={index} className="mb-1">
-                  <Linkify options={linkifyOptions}>{line}</Linkify>
+    <div className="h-full overflow-y-auto">
+      <div className="p-4 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700">
+        <div className="space-y-4">
+          {/* Video Title */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white break-words">
+              {videoInfo.title}
+            </h2>
+          </div>
+
+          {/* Video Stats */}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <span>{formatViewCount(videoInfo.viewCount)}</span>
+            <span>•</span>
+            <span>{formatDuration(videoInfo.lengthSeconds)}</span>
+            <span>•</span>
+            <span>{formatPublishDate(videoInfo.publishDate)}</span>
+          </div>
+
+          {/* Channel Info */}
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-200 dark:bg-zinc-700 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                {videoInfo.channelTitle.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-gray-900 dark:text-white truncate">
+                {videoInfo.channelTitle}
+              </p>
+              {videoInfo.category && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {videoInfo.category}
                 </p>
-              ))}
+              )}
             </div>
           </div>
-        )}
-        {!title && !description && !loading && (
-          <p className="text-gray-500 dark:text-gray-400 italic">Enter a valid YouTube URL to see video details.</p>
-        )}
+
+          {/* Description */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+              Description
+            </h3>
+            <div className="text-sm text-gray-600 dark:text-gray-400 break-words">
+              <div className="whitespace-pre-wrap">
+                <Linkify options={linkifyOptions}>
+                  {videoInfo.description}
+                </Linkify>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
