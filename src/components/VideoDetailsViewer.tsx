@@ -147,8 +147,8 @@ const VideoDetailsViewer: React.FC<VideoDetailsViewerProps> = ({ videoUrl }) => 
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="p-4 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700">
+    <div className="h-full overflow-y-auto flex flex-col">
+      <div className="flex-1 p-4 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700">
         <div className="space-y-4">
           {/* Video Title */}
           <div>
