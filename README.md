@@ -1,6 +1,6 @@
 # YouEducation 🎓
 
-A comprehensive educational platform that transforms traditional learning through **AI-powered mind maps**, interactive video content, and intelligent note generation. YouEducation makes complex subjects accessible by organizing educational content into visual, hierarchical structures with integrated YouTube videos and automatically generated study notes.
+A comprehensive educational platform that transforms traditional learning through **AI-powered mind maps**, interactive video content, and intelligent note generation. YouEducation makes complex subjects accessible by organizing educational content into visual, hierarchical structures with integrated YouTube videos and automatically generated study notes. 
 
 ---
 
