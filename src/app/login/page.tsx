@@ -25,7 +25,7 @@ export default function LoginPage() {
                 </svg>
               </div>
               <CardTitle className="text-2xl font-light text-slate-900 dark:text-white">Welcome Back</CardTitle>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">You're successfully signed in</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">You&apos;re successfully signed in</p>
             </CardHeader>
             <CardContent className="pt-2">
               <div className="text-center mb-6">

@@ -2,7 +2,6 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Navbar from "@/components/Navbar";
 
 export default function SignUpPage() {
   const { data: session } = useSession();
