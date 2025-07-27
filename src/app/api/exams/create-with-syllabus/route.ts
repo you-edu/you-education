@@ -55,7 +55,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // STEP 2: IMMEDIATELY Save the exam to database (THIS PERSISTS EVEN IF USER LEAVES)
+    // STEP 2: Convert file to base64 and validate syllabus FIRST
+    let analysisResult = null;
+    try {
+      const imageDataUrl = await fileToDataUrl(syllabusFile);
+      console.log("File converted to data URL, size:", imageDataUrl.length);
+      
+      // STEP 3: Analyze if the image contains a syllabus
+      analysisResult = await extractChaptersFromImage(imageDataUrl);
+      
+      // If it's not a syllabus, return error immediately without saving exam
+      if (!analysisResult.isSyllabus) {
+        return NextResponse.json({
+          success: false,
+          isSyllabus: false,
+          error: "The uploaded image does not appear to contain a syllabus. Please upload a valid syllabus document."
+        }, { status: 400 });
+      }
+      
+    } catch (syllabusError) {
+      console.error("Error analyzing syllabus:", syllabusError);
+      return NextResponse.json({
+        success: false,
+        error: "Failed to analyze the uploaded image. Please try again with a clear syllabus image."
+      }, { status: 400 });
+    }
+
+    // STEP 4: ONLY NOW Save the exam to database (after validating it's a syllabus)
     const examData = {
       userId,
       subjectName: subjectName.trim(),
@@ -69,48 +95,30 @@ export async function POST(request: NextRequest) {
 
     console.log("Exam saved to database with ID:", savedExam._id);
 
-    // STEP 3: Convert file to base64 data URL in backend
-    let chapters = null;
+    // STEP 5: Save chapters to database
+    let chapters = analysisResult.chapters || [];
     try {
-      const imageDataUrl = await fileToDataUrl(syllabusFile);
-      console.log("File converted to data URL, size:", imageDataUrl.length);
-      
-      // STEP 4: Extract chapters from syllabus image
-      chapters = await extractChaptersFromImage(imageDataUrl);
-      
       if (chapters && chapters.length > 0) {
-        // STEP 5: Save chapters to database
         await saveChaptersToDatabase(chapters, savedExam._id);
         console.log("Chapters extracted and saved for exam:", savedExam._id);
       } else {
-        console.log("Chapter extraction failed for exam:", savedExam._id);
+        console.log("No chapters found in syllabus for exam:", savedExam._id);
       }
-    } catch (syllabusError) {
-      console.error("Error processing syllabus for exam:", savedExam._id, syllabusError);
+    } catch (chapterError) {
+      console.error("Error saving chapters for exam:", savedExam._id, chapterError);
     }
 
-    // Return success response with exam data (regardless of syllabus processing outcome)
+    // Return success response with exam data
     return NextResponse.json({
       success: true,
-      exam: savedExam.toObject(), // Convert to plain object
+      isSyllabus: true,
+      exam: savedExam.toObject(),
       chapters: chapters || [],
-      message: chapters 
-        ? "Exam created and syllabus processed successfully"
-        : "Exam created but syllabus processing failed"
+      message: "Exam created and syllabus processed successfully"
     });
 
   } catch (error) {
     console.error("Error in exam creation:", error);
-    
-    // If exam was saved but something else failed, still return the exam
-    if (savedExam) {
-      return NextResponse.json({
-        success: true,
-        exam: savedExam.toObject(),
-        chapters: [],
-        message: "Exam created but syllabus processing failed"
-      });
-    }
     
     return NextResponse.json(
       { error: "Failed to create exam" },
@@ -163,14 +171,14 @@ async function extractChaptersFromImage(imageDataUrl: string) {
       messages: [
         { 
           role: "system", 
-          content: "You are a specialized AI for extracting educational syllabus information from images. Extract all chapters and their subtopics from the image and format them in a structured JSON format. Each chapter should include a title and content array containing all subtopics as strings."
+          content: "You are a specialized AI for analyzing educational content. First, determine if the image contains a syllabus (educational curriculum content with chapters, topics, or course outline). Then extract chapters and subtopics if it is a syllabus. Always include an 'isSyllabus' boolean field in your response."
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: "Extract all chapters and subtopics from this syllabus image and return the data in JSON format with the following structure: { chapters: [{ title: string, content: string[] }] }. Make sure to include all chapters and their subtopics from the image.",
+              text: "Analyze this image and determine if it contains a syllabus or educational curriculum. If it is a syllabus, extract all chapters and subtopics. Return the data in JSON format with the following structure: { isSyllabus: boolean, chapters: [{ title: string, content: string[] }] }. If it's not a syllabus, set isSyllabus to false and chapters to an empty array.",
             },
             {
               type: "image_url",
@@ -189,7 +197,7 @@ async function extractChaptersFromImage(imageDataUrl: string) {
     console.log("Response from Azure OpenAI received");
     
     if (!responseContent) {
-      throw new Error("Failed to extract content from the syllabus image");
+      throw new Error("Failed to analyze the uploaded image");
     }
 
     // Extract JSON from the response
@@ -197,17 +205,21 @@ async function extractChaptersFromImage(imageDataUrl: string) {
                       responseContent.match(/\{[\s\S]*\}/);
     
     const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : responseContent;
-    let chaptersData = JSON.parse(jsonString);
+    let analysisData = JSON.parse(jsonString);
     
-    // If the expected structure isn't there, check if we need to wrap it
-    if (!chaptersData.chapters && Array.isArray(chaptersData)) {
-      chaptersData = { chapters: chaptersData };
+    // Ensure the response has the expected structure
+    if (typeof analysisData.isSyllabus === 'undefined') {
+      analysisData.isSyllabus = false;
     }
     
-    console.log("Successfully extracted", chaptersData.chapters?.length || 0, "chapters");
-    return chaptersData.chapters;
+    if (!analysisData.chapters) {
+      analysisData.chapters = [];
+    }
+    
+    console.log("Analysis complete - Is Syllabus:", analysisData.isSyllabus, "Chapters found:", analysisData.chapters?.length || 0);
+    return analysisData;
   } catch (error) {
-    console.error("Error extracting chapters from image:", error);
+    console.error("Error analyzing image:", error);
     throw error;
   }
 }

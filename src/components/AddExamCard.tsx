@@ -124,8 +124,8 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       // Set submitting state to true to disable the button
       setIsSubmitting(true);
       
-      // Show loading toast immediately
-      toast.loading("Creating your exam and processing syllabus...");
+      // Show loading toast immediately and store the reference
+      const loadingToast = toast.loading("Creating your exam and processing syllabus...");
       
       // Create FormData to send the file directly
       const formData = new FormData();
@@ -137,23 +137,39 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
         formData.append('syllabusFile', syllabus); // Send the actual file
       }
     
-      // IMMEDIATE API CALL - This will persist even if user leaves the page
+      // API CALL with syllabus validation
       const response = await fetch('/api/exams/create-with-syllabus', {
         method: 'POST',
         body: formData, // Send FormData instead of JSON
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create exam');
-      }
-      
-      // Get the complete exam data
       const result = await response.json();
       
-      // Notify success
-      toast.dismiss();
-      toast.success("Exam created and syllabus processed successfully!");
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      if (!response.ok) {
+        // Check if it's a syllabus validation error
+        if (result.isSyllabus === false) {
+          toast.error("This doesn't appear to be a syllabus! Please upload a valid syllabus document with chapters and topics.", {
+            style: { backgroundColor: "#f44336", color: "white" },
+            duration: 5000
+          });
+          
+          // Reset the file upload to allow user to upload a new file
+          handleRemoveFile();
+          
+          return; // Don't proceed further
+        }
+        
+        // Handle other errors
+        throw new Error(result.error || 'Failed to create exam');
+      }
+      
+      // Success case
+      toast.success("Exam created and syllabus processed successfully!", {
+        style: { backgroundColor: "#4caf50", color: "white" }
+      });
       
       // Pass the saved exam data back to the parent component
       onSave(result.exam);
@@ -162,8 +178,9 @@ export function AddExamCard({ onSave, onCancel }: AddExamCardProps) {
       onCancel();
 
     } catch (error) {
-      toast.dismiss();
-      toast.error(error instanceof Error ? error.message : "Failed to create exam");
+      toast.error(error instanceof Error ? error.message : "Failed to create exam", {
+        style: { backgroundColor: "#f44336", color: "white" }
+      });
       console.error("Error creating exam:", error);
     } finally {
       // Reset submitting state
