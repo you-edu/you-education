@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Innertube, UniversalCache } from 'youtubei.js';
 import { AzureOpenAI } from "openai";
 import { connectToDatabase } from '@/lib/db/mongoose';
-import { Notes, MindMap, Chapter } from '@/lib/db/models';
+import { Notes, MindMap, Chapter, User } from '@/lib/db/models';
 import mongoose from 'mongoose';
 
 // Types
@@ -22,49 +22,70 @@ interface TopicWithVideo {
 const MAX_RESULTS = 5;
 
 export async function POST(request: NextRequest) {
+  let userId: string | null = null;
+  
   try {
     // Connect to the database first
     await connectToDatabase();
     
     const body = await request.json();
-    const { topics, chapterId, chapterTitle } = body;
+    const { topics, chapterId, chapterTitle, userId: requestUserId } = body;
+    userId = requestUserId;
     
     // Input validation
-    if (!Array.isArray(topics) || !chapterId || !chapterTitle) {
+    if (!Array.isArray(topics) || !chapterId || !chapterTitle || !userId) {
       return NextResponse.json(
-        { error: "Invalid input: topics array, chapterId and chapterTitle are required" },
+        { error: "Invalid input: topics array, chapterId, chapterTitle and userId are required" },
         { status: 400 }
       );
     }
 
-    // Step 1: Fetch YouTube videos for each topic
+    // Check if user exists and if they're already generating a mind map
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    if (user.isGeneratingMindMap) {
+      return NextResponse.json(
+        { error: "Mind map generation already in progress for this user" },
+        { status: 409 }
+      );
+    }
+
+    // Set user status to generating
+    await User.findByIdAndUpdate(userId, { isGeneratingMindMap: true });
+    console.log(`Set user ${userId} mind map generation status to true`);
+
+    // Step 1: Check if mind map already exists for this chapter
+    const existingMindMap = await MindMap.findOne({ chapterId });
+    if (existingMindMap) {
+      // Reset status before throwing error
+      await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
+      throw new Error("Mind map already exists for this chapter");
+    }
+
+    // Step 2: Fetch YouTube videos for each topic
     console.log(`Starting YouTube video fetch for ${topics.length} topics`);
     const topicsWithVideos: TopicWithVideo[] = await fetchYouTubeVideosForTopics(topics);
     console.log(`Successfully fetched videos for ${topics.length} topics`);
     
-    // Step 2: Generate mind map structure with those videos
+    // Step 3: Generate mind map structure with those videos
     console.log("Generating mind map structure");
     const mindMap = await generateMindMapStructure(topicsWithVideos, chapterTitle);
     
     if (!mindMap) {
-      return NextResponse.json(
-        { error: "Failed to generate mind map structure" },
-        { status: 500 }
-      );
+      // Reset status before throwing error
+      await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
+      throw new Error("Failed to generate mind map structure");
     }
     
-    // Step 3: Process mind map - create notes directly using Mongoose models
+    // Step 4: Process mind map - create notes directly using Mongoose models
     console.log("Processing mind map and creating notes");
     const processedMindMap = await processMindMapWithModels(mindMap);
-    
-    // Step 4: Check if mind map already exists for this chapter
-    const existingMindMap = await MindMap.findOne({ chapterId });
-    if (existingMindMap) {
-      return NextResponse.json(
-        { error: "Mind map already exists for this chapter" },
-        { status: 400 }
-      );
-    }
     
     // Step 5: Save the mind map directly using the MindMap model
     console.log("Saving mind map to database");
@@ -91,6 +112,10 @@ export async function POST(request: NextRequest) {
     
     console.log("Chapter updated successfully");
     
+    // Reset user status to not generating (success case)
+    await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
+    console.log(`Set user ${userId} mind map generation status to false (success)`);
+    
     return NextResponse.json({
       success: true,
       mindMapId: mindMapId,
@@ -98,6 +123,17 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error("Error in mind map generation process:", error);
+    
+    // Reset user status to not generating (error case)
+    if (userId) {
+      try {
+        await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
+        console.log(`Set user ${userId} mind map generation status to false (error)`);
+      } catch (updateError) {
+        console.error("Failed to update user status after error:", updateError);
+      }
+    }
+    
     return NextResponse.json(
       { 
         success: false,
@@ -164,7 +200,7 @@ async function fetchYouTubeVideosForTopics(topics: string[]): Promise<TopicWithV
           ],
         };
       }
-    }));
+  }));
     
     return results;
   } catch (error) {
@@ -322,7 +358,7 @@ async function generateMindMapStructure(topicsWithVideos: TopicWithVideo[], chap
         CRITICAL: Respond with ONLY the JSON structure and nothing else. No explanations, markdown formatting, or additional text.`
       },
     ],
-    max_completion_tokens: 10000,
+    max_completion_tokens: 100000,
   });
 
   // Process the response

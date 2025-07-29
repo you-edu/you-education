@@ -21,3 +21,37 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
     }
 }
+
+export async function PUT(request: NextRequest) {
+    try {
+        await connectToDatabase();
+        
+        const { userId, isGeneratingMindMap } = await request.json();
+        
+        if (!userId || typeof isGeneratingMindMap !== 'boolean') {
+            return NextResponse.json(
+                { error: 'UserId and isGeneratingMindMap (boolean) are required' }, 
+                { status: 400 }
+            );
+        }
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { isGeneratingMindMap },
+            { new: true }
+        );
+        
+        if (!updatedUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+        
+        return NextResponse.json({ 
+            success: true, 
+            isGeneratingMindMap: updatedUser.isGeneratingMindMap 
+        }, { status: 200 });
+        
+    } catch (error) {
+        console.error('Error updating user mind map status:', error);
+        return NextResponse.json({ error: 'Failed to update user status' }, { status: 500 });
+    }
+}
