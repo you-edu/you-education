@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     console.log("Exam saved to database with ID:", savedExam._id);
 
     // STEP 5: Save chapters to database
-    let chapters = analysisResult.chapters || [];
+    const chapters = analysisResult.chapters || [];
     try {
       if (chapters && chapters.length > 0) {
         await saveChaptersToDatabase(chapters, savedExam._id);
@@ -205,7 +205,7 @@ async function extractChaptersFromImage(imageDataUrl: string) {
                       responseContent.match(/\{[\s\S]*\}/);
     
     const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : responseContent;
-    let analysisData = JSON.parse(jsonString);
+    const analysisData = JSON.parse(jsonString);
     
     // Ensure the response has the expected structure
     if (typeof analysisData.isSyllabus === 'undefined') {
