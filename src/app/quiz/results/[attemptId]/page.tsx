@@ -19,31 +19,20 @@ const QuizResultsPage = () => {
   const attemptId = params.attemptId as string;
   const { data: session } = useSession();
   
-  console.log('🔍 QuizResultsPage - Component initialized');
-  console.log('📋 attemptId from params:', attemptId);
-  console.log('👤 session:', session);
-  
   const [loading, setLoading] = useState<boolean>(true);
   const [attempt, setAttempt] = useState<QuizAttemptWithDetails | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Fetch user data
   useEffect(() => {
-    console.log('🚀 useEffect - fetchUserData triggered');
     const fetchUserData = async () => {
       if (session?.user?.email) {
-        console.log('📧 Fetching user data for email:', session.user.email);
         try {
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
-          console.log('✅ User data fetched successfully:', userResponse.data);
           setUserId(userResponse.data._id);
-          console.log('🆔 UserId set to:', userResponse.data._id);
         } catch (error) {
-          console.error('❌ Error fetching user data:', error);
           toast.error('Failed to load user data');
         }
-      } else {
-        console.log('⚠️ No session email available');
       }
     };
 
@@ -52,52 +41,19 @@ const QuizResultsPage = () => {
 
   // Fetch attempt data
   useEffect(() => {
-    console.log('🚀 useEffect - fetchAttempt triggered');
-    console.log('📊 Current userId:', userId);
-    console.log('📝 Current attemptId:', attemptId);
-    
     const fetchAttempt = async () => {
       if (!userId) {
-        console.log('⚠️ No userId available, skipping fetch');
         return;
       }
       
-      console.log('🔄 Starting to fetch attempt...');
-      
       try {
         const url = `/api/quiz/attempt/${attemptId}?userId=${userId}`;
-        console.log('🌐 Attempt fetch URL:', url);
-        
         const response = await axios.get(url);
-        console.log('📬 Attempt response:', response.data);
-        console.log('🎯 Attempt data structure:', {
-          _id: response.data._id,
-          quiz: response.data.quiz,
-          quizId: response.data.quizId,
-          score: response.data.score,
-          percentage: response.data.percentage,
-          answers: response.data.answers
-        });
-        
-        // Check if quiz data is populated
-        if (response.data.quiz) {
-          console.log('✅ Quiz data is populated:', response.data.quiz);
-        } else if (response.data.quizId) {
-          console.log('⚠️ Quiz data not populated, only quizId available:', response.data.quizId);
-        } else {
-          console.log('❌ No quiz or quizId data found');
-        }
-        
         setAttempt(response.data);
-        console.log('✅ Attempt state updated successfully');
       } catch (error: any) {
-        console.error('❌ Error fetching quiz attempt:', error);
-        console.error('❌ Error response:', error.response?.data);
-        console.error('❌ Error status:', error.response?.status);
         toast.error('Failed to load quiz results');
         router.push('/');
       } finally {
-        console.log('✅ Fetch attempt completed, setting loading to false');
         setLoading(false);
       }
     };
@@ -135,15 +91,7 @@ const QuizResultsPage = () => {
     return 'Need More Study';
   };
 
-  console.log('🎯 Render state:');
-  console.log('  - loading:', loading);
-  console.log('  - userId:', userId);
-  console.log('  - attempt:', attempt);
-  console.log('  - attempt.quiz:', attempt?.quiz);
-  console.log('  - attempt.quizId:', attempt?.quizId);
-
   if (loading) {
-    console.log('⏳ Showing loading state');
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
@@ -155,7 +103,6 @@ const QuizResultsPage = () => {
   }
 
   if (!attempt || !userId) {
-    console.log('❌ No attempt or userId, showing error state');
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="max-w-md mx-auto p-8 bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10">
@@ -172,7 +119,6 @@ const QuizResultsPage = () => {
     );
   }
 
-  console.log('🎨 Rendering main content');
   const quiz = attempt.quiz || attempt.quizId;
 
   return (
@@ -200,7 +146,6 @@ const QuizResultsPage = () => {
                     examId = quiz.examId;
                   }
                 }
-                  console.log('🔗 Exam link examId:', examId);
                 return examId;
               })()}`}
               className="flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-black/90 text-gray-700 dark:text-white/70 rounded-xl hover:bg-gray-200 dark:hover:bg-black/70 transition-all duration-200 border border-gray-200 dark:border-white/10"
@@ -277,91 +222,79 @@ const QuizResultsPage = () => {
           </div>
 
           <div className="divide-y divide-gray-200 dark:divide-white/10">
-            {(() => {
-              console.log('🎨 Rendering questions');
-              console.log('📋 Quiz questions:', quiz?.questions);
-              console.log('📊 Attempt answers:', attempt?.answers);
-              
-              return quiz?.questions?.map((question, index) => {
-                const userAnswer = attempt.answers?.find(a => a.questionIndex === index);
-                const isCorrect = userAnswer?.isCorrect || false;
-                
-                console.log(`🎯 Question ${index + 1}:`, {
-                  question: question.question,
-                  userAnswer,
-                  isCorrect
-                });
-                
-                return (
-                  <div key={index} className="p-8">
-                    <div className="flex items-start gap-6">
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        isCorrect 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                      }`}>
-                        {isCorrect ? <CheckCircle className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
-                      </div>
+            {quiz?.questions?.map((question, index) => {
+              const userAnswer = attempt.answers?.find(a => a.questionIndex === index);
+              const isCorrect = userAnswer?.isCorrect || false;
+
+              return (
+                <div key={index} className="p-8">
+                  <div className="flex items-start gap-6">
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                      isCorrect 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                    }`}>
+                      {isCorrect ? <CheckCircle className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-black dark:text-white mb-4">
+                        {index + 1}. {question.question}
+                      </h3>
                       
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-black dark:text-white mb-4">
-                          {index + 1}. {question.question}
-                        </h3>
-                        
-                        <div className="space-y-3 mb-6">
-                          {question.options?.map((option, optionIndex) => {
-                            const isSelected = userAnswer?.selectedOption === optionIndex;
-                            const isCorrectOption = question.correctAnswer === optionIndex;
-                            
-                            return (
-                              <div 
-                                key={optionIndex} 
-                                className={`p-4 rounded-xl border-2 ${
-                                  isCorrectOption 
-                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                                    : isSelected 
-                                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
-                                    : 'bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="text-black dark:text-white font-medium">{option}</span>
-                                  <div className="flex items-center gap-2">
-                                    {isCorrectOption && (
-                                      <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
-                                        Correct
-                                      </span>
-                                    )}
-                                    {isSelected && !isCorrectOption && (
-                                      <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-3 py-1 rounded-full">
-                                        Your Answer
-                                      </span>
-                                    )}
-                                  </div>
+                      <div className="space-y-3 mb-6">
+                        {question.options?.map((option, optionIndex) => {
+                          const isSelected = userAnswer?.selectedOption === optionIndex;
+                          const isCorrectOption = question.correctAnswer === optionIndex;
+                          
+                          return (
+                            <div 
+                              key={optionIndex} 
+                              className={`p-4 rounded-xl border-2 ${
+                                isCorrectOption 
+                                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                                  : isSelected 
+                                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+                                  : 'bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-black dark:text-white font-medium">{option}</span>
+                                <div className="flex items-center gap-2">
+                                  {isCorrectOption && (
+                                    <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
+                                      Correct
+                                    </span>
+                                  )}
+                                  {isSelected && !isCorrectOption && (
+                                    <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-3 py-1 rounded-full">
+                                      Your Answer
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
-                        
-                        {question.explanation && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                            <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">Explanation:</h4>
-                            <p className="text-blue-700 dark:text-blue-300">{question.explanation}</p>
-                          </div>
-                        )}
-                        
-                        {userAnswer && (
-                          <div className="mt-4 text-sm text-gray-500 dark:text-white/70">
-                            Time taken: {formatTime(userAnswer.timeTaken)}
-                          </div>
-                        )}
+                            </div>
+                          );
+                        })}
                       </div>
+                      
+                      {question.explanation && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                          <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">Explanation:</h4>
+                          <p className="text-blue-700 dark:text-blue-300">{question.explanation}</p>
+                        </div>
+                      )}
+                      
+                      {userAnswer && (
+                        <div className="mt-4 text-sm text-gray-500 dark:text-white/70">
+                          Time taken: {formatTime(userAnswer.timeTaken)}
+                        </div>
+                      )}
                     </div>
                   </div>
-                );
-              }) || [];
-            })()}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -389,3 +322,4 @@ const QuizResultsPage = () => {
 };
 
 export default QuizResultsPage;
+

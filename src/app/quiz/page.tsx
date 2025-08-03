@@ -20,18 +20,12 @@ const QuizDashboardPage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       if (session?.user?.email) {
-        console.log('📧 Fetching user data for email:', session.user.email);
         try {
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
-          console.log('✅ User data fetched successfully:', userResponse.data);
           setUserId(userResponse.data._id);
-          console.log('🆔 UserId set to:', userResponse.data._id);
         } catch (error) {
-          console.error('❌ Error fetching user data:', error);
           toast.error('Failed to load user data');
         }
-      } else {
-        console.log('⚠️ No session email available');
       }
     };
 
@@ -40,46 +34,17 @@ const QuizDashboardPage = () => {
 
   // Fetch all quizzes
   useEffect(() => {
-    console.log('🚀 useEffect - fetchQuizzes triggered');
-    console.log('📊 Current userId:', userId);
-    
     const fetchQuizzes = async () => {
       if (!userId) {
-        console.log('⚠️ No userId available, skipping fetch');
         return;
       }
-      
-      console.log('🔄 Starting to fetch quizzes...');
-      
       try {
         const url = `/api/quiz?userId=${userId}`;
-        console.log('🌐 Quiz fetch URL:', url);
-        
         const response = await axios.get(url);
-        console.log('📬 Quizzes response:', response.data);
-        console.log('🔢 Number of quizzes fetched:', response.data.length);
-        
-        // Log each quiz details
-        response.data.forEach((quiz: Quiz, index: number) => {
-          console.log(`📋 Quiz ${index + 1}:`, {
-            id: quiz._id,
-            title: quiz.title,
-            examId: quiz.examId,
-            difficulty: quiz.difficulty,
-            totalQuestions: quiz.totalQuestions,
-            timeLimit: quiz.timeLimit
-          });
-        });
-        
         setQuizzes(response.data);
-        console.log('✅ Quizzes state updated successfully');
       } catch (error: any) {
-        console.error('❌ Error fetching quizzes:', error);
-        console.error('❌ Error response:', error.response?.data);
-        console.error('❌ Error status:', error.response?.status);
         toast.error('Failed to load quizzes');
       } finally {
-        console.log('✅ Fetch quizzes completed, setting loading to false');
         setLoading(false);
       }
     };
@@ -108,14 +73,7 @@ const QuizDashboardPage = () => {
     });
   };
 
-  console.log('🎯 Render state:');
-  console.log('  - loading:', loading);
-  console.log('  - userId:', userId);
-  console.log('  - quizzes.length:', quizzes.length);
-  console.log('  - quizzes:', quizzes);
-
   if (loading) {
-    console.log('⏳ Showing loading state');
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
@@ -125,8 +83,6 @@ const QuizDashboardPage = () => {
       </div>
     );
   }
-
-  console.log('🎨 Rendering main content');
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -165,7 +121,6 @@ const QuizDashboardPage = () => {
       <div className="max-w-6xl mx-auto px-6 py-12">
         {quizzes.length === 0 ? (
           (() => {
-            console.log('📋 No quizzes found, showing empty state');
             return (
               <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-12 text-center">
                 <Target className="h-20 w-20 text-gray-400 dark:text-white/50 mx-auto mb-6" />
@@ -221,21 +176,13 @@ const QuizDashboardPage = () => {
               <h2 className="text-2xl font-bold text-black dark:text-white mb-6 tracking-tight">Your Quizzes</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {quizzes.map((quiz, index) => {
-                  console.log(`🎨 Rendering quiz ${index + 1}:`, quiz);
-                  console.log(`🎯 Quiz examId type:`, typeof quiz.examId);
-                  console.log(`🎯 Quiz examId value:`, quiz.examId);
-                  
                   // Determine the exam link
                   let examLink = '/';
                   if (quiz.examId) {
                     if (typeof quiz.examId === 'object' && quiz.examId !== null && '_id' in quiz.examId) {
                       examLink = `/exams/${(quiz.examId as { _id: string })._id}`;
-                      console.log(`🔗 Exam link (object):`, examLink);
                     } else if (typeof quiz.examId === 'string') {
                       examLink = `/exams/${quiz.examId}`;
-                      console.log(`🔗 Exam link (string):`, examLink);
-                    } else {
-                      console.log(`⚠️ Unknown examId format:`, quiz.examId);
                     }
                   }
                   
@@ -286,7 +233,6 @@ const QuizDashboardPage = () => {
                           <Link
                             href={`/quiz/${quiz._id}`}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl transition-all duration-200 hover:bg-gray-800 dark:hover:bg-gray-200 text-sm font-medium shadow-sm"
-                            onClick={() => console.log(`🎯 Taking quiz:`, quiz._id)}
                           >
                             <Play className="h-4 w-4" />
                             Take Quiz
@@ -296,7 +242,6 @@ const QuizDashboardPage = () => {
                             href={examLink}
                             className="px-4 py-3 bg-gray-200 dark:bg-black/70 text-gray-700 dark:text-white/70 hover:bg-gray-300 dark:hover:bg-black/50 rounded-xl transition-all duration-200 text-sm border border-gray-300 dark:border-white/20"
                             title="View Exam"
-                            onClick={() => console.log(`🎯 Viewing exam:`, examLink)}
                           >
                             <BookOpen className="h-4 w-4" />
                           </Link>

@@ -15,10 +15,6 @@ const QuizHistoryPage = () => {
   const examId = searchParams.get('examId');
   const { data: session } = useSession();
   
-  console.log('🔍 QuizHistoryPage - Component initialized');
-  console.log('📋 examId from searchParams:', examId);
-  console.log('👤 session:', session);
-  
   const [loading, setLoading] = useState<boolean>(true);
   const [attempts, setAttempts] = useState<QuizAttemptWithQuiz[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -27,21 +23,14 @@ const QuizHistoryPage = () => {
 
   // Fetch user data
   useEffect(() => {
-    console.log('🚀 useEffect - fetchUserData triggered');
     const fetchUserData = async () => {
       if (session?.user?.email) {
-        console.log('📧 Fetching user data for email:', session.user.email);
         try {
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
-          console.log('✅ User data fetched successfully:', userResponse.data);
           setUserId(userResponse.data._id);
-          console.log('🆔 UserId set to:', userResponse.data._id);
         } catch (error) {
-          console.error('❌ Error fetching user data:', error);
           toast.error('Failed to load user data');
         }
-      } else {
-        console.log('⚠️ No session email available');
       }
     };
 
@@ -50,65 +39,34 @@ const QuizHistoryPage = () => {
 
   // Fetch quiz attempts
   useEffect(() => {
-    console.log('🚀 useEffect - fetchAttempts triggered');
-    console.log('📊 Current userId:', userId);
-    console.log('📝 Current examId:', examId);
-    
     const fetchAttempts = async () => {
       if (!userId) {
-        console.log('⚠️ No userId available, skipping fetch');
         return;
       }
       
-      console.log('🔄 Starting to fetch attempts...');
-      
       try {
         let url = `/api/quiz/attempt?userId=${userId}`;
-        console.log('🌐 Base URL:', url);
         
         if (examId) {
-          console.log('📚 ExamId provided, fetching quizzes for exam first');
-          // If examId is provided, we need to fetch quizzes for that exam first
           const quizzesUrl = `/api/quiz?userId=${userId}&examId=${examId}`;
-          console.log('🌐 Quizzes URL:', quizzesUrl);
-          
           const quizzesResponse = await axios.get(quizzesUrl);
-          console.log('📋 Quizzes response:', quizzesResponse.data);
           const quizzes = quizzesResponse.data;
           
-          console.log('🔢 Number of quizzes found:', quizzes.length);
-          
-          // Then fetch attempts for all those quizzes
           const attemptPromises = quizzes.map((quiz: any) => {
             const attemptUrl = `/api/quiz/attempt?userId=${userId}&quizId=${quiz._id}`;
-            console.log('🌐 Attempt URL for quiz:', attemptUrl);
             return axios.get(attemptUrl);
           });
           
-          console.log('📊 Number of attempt requests:', attemptPromises.length);
-          
           const attemptResponses = await Promise.all(attemptPromises);
-          console.log('📬 Attempt responses:', attemptResponses.map(r => r.data));
-          
           const allAttempts = attemptResponses.flatMap(response => response.data);
-          console.log('📈 All attempts combined:', allAttempts);
-          console.log('🔢 Total attempts count:', allAttempts.length);
-          
           setAttempts(allAttempts);
         } else {
-          console.log('📊 No examId, fetching all attempts');
           const response = await axios.get(url);
-          console.log('📬 All attempts response:', response.data);
-          console.log('🔢 Total attempts count:', response.data.length);
           setAttempts(response.data);
         }
       } catch (error: any) {
-        console.error('❌ Error fetching quiz attempts:', error);
-        console.error('❌ Error response:', error.response?.data);
-        console.error('❌ Error status:', error.response?.status);
         toast.error('Failed to load quiz history');
       } finally {
-        console.log('✅ Fetch attempts completed, setting loading to false');
         setLoading(false);
       }
     };
@@ -118,35 +76,25 @@ const QuizHistoryPage = () => {
 
   // Filter attempts based on performance
   useEffect(() => {
-    console.log('🚀 useEffect - filterAttempts triggered');
-    console.log('📊 Current attempts:', attempts);
-    console.log('🔍 Current filter:', filter);
-    
     let filtered = attempts;
     
     switch (filter) {
       case 'excellent':
         filtered = attempts.filter(attempt => attempt.percentage >= 90);
-        console.log('⭐ Excellent filtered attempts:', filtered);
         break;
       case 'good':
         filtered = attempts.filter(attempt => attempt.percentage >= 70 && attempt.percentage < 90);
-        console.log('👍 Good filtered attempts:', filtered);
         break;
       case 'average':
         filtered = attempts.filter(attempt => attempt.percentage >= 50 && attempt.percentage < 70);
-        console.log('📊 Average filtered attempts:', filtered);
         break;
       case 'poor':
         filtered = attempts.filter(attempt => attempt.percentage < 50);
-        console.log('📉 Poor filtered attempts:', filtered);
         break;
       default:
         filtered = attempts;
-        console.log('📋 All attempts (no filter):', filtered);
     }
     
-    console.log('🔢 Filtered attempts count:', filtered.length);
     setFilteredAttempts(filtered);
   }, [attempts, filter]);
 
@@ -174,36 +122,23 @@ const QuizHistoryPage = () => {
   };
 
   const getStats = () => {
-    console.log('📊 Calculating stats for:', filteredAttempts);
     if (filteredAttempts.length === 0) {
-      console.log('📊 No attempts, returning zero stats');
       return { avgScore: 0, totalQuizzes: 0, bestScore: 0 };
     }
     
     const avgScore = Math.round(filteredAttempts.reduce((sum, attempt) => sum + attempt.percentage, 0) / filteredAttempts.length);
     const bestScore = Math.max(...filteredAttempts.map(attempt => attempt.percentage));
     
-    const stats = {
+    return {
       avgScore,
       totalQuizzes: filteredAttempts.length,
       bestScore
     };
-    
-    console.log('📊 Calculated stats:', stats);
-    return stats;
   };
 
   const stats = getStats();
 
-  console.log('🎯 Render state:');
-  console.log('  - loading:', loading);
-  console.log('  - userId:', userId);
-  console.log('  - attempts.length:', attempts.length);
-  console.log('  - filteredAttempts.length:', filteredAttempts.length);
-  console.log('  - stats:', stats);
-
   if (loading) {
-    console.log('⏳ Showing loading state');
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
@@ -213,8 +148,6 @@ const QuizHistoryPage = () => {
       </div>
     );
   }
-
-  console.log('🎨 Rendering main content');
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -292,7 +225,6 @@ const QuizHistoryPage = () => {
                 <button
                   key={option.value}
                   onClick={() => {
-                    console.log('🔍 Filter button clicked:', option.value);
                     setFilter(option.value as any);
                   }}
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -327,101 +259,85 @@ const QuizHistoryPage = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {(() => {
-              console.log('🎨 Rendering attempts list');
-              const validAttempts = filteredAttempts.filter(attempt => {
-                const hasQuiz = !!(attempt.quiz || attempt.quizId);
-                console.log(`📋 Attempt ${attempt._id} has quiz:`, hasQuiz);
-                console.log(`📋 Attempt quiz data:`, attempt.quiz || attempt.quizId);
-                if (!hasQuiz) {
-                  console.log(`⚠️ Attempt ${attempt._id} missing quiz data:`, attempt);
-                }
-                return hasQuiz;
-              });
-              console.log('✅ Valid attempts to render:', validAttempts.length);
-              
-              return validAttempts.map((attempt) => {
-                const badge = getPerformanceBadge(attempt.percentage);
-                const quiz = attempt.quiz || attempt.quizId; // Use quizId if quiz is not available
-                console.log(`🎨 Rendering attempt ${attempt._id}:`, attempt);
-                console.log(`🎯 Quiz data for attempt:`, quiz);
-                
-                return (
-                  <div key={attempt._id} className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-gray-600 transition-all duration-300">
-                    <div className="p-8">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex-1">
-                          <h3 className="text-2xl font-bold text-black dark:text-white mb-2">
-                            {quiz?.title || 'Quiz Title Not Available'}
-                          </h3>
-                          <p className="text-gray-500 dark:text-white/70 text-lg">
-                            {quiz?.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId 
-                              ? (quiz.examId as any).subjectName 
-                              : 'Subject'}
-                          </p>
-                        </div>
+            {filteredAttempts.map((attempt) => {
+              const badge = getPerformanceBadge(attempt.percentage);
+              const quiz = attempt.quiz || attempt.quizId;
+
+              return (
+                <div key={attempt._id} className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-gray-600 transition-all duration-300">
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold text-black dark:text-white mb-2">
+                          {quiz?.title || 'Quiz Title Not Available'}
+                        </h3>
+                        <p className="text-gray-500 dark:text-white/70 text-lg">
+                          {quiz?.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId 
+                            ? (quiz.examId as any).subjectName 
+                            : 'Subject'}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <span className={`px-4 py-2 rounded-xl text-sm font-bold border ${badge.color}`}>
+                          {badge.text}
+                        </span>
                         
-                        <div className="flex items-center gap-4">
-                          <span className={`px-4 py-2 rounded-xl text-sm font-bold border ${badge.color}`}>
-                            {badge.text}
-                          </span>
-                          
-                          <Link
-                            href={`/quiz/results/${attempt._id}`}
-                            className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
-                          >
-                            <Eye className="h-4 w-4" />
-                            View Details
-                          </Link>
+                        <Link
+                          href={`/quiz/results/${attempt._id}`}
+                          className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      <div className="flex items-center gap-3">
+                        <Award className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <span className="text-sm text-gray-500 dark:text-white/70">Score:</span>
+                          <p className="font-bold text-black dark:text-white">
+                            {attempt.score}/{quiz?.totalQuestions || 0} ({attempt.percentage}%)
+                          </p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div className="flex items-center gap-3">
-                          <Award className="h-5 w-5 text-blue-500" />
-                          <div>
-                            <span className="text-sm text-gray-500 dark:text-white/70">Score:</span>
-                            <p className="font-bold text-black dark:text-white">
-                              {attempt.score}/{quiz?.totalQuestions || 0} ({attempt.percentage}%)
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <span className="text-sm text-gray-500 dark:text-white/70">Time:</span>
+                          <p className="font-bold text-black dark:text-white">
+                            {formatTime(attempt.totalTimeTaken)}
+                          </p>
                         </div>
+                      </div>
 
-                        <div className="flex items-center gap-3">
-                          <Clock className="h-5 w-5 text-blue-500" />
-                          <div>
-                            <span className="text-sm text-gray-500 dark:text-white/70">Time:</span>
-                            <p className="font-bold text-black dark:text-white">
-                              {formatTime(attempt.totalTimeTaken)}
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <span className="text-sm text-gray-500 dark:text-white/70">Date:</span>
+                          <p className="font-bold text-black dark:text-white">
+                            {formatDate(attempt.completedAt)}
+                          </p>
                         </div>
+                      </div>
 
-                        <div className="flex items-center gap-3">
-                          <Calendar className="h-5 w-5 text-blue-500" />
-                          <div>
-                            <span className="text-sm text-gray-500 dark:text-white/70">Date:</span>
-                            <p className="font-bold text-black dark:text-white">
-                              {formatDate(attempt.completedAt)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <TrendingUp className="h-5 w-5 text-blue-500" />
-                          <div>
-                            <span className="text-sm text-gray-500 dark:text-white/70">Difficulty:</span>
-                            <p className="font-bold text-black dark:text-white capitalize">
-                              {quiz?.difficulty || 'N/A'}
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-3">
+                        <TrendingUp className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <span className="text-sm text-gray-500 dark:text-white/70">Difficulty:</span>
+                          <p className="font-bold text-black dark:text-white capitalize">
+                            {quiz?.difficulty || 'N/A'}
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
-                );
-              });
-            })()}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
