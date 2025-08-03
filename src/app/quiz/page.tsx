@@ -10,11 +10,7 @@ import { Play, Clock, Target, Calendar, BookOpen, Plus, TrendingUp } from 'lucid
 import Link from 'next/link';
 
 const QuizDashboardPage = () => {
-  const router = useRouter();
   const { data: session } = useSession();
-  
-  console.log('🔍 QuizDashboardPage - Component initialized');
-  console.log('👤 session:', session);
   
   const [loading, setLoading] = useState<boolean>(true);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -22,7 +18,6 @@ const QuizDashboardPage = () => {
 
   // Fetch user data
   useEffect(() => {
-    console.log('🚀 useEffect - fetchUserData triggered');
     const fetchUserData = async () => {
       if (session?.user?.email) {
         console.log('📧 Fetching user data for email:', session.user.email);
@@ -122,7 +117,7 @@ const QuizDashboardPage = () => {
   if (loading) {
     console.log('⏳ Showing loading state');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-700 dark:text-gray-300">Loading quizzes...</p>
@@ -134,14 +129,14 @@ const QuizDashboardPage = () => {
   console.log('🎨 Rendering main content');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="border-b border-gray-100 dark:border-white/10">
+        <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Quiz Dashboard</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <h1 className="text-4xl font-bold text-black dark:text-white mb-3 tracking-tight">Quiz Dashboard</h1>
+              <p className="text-gray-500 dark:text-white/70 text-lg">
                 All your quizzes in one place
               </p>
             </div>
@@ -149,7 +144,7 @@ const QuizDashboardPage = () => {
             <div className="flex items-center gap-4">
               <Link
                 href="/quiz-history"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
               >
                 <TrendingUp className="h-4 w-4" />
                 View History
@@ -157,7 +152,7 @@ const QuizDashboardPage = () => {
               
               <Link
                 href="/"
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-black/90 text-gray-700 dark:text-white/70 hover:bg-gray-200 dark:hover:bg-black/70 rounded-xl font-medium transition-all duration-200 shadow-sm border border-gray-200 dark:border-white/10"
               >
                 <BookOpen className="h-4 w-4" />
                 Browse Exams
@@ -167,31 +162,63 @@ const QuizDashboardPage = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-12">
         {quizzes.length === 0 ? (
           (() => {
             console.log('📋 No quizzes found, showing empty state');
             return (
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                <Target className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">No Quizzes Found</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-12 text-center">
+                <Target className="h-20 w-20 text-gray-400 dark:text-white/50 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-black dark:text-white mb-3">No Quizzes Found</h3>
+                <p className="text-gray-500 dark:text-white/70 mb-8 text-lg max-w-md mx-auto">
                   You haven't created any quizzes yet. Start by browsing your exams and generating quizzes.
                 </p>
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium transition-all duration-200 hover:bg-gray-800 dark:hover:bg-gray-200 shadow-sm"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                   Browse Exams
                 </Link>
               </div>
             );
           })()
         ) : (
-          (() => {
-            console.log('📋 Rendering quizzes grid');
-            return (
+          <div className="space-y-8">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="bg-gray-50 dark:bg-black/90 shadow-lg shadow-gray-500 rounded-2xl p-6 border border-gray-100 dark:border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-600 dark:text-white/70 uppercase text-sm tracking-wide">Total Quizzes</h3>
+                  <BookOpen className="h-6 w-6 text-blue-500" />
+                </div>
+                <p className="text-3xl font-bold text-black dark:text-white">{quizzes.length}</p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-black/90 shadow-lg shadow-gray-500 rounded-2xl p-6 border border-gray-100 dark:border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-600 dark:text-white/70 uppercase text-sm tracking-wide">Easy Quizzes</h3>
+                  <Target className="h-6 w-6 text-green-500" />
+                </div>
+                <p className="text-3xl font-bold text-black dark:text-white">
+                  {quizzes.filter(q => q.difficulty === 'easy').length}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-black/90 shadow-lg shadow-gray-500 rounded-2xl p-6 border border-gray-100 dark:border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-600 dark:text-white/70 uppercase text-sm tracking-wide">Hard Quizzes</h3>
+                  <Target className="h-6 w-6 text-red-500" />
+                </div>
+                <p className="text-3xl font-bold text-black dark:text-white">
+                  {quizzes.filter(q => q.difficulty === 'hard').length}
+                </p>
+              </div>
+            </div>
+
+            {/* Quizzes Grid */}
+            <div>
+              <h2 className="text-2xl font-bold text-black dark:text-white mb-6 tracking-tight">Your Quizzes</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {quizzes.map((quiz, index) => {
                   console.log(`🎨 Rendering quiz ${index + 1}:`, quiz);
@@ -213,41 +240,41 @@ const QuizDashboardPage = () => {
                   }
                   
                   return (
-                    <div key={quiz._id} className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow">
+                    <div key={quiz._id} className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-gray-600 transition-all duration-300">
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 line-clamp-2">
+                            <h3 className="font-bold text-black dark:text-white mb-2 line-clamp-2 text-lg">
                               {quiz.title}
                             </h3>
                             {quiz.description && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                              <p className="text-sm text-gray-500 dark:text-white/70 line-clamp-2 mb-3">
                                 {quiz.description}
                               </p>
                             )}
                           </div>
                           
-                          <span className={`px-2 py-1 text-xs font-medium rounded border capitalize flex-shrink-0 ml-2 ${getDifficultyColor(quiz.difficulty)}`}>
-                            {quiz.difficulty}
+                          <span className={`px-3 py-1 text-xs font-bold rounded-full border flex-shrink-0 ml-3 ${getDifficultyColor(quiz.difficulty)}`}>
+                            {quiz.difficulty.toUpperCase()}
                           </span>
                         </div>
 
-                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                          <div className="flex items-center gap-2">
-                            <Target className="h-4 w-4" />
+                        <div className="space-y-3 text-sm text-gray-500 dark:text-white/70 mb-6">
+                          <div className="flex items-center gap-3">
+                            <Target className="h-4 w-4 text-blue-500" />
                             <span>{quiz.totalQuestions} questions</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-4 w-4 text-blue-500" />
                             <span>{quiz.timeLimit} minutes</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-4 w-4 text-blue-500" />
                             <span>Created {formatDate(quiz.createdAt)}</span>
                           </div>
                           {quiz.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId && (
-                            <div className="flex items-center gap-2">
-                              <BookOpen className="h-4 w-4" />
+                            <div className="flex items-center gap-3">
+                              <BookOpen className="h-4 w-4 text-blue-500" />
                               <span className="text-blue-600 dark:text-blue-400 font-medium">
                                 {(quiz.examId as any).subjectName}
                               </span>
@@ -255,10 +282,10 @@ const QuizDashboardPage = () => {
                           )}
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <Link
                             href={`/quiz/${quiz._id}`}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl transition-all duration-200 hover:bg-gray-800 dark:hover:bg-gray-200 text-sm font-medium shadow-sm"
                             onClick={() => console.log(`🎯 Taking quiz:`, quiz._id)}
                           >
                             <Play className="h-4 w-4" />
@@ -267,7 +294,7 @@ const QuizDashboardPage = () => {
                           
                           <Link
                             href={examLink}
-                            className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors text-sm"
+                            className="px-4 py-3 bg-gray-200 dark:bg-black/70 text-gray-700 dark:text-white/70 hover:bg-gray-300 dark:hover:bg-black/50 rounded-xl transition-all duration-200 text-sm border border-gray-300 dark:border-white/20"
                             title="View Exam"
                             onClick={() => console.log(`🎯 Viewing exam:`, examLink)}
                           >
@@ -279,8 +306,8 @@ const QuizDashboardPage = () => {
                   );
                 })}
               </div>
-            );
-          })()
+            </div>
+          </div>
         )}
       </div>
     </div>

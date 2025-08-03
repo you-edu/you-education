@@ -205,7 +205,7 @@ const QuizHistoryPage = () => {
   if (loading) {
     console.log('⏳ Showing loading state');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-700 dark:text-gray-300">Loading quiz history...</p>
@@ -217,14 +217,14 @@ const QuizHistoryPage = () => {
   console.log('🎨 Rendering main content');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="border-b border-gray-100 dark:border-white/10">
+        <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Quiz History</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <h1 className="text-4xl font-bold text-black dark:text-white mb-3 tracking-tight">Quiz History</h1>
+              <p className="text-gray-500 dark:text-white/70 text-lg">
                 {examId ? 'Quiz attempts for this exam' : 'All your quiz attempts'}
               </p>
             </div>
@@ -232,7 +232,7 @@ const QuizHistoryPage = () => {
             {examId && (
               <Link
                 href={`/exams/${examId}`}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium transition-all duration-200 hover:bg-gray-800 dark:hover:bg-gray-200 shadow-sm"
               >
                 Back to Exam
               </Link>
@@ -241,68 +241,53 @@ const QuizHistoryPage = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-8">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Quizzes</h3>
-                <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{stats.totalQuizzes}</p>
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-white/70 uppercase tracking-wide">Total Quizzes</h3>
+                <p className="text-4xl font-bold text-black dark:text-white">{stats.totalQuizzes}</p>
               </div>
-              <BookOpen className="h-10 w-10 text-blue-500" />
+              <BookOpen className="h-12 w-12 text-blue-500" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-8">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Average Score</h3>
-                <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{stats.avgScore}%</p>
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-white/70 uppercase tracking-wide">Average Score</h3>
+                <p className="text-4xl font-bold text-black dark:text-white">{stats.avgScore}%</p>
               </div>
-              <TrendingUp className="h-10 w-10 text-green-500" />
+              <TrendingUp className="h-12 w-12 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-8">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Best Score</h3>
-                <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{stats.bestScore}%</p>
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-white/70 uppercase tracking-wide">Best Score</h3>
+                <p className="text-4xl font-bold text-black dark:text-white">{stats.bestScore}%</p>
               </div>
-              <Award className="h-10 w-10 text-yellow-500" />
+              <Award className="h-12 w-12 text-yellow-500" />
             </div>
           </div>
         </div>
 
         {/* Filter Controls */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
-          <div className="flex items-center gap-4">
-            <Filter className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by performance:</span>
+        <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-6 mb-8">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Filter className="h-5 w-5 text-blue-500" />
+            <span className="text-sm font-semibold text-gray-600 dark:text-white/70 uppercase tracking-wide">Filter by performance:</span>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {[
-                {
-                  value: 'all',
-                  label: 'All'
-                },
-                {
-                  value: 'excellent',
-                  label: 'Excellent (90%+)'
-                },
-                {
-                  value: 'good',
-                  label: 'Good (70-89%)'
-                },
-                {
-                  value: 'average',
-                  label: 'Average (50-69%)'
-                },
-                {
-                  value: 'poor',
-                  label: 'Below 50%'
-                }
+                { value: 'all', label: 'All' },
+                { value: 'excellent', label: 'Excellent (90%+)' },
+                { value: 'good', label: 'Good (70-89%)' },
+                { value: 'average', label: 'Average (50-69%)' },
+                { value: 'poor', label: 'Below 50%' }
               ].map((option) => (
                 <button
                   key={option.value}
@@ -310,10 +295,10 @@ const QuizHistoryPage = () => {
                     console.log('🔍 Filter button clicked:', option.value);
                     setFilter(option.value as any);
                   }}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                     filter === option.value
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'bg-gray-200 dark:bg-black/70 text-gray-700 dark:text-white/70 hover:bg-gray-300 dark:hover:bg-black/50 border border-gray-300 dark:border-white/20'
                   }`}
                 >
                   {option.label}
@@ -325,23 +310,23 @@ const QuizHistoryPage = () => {
 
         {/* Quiz Attempts List */}
         {filteredAttempts.length === 0 ? (
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-            <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">No Quiz Attempts Found</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-12 text-center">
+            <BookOpen className="h-20 w-20 text-gray-400 dark:text-white/50 mx-auto mb-6" />
+            <h3 className="text-2xl font-bold text-black dark:text-white mb-3">No Quiz Attempts Found</h3>
+            <p className="text-gray-500 dark:text-white/70 mb-6 text-lg">
               {filter === 'all' ? 'You haven\'t taken any quizzes yet.' : `No quizzes found with ${filter} performance.`}
             </p>
             {!examId && (
               <Link
                 href="/"
-                className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                className="inline-flex items-center px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium transition-all duration-200 hover:bg-gray-800 dark:hover:bg-gray-200 shadow-sm"
               >
                 Browse Exams
               </Link>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {(() => {
               console.log('🎨 Rendering attempts list');
               const validAttempts = filteredAttempts.filter(attempt => {
@@ -362,14 +347,14 @@ const QuizHistoryPage = () => {
                 console.log(`🎯 Quiz data for attempt:`, quiz);
                 
                 return (
-                  <div key={attempt._id} className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow">
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
+                  <div key={attempt._id} className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-gray-600 transition-all duration-300">
+                    <div className="p-8">
+                      <div className="flex items-center justify-between mb-6">
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-1">
+                          <h3 className="text-2xl font-bold text-black dark:text-white mb-2">
                             {quiz?.title || 'Quiz Title Not Available'}
                           </h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          <p className="text-gray-500 dark:text-white/70 text-lg">
                             {quiz?.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId 
                               ? (quiz.examId as any).subjectName 
                               : 'Subject'}
@@ -377,13 +362,13 @@ const QuizHistoryPage = () => {
                         </div>
                         
                         <div className="flex items-center gap-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${badge.color}`}>
+                          <span className={`px-4 py-2 rounded-xl text-sm font-bold border ${badge.color}`}>
                             {badge.text}
                           </span>
                           
                           <Link
                             href={`/quiz/results/${attempt._id}`}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
                           >
                             <Eye className="h-4 w-4" />
                             View Details
@@ -391,37 +376,45 @@ const QuizHistoryPage = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Award className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600 dark:text-gray-400">Score:</span>
-                          <span className="font-semibold text-gray-800 dark:text-gray-100">
-                            {attempt.score}/{quiz?.totalQuestions || 0} ({attempt.percentage}%)
-                          </span>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="flex items-center gap-3">
+                          <Award className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <span className="text-sm text-gray-500 dark:text-white/70">Score:</span>
+                            <p className="font-bold text-black dark:text-white">
+                              {attempt.score}/{quiz?.totalQuestions || 0} ({attempt.percentage}%)
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600 dark:text-gray-400">Time:</span>
-                          <span className="font-semibold text-gray-800 dark:text-gray-100">
-                            {formatTime(attempt.totalTimeTaken)}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <Clock className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <span className="text-sm text-gray-500 dark:text-white/70">Time:</span>
+                            <p className="font-bold text-black dark:text-white">
+                              {formatTime(attempt.totalTimeTaken)}
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600 dark:text-gray-400">Date:</span>
-                          <span className="font-semibold text-gray-800 dark:text-gray-100">
-                            {formatDate(attempt.completedAt)}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <Calendar className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <span className="text-sm text-gray-500 dark:text-white/70">Date:</span>
+                            <p className="font-bold text-black dark:text-white">
+                              {formatDate(attempt.completedAt)}
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600 dark:text-gray-400">Difficulty:</span>
-                          <span className="font-semibold text-gray-800 dark:text-gray-100 capitalize">
-                            {quiz?.difficulty || 'N/A'}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <TrendingUp className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <span className="text-sm text-gray-500 dark:text-white/70">Difficulty:</span>
+                            <p className="font-bold text-black dark:text-white capitalize">
+                              {quiz?.difficulty || 'N/A'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>

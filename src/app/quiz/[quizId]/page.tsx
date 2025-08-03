@@ -178,7 +178,7 @@ const QuizPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-700 dark:text-gray-300">Loading quiz...</p>
@@ -189,13 +189,13 @@ const QuizPage = () => {
 
   if (!quiz || !userId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
-        <div className="max-w-md mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="max-w-md mx-auto p-8 bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10">
           <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
           <p className="text-gray-700 dark:text-gray-300 mb-4">Quiz not found or access denied</p>
           <button 
             onClick={() => router.push('/')}
-            className="px-4 py-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 rounded-lg hover:opacity-90"
+            className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200"
           >
             Go Home
           </button>
@@ -206,38 +206,38 @@ const QuizPage = () => {
 
   if (!isStarted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
-        <div className="max-w-2xl mx-auto p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4">{quiz.title}</h1>
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="max-w-2xl mx-auto p-12 bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-black dark:text-white mb-6 tracking-tight">{quiz.title}</h1>
             {quiz.description && (
-              <p className="text-gray-600 dark:text-gray-400 mb-6">{quiz.description}</p>
+              <p className="text-gray-500 dark:text-white/70 mb-8 text-lg">{quiz.description}</p>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <CheckCircle className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Questions</h3>
-              <p className="text-gray-600 dark:text-gray-400">{quiz.totalQuestions}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="text-center p-6 bg-white dark:bg-black/50 rounded-xl border border-gray-200 dark:border-white/10">
+              <CheckCircle className="h-10 w-10 text-blue-500 mx-auto mb-3" />
+              <h3 className="font-bold text-black dark:text-white mb-1">Questions</h3>
+              <p className="text-gray-500 dark:text-white/70">{quiz.totalQuestions}</p>
             </div>
 
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <Clock className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Time Limit</h3>
-              <p className="text-gray-600 dark:text-gray-400">{quiz.timeLimit} minutes</p>
+            <div className="text-center p-6 bg-white dark:bg-black/50 rounded-xl border border-gray-200 dark:border-white/10">
+              <Clock className="h-10 w-10 text-green-500 mx-auto mb-3" />
+              <h3 className="font-bold text-black dark:text-white mb-1">Time Limit</h3>
+              <p className="text-gray-500 dark:text-white/70">{quiz.timeLimit} minutes</p>
             </div>
 
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <AlertCircle className="h-8 w-8 text-orange-500 mx-auto mb-2" />
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200">Difficulty</h3>
-              <p className="text-gray-600 dark:text-gray-400 capitalize">{quiz.difficulty}</p>
+            <div className="text-center p-6 bg-white dark:bg-black/50 rounded-xl border border-gray-200 dark:border-white/10">
+              <AlertCircle className="h-10 w-10 text-orange-500 mx-auto mb-3" />
+              <h3 className="font-bold text-black dark:text-white mb-1">Difficulty</h3>
+              <p className="text-gray-500 dark:text-white/70 capitalize">{quiz.difficulty}</p>
             </div>
           </div>
 
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 mb-8">
-            <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Instructions:</h3>
-            <ul className="text-yellow-700 dark:text-yellow-300 text-sm space-y-1">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl p-6 mb-12">
+            <h3 className="font-bold text-yellow-800 dark:text-yellow-200 mb-3">Instructions:</h3>
+            <ul className="text-yellow-700 dark:text-yellow-300 space-y-2">
               <li>• Read each question carefully before selecting an answer</li>
               <li>• You can navigate between questions using the navigation buttons</li>
               <li>• Make sure to submit your quiz before the time runs out</li>
@@ -248,7 +248,7 @@ const QuizPage = () => {
           <div className="text-center">
             <button
               onClick={startQuiz}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              className="px-12 py-4 bg-black dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
             >
               Start Quiz
             </button>
@@ -261,33 +261,33 @@ const QuizPage = () => {
   const currentQ = quiz.questions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+      <div className="bg-gray-50 dark:bg-black/90 shadow-lg shadow-gray-500 border-b border-gray-100 dark:border-white/10 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{quiz.title}</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h1 className="text-2xl font-bold text-black dark:text-white">{quiz.title}</h1>
+              <p className="text-gray-500 dark:text-white/70">
                 Question {currentQuestion + 1} of {quiz.questions.length}
               </p>
             </div>
             
             <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold ${
                 timeLeft <= 300 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 
                 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
               }`}>
                 <Clock className="h-4 w-4" />
-                <span className="font-mono font-semibold">{formatTime(timeLeft)}</span>
+                <span className="font-mono font-bold">{formatTime(timeLeft)}</span>
               </div>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="mt-6 w-full bg-gray-200 dark:bg-black/50 rounded-full h-3">
             <div 
-              className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300"
               style={{ width: `${getProgressPercentage()}%` }}
             />
           </div>
@@ -295,10 +295,10 @@ const QuizPage = () => {
       </div>
 
       {/* Question Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6">
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-12">
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-black dark:text-white mb-8">
               {currentQ.question}
             </h2>
 
@@ -307,23 +307,23 @@ const QuizPage = () => {
                 <button
                   key={index}
                   onClick={() => handleOptionSelect(index)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                  className={`w-full text-left p-6 rounded-xl border-2 transition-all duration-200 ${
                     selectedOption === index
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-100 dark:hover:bg-black/50'
                   }`}
                 >
                   <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                    <div className={`w-8 h-8 rounded-full border-2 mr-6 flex items-center justify-center ${
                       selectedOption === index
                         ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300 dark:border-gray-600'
+                        : 'border-gray-300 dark:border-white/30'
                     }`}>
                       {selectedOption === index && (
-                        <div className="w-2 h-2 bg-white rounded-full" />
+                        <div className="w-3 h-3 bg-white rounded-full" />
                       )}
                     </div>
-                    <span className="text-gray-800 dark:text-gray-200">{option}</span>
+                    <span className="text-black dark:text-white text-lg">{option}</span>
                   </div>
                 </button>
               ))}
@@ -335,25 +335,25 @@ const QuizPage = () => {
             <button
               onClick={handlePreviousQuestion}
               disabled={currentQuestion === 0}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+              className={`flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200 ${
                 currentQuestion === 0
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  ? 'bg-gray-100 dark:bg-black/50 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-200 dark:bg-black/70 text-gray-700 dark:text-white/70 hover:bg-gray-300 dark:hover:bg-black/50 border border-gray-300 dark:border-white/20'
               }`}
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-5 w-5" />
               Previous
             </button>
 
             <button
               onClick={handleNextQuestion}
               disabled={selectedOption === null || isSubmitting}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+              className={`flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200 ${
                 selectedOption === null || isSubmitting
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-100 dark:bg-black/50 text-gray-400 cursor-not-allowed'
                   : currentQuestion === quiz.questions.length - 1
-                  ? 'bg-green-500 hover:bg-green-600 text-white'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  ? 'bg-green-500 hover:bg-green-600 text-white shadow-sm'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
               }`}
             >
               {isSubmitting ? (
@@ -363,7 +363,7 @@ const QuizPage = () => {
               ) : (
                 <>
                   Next
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-5 w-5" />
                 </>
               )}
             </button>

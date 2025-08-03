@@ -352,40 +352,35 @@ const ExamDetailsPage = () => {
                       disabled={generatingQuiz || chapters.length === 0 || !userId}
                       className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 
                         ${generatingQuiz || chapters.length === 0 || !userId
-                          ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl'} 
+                          ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed border border-gray-200 dark:border-gray-700' 
+                          : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md'} 
                         rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105`}
                     >
                       {generatingQuiz ? (
                         <>
-                          <Loader2 className="h-5 w-5 text-white animate-spin" />
-                          <span className="text-white font-medium">Generating Quiz...</span>
+                          <Loader2 className="h-5 w-5 text-gray-500 dark:text-gray-400 animate-spin" />
+                          <span className="text-gray-500 dark:text-gray-400 font-medium">Generating Quiz...</span>
                         </>
                       ) : chapters.length === 0 ? (
                         <>
-                          <FileText className="h-5 w-5 text-gray-500" />
-                          <span className="text-gray-500 font-medium">Add Chapters First</span>
+                          <FileText className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                          <span className="text-gray-400 dark:text-gray-500 font-medium">Add Chapters First</span>
                         </>
                       ) : !userId ? (
                         <>
-                          <FileText className="h-5 w-5 text-gray-500" />
-                          <span className="text-gray-500 font-medium">Loading...</span>
+                          <FileText className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                          <span className="text-gray-400 dark:text-gray-500 font-medium">Loading...</span>
                         </>
                       ) : (
                         <>
-                          <FileText className="h-5 w-5 text-white" />
-                          <span className="text-white font-medium">Generate Quiz</span>
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <FileText className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200" />
+                          <span className="text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 font-medium">Generate Quiz</span>
+                          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                         </>
                       )}
                     </button>
                   }
                 />
-                {chapters.length > 0 && !generatingQuiz && userId && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                    Create customizable quizzes with different difficulty levels
-                  </p>
-                )}
               </div>
 
               {/* View Past Quizzes Button */}
@@ -393,16 +388,15 @@ const ExamDetailsPage = () => {
                 <Link 
                   href={`/quiz-history?examId=${examId}`}
                   className="w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 
-                    bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 
-                    rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105"
+                    bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 
+                    hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 
+                    border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm hover:shadow-md 
+                    transition-all duration-300 ease-in-out transform hover:scale-105"
                 >
-                  <Play className="h-5 w-5 text-white" />
-                  <span className="text-white font-medium">View Quiz History</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-teal-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <Play className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200" />
+                  <span className="text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 font-medium">View Quiz History</span>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                 </Link>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  Review past quiz attempts and scores
-                </p>
               </div>
             </div>
           </div>

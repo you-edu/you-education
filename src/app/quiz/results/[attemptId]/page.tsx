@@ -145,7 +145,7 @@ const QuizResultsPage = () => {
   if (loading) {
     console.log('⏳ Showing loading state');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-700 dark:text-gray-300">Loading results...</p>
@@ -156,16 +156,14 @@ const QuizResultsPage = () => {
 
   if (!attempt || !userId) {
     console.log('❌ No attempt or userId, showing error state');
-    console.log('  - attempt exists:', !!attempt);
-    console.log('  - userId exists:', !!userId);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
-        <div className="max-w-md mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="max-w-md mx-auto p-8 bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10">
           <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
           <p className="text-gray-700 dark:text-gray-300 mb-4">Quiz results not found or access denied</p>
           <button 
             onClick={() => router.push('/')}
-            className="px-4 py-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 rounded-lg hover:opacity-90"
+            className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all duration-200"
           >
             Go Home
           </button>
@@ -175,20 +173,17 @@ const QuizResultsPage = () => {
   }
 
   console.log('🎨 Rendering main content');
-  
-  // Use quiz data from either quiz or quizId field
   const quiz = attempt.quiz || attempt.quizId;
-  console.log('🎯 Using quiz data:', quiz);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 dark:from-black dark:to-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-4xl mx-auto px-6 py-6">
+      <div className="border-b border-gray-100 dark:border-white/10">
+        <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Quiz Results</h1>
-              <p className="text-gray-600 dark:text-gray-400">{quiz?.title || 'Loading...'}</p>
+              <h1 className="text-3xl font-bold text-black dark:text-white mb-2 tracking-tight">Quiz Results</h1>
+              <p className="text-gray-500 dark:text-white/70 text-lg">{quiz?.title || 'Loading...'}</p>
             </div>
             
             <Link
@@ -208,7 +203,7 @@ const QuizResultsPage = () => {
                   console.log('🔗 Exam link examId:', examId);
                 return examId;
               })()}`}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-black/90 text-gray-700 dark:text-white/70 rounded-xl hover:bg-gray-200 dark:hover:bg-black/70 transition-all duration-200 border border-gray-200 dark:border-white/10"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Exam
@@ -217,71 +212,71 @@ const QuizResultsPage = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Score Overview */}
-        <div className={`rounded-2xl border-2 p-8 mb-8 ${getGradeBg(attempt?.percentage || 0)}`}>
+        <div className={`rounded-2xl border-2 p-12 mb-12 shadow-lg ${getGradeBg(attempt?.percentage || 0)}`}>
           <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <Award className={`h-16 w-16 ${getGradeColor(attempt?.percentage || 0)}`} />
+            <div className="flex items-center justify-center mb-6">
+              <Award className={`h-20 w-20 ${getGradeColor(attempt?.percentage || 0)}`} />
             </div>
-            <h2 className={`text-4xl font-bold mb-2 ${getGradeColor(attempt?.percentage || 0)}`}>
+            <h2 className={`text-6xl font-bold mb-4 ${getGradeColor(attempt?.percentage || 0)}`}>
               {attempt?.percentage || 0}%
             </h2>
-            <p className={`text-xl font-semibold mb-4 ${getGradeColor(attempt?.percentage || 0)}`}>
+            <p className={`text-2xl font-semibold mb-6 ${getGradeColor(attempt?.percentage || 0)}`}>
               {getGradeText(attempt?.percentage || 0)}
             </p>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="text-xl text-gray-700 dark:text-gray-300">
               You scored {attempt?.score || 0} out of {quiz?.totalQuestions || 0} questions correctly
             </p>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-8">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Score</h3>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-white/70 uppercase tracking-wide">Score</h3>
+                <p className="text-3xl font-bold text-black dark:text-white">
                   {attempt?.score || 0}/{quiz?.totalQuestions || 0}
                 </p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-10 w-10 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-8">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Time Taken</h3>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-white/70 uppercase tracking-wide">Time Taken</h3>
+                <p className="text-3xl font-bold text-black dark:text-white">
                   {formatTime(attempt?.totalTimeTaken || 0)}
                 </p>
               </div>
-              <Clock className="h-8 w-8 text-blue-500" />
+              <Clock className="h-10 w-10 text-blue-500" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 p-8">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Accuracy</h3>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-white/70 uppercase tracking-wide">Accuracy</h3>
+                <p className="text-3xl font-bold text-black dark:text-white">
                   {attempt?.percentage || 0}%
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+              <TrendingUp className="h-10 w-10 text-purple-500" />
             </div>
           </div>
         </div>
 
         {/* Question Review */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-900 dark:to-black px-6 py-4">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Question Review</h2>
+        <div className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-900 dark:to-black px-8 py-6">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Question Review</h2>
           </div>
 
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200 dark:divide-white/10">
             {(() => {
               console.log('🎨 Rendering questions');
               console.log('📋 Quiz questions:', quiz?.questions);
@@ -298,22 +293,22 @@ const QuizResultsPage = () => {
                 });
                 
                 return (
-                  <div key={index} className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  <div key={index} className="p-8">
+                    <div className="flex items-start gap-6">
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
                         isCorrect 
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
                           : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                       }`}>
-                        {isCorrect ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                        {isCorrect ? <CheckCircle className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">
+                        <h3 className="text-xl font-bold text-black dark:text-white mb-4">
                           {index + 1}. {question.question}
                         </h3>
                         
-                        <div className="space-y-2 mb-4">
+                        <div className="space-y-3 mb-6">
                           {question.options?.map((option, optionIndex) => {
                             const isSelected = userAnswer?.selectedOption === optionIndex;
                             const isCorrectOption = question.correctAnswer === optionIndex;
@@ -321,24 +316,24 @@ const QuizResultsPage = () => {
                             return (
                               <div 
                                 key={optionIndex} 
-                                className={`p-3 rounded-lg border ${
+                                className={`p-4 rounded-xl border-2 ${
                                   isCorrectOption 
                                     ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
                                     : isSelected 
                                     ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
-                                    : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                    : 'bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10'
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="text-gray-800 dark:text-gray-200">{option}</span>
+                                  <span className="text-black dark:text-white font-medium">{option}</span>
                                   <div className="flex items-center gap-2">
                                     {isCorrectOption && (
-                                      <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">
+                                      <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
                                         Correct
                                       </span>
                                     )}
                                     {isSelected && !isCorrectOption && (
-                                      <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">
+                                      <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-3 py-1 rounded-full">
                                         Your Answer
                                       </span>
                                     )}
@@ -350,14 +345,14 @@ const QuizResultsPage = () => {
                         </div>
                         
                         {question.explanation && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                            <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-1">Explanation:</h4>
-                            <p className="text-blue-700 dark:text-blue-300 text-sm">{question.explanation}</p>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                            <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">Explanation:</h4>
+                            <p className="text-blue-700 dark:text-blue-300">{question.explanation}</p>
                           </div>
                         )}
                         
                         {userAnswer && (
-                          <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="mt-4 text-sm text-gray-500 dark:text-white/70">
                             Time taken: {formatTime(userAnswer.timeTaken)}
                           </div>
                         )}
@@ -371,22 +366,20 @@ const QuizResultsPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-center gap-4 mt-8">
+        <div className="flex items-center justify-center gap-6 mt-12">
           <Link
             href={`/quiz-history`}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
-            onClick={() => console.log('🔗 Navigating to quiz history')}
+            className="flex items-center gap-3 px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm"
           >
-            <TrendingUp className="h-4 w-4" />
+            <TrendingUp className="h-5 w-5" />
             View All Results
           </Link>
           
           <Link
             href={`/quiz/${quiz?._id || ''}`}
-            className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-colors"
-            onClick={() => console.log('🔗 Retaking quiz:', quiz?._id)}
+            className="flex items-center gap-3 px-8 py-4 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium transition-all duration-200 hover:bg-gray-800 dark:hover:bg-gray-200 shadow-sm"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-5 w-5" />
             Retake Quiz
           </Link>
         </div>
