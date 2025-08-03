@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Calendar, BookOpen, FileText, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, BookOpen, FileText, Clock, ArrowRight, Loader2, Brain, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -9,6 +9,7 @@ import axios from 'axios';
 import { Chapter, ExamData } from '@/lib/types';
 import { toast } from 'sonner';
 import { DeleteExamDialog } from '@/components/dialogs/DeleteExamDialog';
+import { QuizGenerationDialog } from '@/components/dialogs/QuizGenerationDialog';
 import { Footer } from '@/components/Footer';
 
 const ExamDetailsPage = () => {
@@ -23,6 +24,7 @@ const ExamDetailsPage = () => {
   const [generatingChapterId, setGeneratingChapterId] = useState<string | null>(null);
   const [userGeneratingStatus, setUserGeneratingStatus] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [generatingQuiz] = useState<boolean>(false);
 
   // Function to fetch user generation status
   const fetchUserGenerationStatus = useCallback(async () => {
@@ -329,6 +331,77 @@ const ExamDetailsPage = () => {
             </div>
           )}
         </div>
+
+        {/* Quick Actions Section */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-12">
+          <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-900 dark:to-black px-8 py-6">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center justify-center">
+              <Brain className="mr-3 h-6 w-6" />
+              Quick Actions
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Generate Quiz Button */}
+              <div className="relative">
+                <QuizGenerationDialog
+                  examId={examId}
+                  userId={userId || ''}
+                  trigger={
+                    <button
+                      disabled={generatingQuiz || chapters.length === 0 || !userId}
+                      className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 
+                        ${generatingQuiz || chapters.length === 0 || !userId
+                          ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed border border-gray-200 dark:border-gray-700' 
+                          : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md'} 
+                        rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105`}
+                    >
+                      {generatingQuiz ? (
+                        <>
+                          <Loader2 className="h-5 w-5 text-gray-500 dark:text-gray-400 animate-spin" />
+                          <span className="text-gray-500 dark:text-gray-400 font-medium">Generating Quiz...</span>
+                        </>
+                      ) : chapters.length === 0 ? (
+                        <>
+                          <FileText className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                          <span className="text-gray-400 dark:text-gray-500 font-medium">Add Chapters First</span>
+                        </>
+                      ) : !userId ? (
+                        <>
+                          <FileText className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                          <span className="text-gray-400 dark:text-gray-500 font-medium">Loading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200" />
+                          <span className="text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 font-medium">Generate Quiz</span>
+                          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                        </>
+                      )}
+                    </button>
+                  }
+                />
+              </div>
+
+              {/* View Past Quizzes Button */}
+              <div className="relative">
+                <Link 
+                  href={`/quiz-history?examId=${examId}`}
+                  className="w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 
+                    bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 
+                    hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 
+                    border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm hover:shadow-md 
+                    transition-all duration-300 ease-in-out transform hover:scale-105"
+                >
+                  <Play className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200" />
+                  <span className="text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 font-medium">View Quiz History</span>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
         {/* Chapters Section */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
