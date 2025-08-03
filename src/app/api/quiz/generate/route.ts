@@ -140,7 +140,7 @@ Please ensure questions cover the selected chapters and topics proportionally.`
     try {
       parsedResponse = JSON.parse(responseContent);
     } catch (parseError) {
-      console.error("Failed to parse AI response:", responseContent);
+      console.error("Failed to parse AI response:", parseError, responseContent);
       throw new Error("Invalid response format from AI");
     }
 

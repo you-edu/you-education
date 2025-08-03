@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { Quiz } from '@/lib/types';
@@ -24,7 +23,7 @@ const QuizDashboardPage = () => {
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
           setUserId(userResponse.data._id);
         } catch (error) {
-          toast.error('Failed to load user data');
+          toast.error('Failed to load user data', { description: error instanceof Error ? error.message : String(error) });
         }
       }
     };
@@ -43,7 +42,7 @@ const QuizDashboardPage = () => {
         const response = await axios.get(url);
         setQuizzes(response.data);
       } catch (error: any) {
-        toast.error('Failed to load quizzes');
+        toast.error('Failed to load quizzes', { description: error instanceof Error ? error.message : String(error) });
       } finally {
         setLoading(false);
       }
@@ -126,7 +125,7 @@ const QuizDashboardPage = () => {
                 <Target className="h-20 w-20 text-gray-400 dark:text-white/50 mx-auto mb-6" />
                 <h3 className="text-2xl font-bold text-black dark:text-white mb-3">No Quizzes Found</h3>
                 <p className="text-gray-500 dark:text-white/70 mb-8 text-lg max-w-md mx-auto">
-                  You haven't created any quizzes yet. Start by browsing your exams and generating quizzes.
+                  You haven&apos;t created any quizzes yet. Start by browsing your exams and generating quizzes.
                 </p>
                 <Link
                   href="/"
@@ -175,7 +174,7 @@ const QuizDashboardPage = () => {
             <div>
               <h2 className="text-2xl font-bold text-black dark:text-white mb-6 tracking-tight">Your Quizzes</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {quizzes.map((quiz, index) => {
+                {quizzes.map((quiz) => {
                   // Determine the exam link
                   let examLink = '/';
                   if (quiz.examId) {

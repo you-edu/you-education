@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query: any = { userId };
+    const query: any = { userId };
     if (examId) {
       query.examId = examId;
     }

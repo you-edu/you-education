@@ -24,7 +24,7 @@ const ExamDetailsPage = () => {
   const [generatingChapterId, setGeneratingChapterId] = useState<string | null>(null);
   const [userGeneratingStatus, setUserGeneratingStatus] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [generatingQuiz, setGeneratingQuiz] = useState<boolean>(false);
+  const [generatingQuiz] = useState<boolean>(false);
 
   // Function to fetch user generation status
   const fetchUserGenerationStatus = useCallback(async () => {

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { QuizAttemptWithQuiz } from '@/lib/types';
@@ -9,8 +9,7 @@ import { toast } from 'sonner';
 import { Clock, Award, TrendingUp, Filter, Calendar, BookOpen, Eye } from 'lucide-react';
 import Link from 'next/link';
 
-const QuizHistoryPage = () => {
-  const router = useRouter();
+const QuizHistoryContent = () => {
   const searchParams = useSearchParams();
   const examId = searchParams.get('examId');
   const { data: session } = useSession();
@@ -29,7 +28,7 @@ const QuizHistoryPage = () => {
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
           setUserId(userResponse.data._id);
         } catch (error) {
-          toast.error('Failed to load user data');
+          toast.error('Failed to load user data', { description: error instanceof Error ? error.message : String(error) });
         }
       }
     };
@@ -45,7 +44,7 @@ const QuizHistoryPage = () => {
       }
       
       try {
-        let url = `/api/quiz/attempt?userId=${userId}`;
+        const url = `/api/quiz/attempt?userId=${userId}`;
         
         if (examId) {
           const quizzesUrl = `/api/quiz?userId=${userId}&examId=${examId}`;
@@ -65,7 +64,7 @@ const QuizHistoryPage = () => {
           setAttempts(response.data);
         }
       } catch (error: any) {
-        toast.error('Failed to load quiz history');
+        toast.error('Failed to load quiz history', { description: error instanceof Error ? error.message : String(error) });
       } finally {
         setLoading(false);
       }
@@ -342,6 +341,21 @@ const QuizHistoryPage = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const QuizHistoryPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    }>
+      <QuizHistoryContent />
+    </Suspense>
   );
 };
 

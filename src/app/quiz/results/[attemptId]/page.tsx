@@ -31,7 +31,7 @@ const QuizResultsPage = () => {
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
           setUserId(userResponse.data._id);
         } catch (error) {
-          toast.error('Failed to load user data');
+          toast.error('Failed to load user data', { description: error instanceof Error ? error.message : String(error) });
         }
       }
     };
@@ -51,7 +51,7 @@ const QuizResultsPage = () => {
         const response = await axios.get(url);
         setAttempt(response.data);
       } catch (error: any) {
-        toast.error('Failed to load quiz results');
+        toast.error('Failed to load quiz results', { description: error instanceof Error ? error.message : String(error) });
         router.push('/');
       } finally {
         setLoading(false);
