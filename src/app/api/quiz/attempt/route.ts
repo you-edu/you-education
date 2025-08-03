@@ -1,0 +1,121 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { QuizAttempt, Quiz } from '@/lib/db/models';
+import { connectToDatabase } from '@/lib/db/mongoose';
+
+export async function POST(request: NextRequest) {
+  try {
+    await connectToDatabase();
+    
+    const { quizId, userId, answers, startedAt } = await request.json();
+    
+    if (!quizId || !userId || !answers || !startedAt) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Get quiz with answers to calculate score
+    const quiz = await Quiz.findOne({ _id: quizId, userId });
+    if (!quiz) {
+      return NextResponse.json(
+        { error: "Quiz not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // Calculate score and process answers
+    let correctAnswers = 0;
+    const processedAnswers = answers.map((answer: any) => {
+      const question = quiz.questions[answer.questionIndex];
+      const isCorrect = question.correctAnswer === answer.selectedOption;
+      if (isCorrect) correctAnswers++;
+      
+      return {
+        questionIndex: answer.questionIndex,
+        selectedOption: answer.selectedOption,
+        isCorrect,
+        timeTaken: answer.timeTaken || 0
+      };
+    });
+
+    const score = correctAnswers;
+    const percentage = Math.round((correctAnswers / quiz.totalQuestions) * 100);
+    const completedAt = new Date();
+    const totalTimeTaken = Math.round((completedAt.getTime() - new Date(startedAt).getTime()) / 1000);
+
+    // Create quiz attempt
+    const quizAttempt = new QuizAttempt({
+      quizId,
+      userId,
+      answers: processedAnswers,
+      score,
+      percentage,
+      totalTimeTaken,
+      completedAt,
+      startedAt: new Date(startedAt)
+    });
+
+    await quizAttempt.save();
+
+    return NextResponse.json({
+      success: true,
+      attempt: {
+        _id: quizAttempt._id,
+        score,
+        percentage,
+        totalTimeTaken,
+        completedAt: quizAttempt.completedAt
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Error submitting quiz attempt:', error);
+    return NextResponse.json(
+      { error: "Failed to submit quiz attempt" },
+      { status: 500 }
+    );
+  }
+}
+
+// GET quiz attempts for a user
+export async function GET(request: NextRequest) {
+  try {
+    await connectToDatabase();
+    
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const quizId = searchParams.get('quizId');
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    let query: any = { userId };
+    if (quizId) {
+      query.quizId = quizId;
+    }
+
+    const attempts = await QuizAttempt.find(query)
+      .populate({
+        path: 'quizId',
+        select: 'title description totalQuestions timeLimit difficulty',
+        populate: {
+          path: 'examId',
+          select: 'subjectName'
+        }
+      })
+      .sort({ completedAt: -1 });
+
+    return NextResponse.json(attempts);
+  } catch (error: any) {
+    console.error('Error fetching quiz attempts:', error);
+    return NextResponse.json(
+      { error: "Failed to fetch quiz attempts" },
+      { status: 500 }
+    );
+  }
+}
