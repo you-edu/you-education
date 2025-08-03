@@ -43,6 +43,18 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
+              <Link 
+                href="/quiz" 
+                className="text-sm text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors"
+              >
+                Quizzes
+              </Link>
+              <Link 
+                href="/quiz-history" 
+                className="text-sm text-gray-600 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors"
+              >
+                Quiz History
+              </Link>
             </>
           )}
           
