@@ -7,11 +7,18 @@ export async function POST(request: NextRequest) {
   try {
     await connectToDatabase();
     
-    const { examId, userId, difficulty = 'medium', numberOfQuestions = 10 } = await request.json();
+    const { examId, userId, difficulty = 'medium', numberOfQuestions = 10, selectedChapterIds } = await request.json();
     
     if (!examId || !userId) {
       return NextResponse.json(
         { error: "Missing required fields: examId and userId" },
+        { status: 400 }
+      );
+    }
+
+    if (!selectedChapterIds || !Array.isArray(selectedChapterIds) || selectedChapterIds.length === 0) {
+      return NextResponse.json(
+        { error: "At least one chapter must be selected" },
         { status: 400 }
       );
     }
@@ -25,20 +32,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get all chapters for this exam
-    const chapters = await Chapter.find({ examId }).select('title content');
+    // Get only selected chapters for this exam
+    const chapters = await Chapter.find({ 
+      examId, 
+      _id: { $in: selectedChapterIds } 
+    }).select('title content');
+    
     if (!chapters || chapters.length === 0) {
       return NextResponse.json(
-        { error: "No chapters found for this exam" },
+        { error: "No valid chapters found for the selected chapters" },
         { status: 404 }
       );
     }
-
-    // Prepare topics for quiz generation
-    const allTopics = chapters.map(chapter => ({
-      chapterTitle: chapter.title,
-      topics: chapter.content
-    }));
 
     // Azure OpenAI configuration
     const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
@@ -60,6 +65,12 @@ export async function POST(request: NextRequest) {
       deployment: deploymentName,
       apiVersion,
     });
+
+    // Prepare topics for quiz generation from selected chapters only
+    const allTopics = chapters.map(chapter => ({
+      chapterTitle: chapter.title,
+      topics: chapter.content
+    }));
 
     // Create prompt for quiz generation
     const topicsText = allTopics.map(chapter => 
@@ -105,14 +116,14 @@ CRITICAL: correctAnswer should be the index (0-3) of the correct option in the o
         },
         {
           role: "user",
-          content: `Generate a ${difficulty} difficulty quiz with ${numberOfQuestions} multiple-choice questions based on these topics:
+          content: `Generate a ${difficulty} difficulty quiz with ${numberOfQuestions} multiple-choice questions based on these selected chapters:
 
 ${topicsText}
 
 Subject: ${exam.subjectName}
 ${exam.description ? `Description: ${exam.description}` : ''}
 
-Please ensure questions cover different chapters and topics proportionally.`
+Please ensure questions cover the selected chapters and topics proportionally.`
         }
       ],
       temperature: 1,
@@ -158,11 +169,12 @@ Please ensure questions cover different chapters and topics proportionally.`
     // Create quiz in database
     const timeLimit = difficulty === 'easy' ? 15 : difficulty === 'medium' ? 20 : 30; // minutes
 
+    const selectedChapterTitles = chapters.map(ch => ch.title).join(', ');
     const quiz = new Quiz({
       examId,
       userId,
-      title: `${exam.subjectName} Quiz - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
-      description: `Auto-generated ${difficulty} level quiz for ${exam.subjectName}`,
+      title: `${exam.subjectName} Quiz - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} (${selectedChapterTitles})`,
+      description: `Auto-generated ${difficulty} level quiz for selected chapters: ${selectedChapterTitles}`,
       questions: validatedQuestions,
       timeLimit,
       difficulty,

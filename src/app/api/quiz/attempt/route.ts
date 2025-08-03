@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { QuizAttempt, Quiz } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/mongoose';
 
+// POST - Submit quiz answer or final submission
 export async function POST(request: NextRequest) {
   try {
     await connectToDatabase();
     
-    const { quizId, userId, answers, startedAt } = await request.json();
+    const { quizId, userId, answers, startedAt, isComplete = false, questionIndex, selectedOption } = await request.json();
     
-    if (!quizId || !userId || !answers || !startedAt) {
+    if (!quizId || !userId || !startedAt) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Get quiz with answers to calculate score
+    // Get quiz to validate and calculate scores
     const quiz = await Quiz.findOne({ _id: quizId, userId });
     if (!quiz) {
       return NextResponse.json(
@@ -24,55 +25,115 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate score and process answers
-    let correctAnswers = 0;
-    const processedAnswers = answers.map((answer: any) => {
-      const question = quiz.questions[answer.questionIndex];
-      const isCorrect = question.correctAnswer === answer.selectedOption;
-      if (isCorrect) correctAnswers++;
-      
-      return {
-        questionIndex: answer.questionIndex,
-        selectedOption: answer.selectedOption,
+    // Check if attempt already exists
+    let quizAttempt = await QuizAttempt.findOne({ 
+      quizId, 
+      userId, 
+      startedAt: new Date(startedAt) 
+    });
+
+    if (!quizAttempt) {
+      // Create new attempt if it doesn't exist
+      quizAttempt = new QuizAttempt({
+        quizId,
+        userId,
+        answers: [],
+        score: 0,
+        percentage: 0,
+        totalTimeTaken: 0,
+        completedAt: null,
+        startedAt: new Date(startedAt),
+        isComplete: false
+      });
+    }
+
+    // Handle single question submission (real-time saving)
+    if (!isComplete && questionIndex !== undefined && selectedOption !== undefined) {
+      // Update or add the answer for this question
+      const existingAnswerIndex = quizAttempt.answers.findIndex(
+        (answer: any) => answer.questionIndex === questionIndex
+      );
+
+      const question = quiz.questions[questionIndex];
+      const isCorrect = question.correctAnswer === selectedOption;
+      const answerData = {
+        questionIndex,
+        selectedOption,
         isCorrect,
-        timeTaken: answer.timeTaken || 0
+        timeTaken: Math.round((new Date().getTime() - new Date(startedAt).getTime()) / 1000)
       };
-    });
 
-    const score = correctAnswers;
-    const percentage = Math.round((correctAnswers / quiz.totalQuestions) * 100);
-    const completedAt = new Date();
-    const totalTimeTaken = Math.round((completedAt.getTime() - new Date(startedAt).getTime()) / 1000);
-
-    // Create quiz attempt
-    const quizAttempt = new QuizAttempt({
-      quizId,
-      userId,
-      answers: processedAnswers,
-      score,
-      percentage,
-      totalTimeTaken,
-      completedAt,
-      startedAt: new Date(startedAt)
-    });
-
-    await quizAttempt.save();
-
-    return NextResponse.json({
-      success: true,
-      attempt: {
-        _id: quizAttempt._id,
-        score,
-        percentage,
-        totalTimeTaken,
-        completedAt: quizAttempt.completedAt
+      if (existingAnswerIndex >= 0) {
+        quizAttempt.answers[existingAnswerIndex] = answerData;
+      } else {
+        quizAttempt.answers.push(answerData);
       }
-    });
+
+      await quizAttempt.save();
+
+      return NextResponse.json({
+        success: true,
+        message: "Answer saved",
+        attemptId: quizAttempt._id
+      });
+    }
+
+    // Handle final submission or auto-submission
+    if (isComplete || answers) {
+      // Use provided answers or current saved answers
+      const finalAnswers = answers || quizAttempt.answers;
+      
+      // Calculate final score
+      let correctAnswers = 0;
+      const processedAnswers = finalAnswers.map((answer: any) => {
+        const question = quiz.questions[answer.questionIndex];
+        const isCorrect = question.correctAnswer === answer.selectedOption;
+        if (isCorrect) correctAnswers++;
+        
+        return {
+          questionIndex: answer.questionIndex,
+          selectedOption: answer.selectedOption,
+          isCorrect,
+          timeTaken: answer.timeTaken || 0
+        };
+      });
+
+      const score = correctAnswers;
+      const percentage = Math.round((correctAnswers / quiz.totalQuestions) * 100);
+      const completedAt = new Date();
+      const totalTimeTaken = Math.round((completedAt.getTime() - new Date(startedAt).getTime()) / 1000);
+
+      // Update the attempt with final data
+      quizAttempt.answers = processedAnswers;
+      quizAttempt.score = score;
+      quizAttempt.percentage = percentage;
+      quizAttempt.totalTimeTaken = totalTimeTaken;
+      quizAttempt.completedAt = completedAt;
+      quizAttempt.isComplete = true;
+
+      await quizAttempt.save();
+
+      return NextResponse.json({
+        success: true,
+        attempt: {
+          _id: quizAttempt._id,
+          score,
+          percentage,
+          totalTimeTaken,
+          completedAt: quizAttempt.completedAt
+        }
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Invalid request parameters" },
+      { status: 400 }
+    );
 
   } catch (error: any) {
-    console.error('Error submitting quiz attempt:', error);
+    console.error('Error handling quiz attempt:', error);
     return NextResponse.json(
-      { error: "Failed to submit quiz attempt" },
+      { error: "Failed to handle quiz attempt" },
       { status: 500 }
     );
   }
