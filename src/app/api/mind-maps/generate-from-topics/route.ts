@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Innertube, UniversalCache } from 'youtubei.js';
 import { AzureOpenAI } from "openai";
 import { connectToDatabase } from '@/lib/db/mongoose';
-import { Notes, MindMap, Chapter, User } from '@/lib/db/models';
+import { Notes, MindMap, Chapter, User, UserGenerationStatus } from '@/lib/db/models';
 import mongoose from 'mongoose';
 
 // Types
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Check if mind map already exists for this chapter BEFORE setting generating flag
+    // Check existing mind map for chapter BEFORE setting flag
     const existingMindMap = await MindMap.findOne({ chapterId });
     if (existingMindMap) {
       return NextResponse.json(
@@ -57,13 +57,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 2: Atomically set user status to generating to avoid races
-    const updatedUser = await User.findOneAndUpdate(
-      { _id: userId, isGeneratingMindMap: false },
-      { $set: { isGeneratingMindMap: true } },
-      { new: true }
+    // Atomically set isGeneratingMindMap = true in status collection (upsert)
+    const now = new Date();
+    const updatedStatus = await UserGenerationStatus.findOneAndUpdate(
+      { userId, isGeneratingMindMap: { $ne: true } },
+      { $set: { isGeneratingMindMap: true, updatedAt: now }, $setOnInsert: { userId, isGeneratingQuiz: false, createdAt: now } },
+      { new: true, upsert: true }
     );
-    if (!updatedUser) {
+    if (!updatedStatus || updatedStatus.isGeneratingMindMap !== true) {
       return NextResponse.json(
         { error: "Mind map generation already in progress for this user" },
         { status: 409 }
@@ -81,8 +82,12 @@ export async function POST(request: NextRequest) {
     const mindMap = await generateMindMapStructure(topicsWithVideos, chapterTitle);
     
     if (!mindMap) {
-      // Reset status before throwing error
-      await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
+      // Reset status before throwing error (update status collection)
+      await UserGenerationStatus.findOneAndUpdate(
+        { userId },
+        { $set: { isGeneratingMindMap: false, updatedAt: new Date() } },
+        { new: true, upsert: true }
+      );
       throw new Error("Failed to generate mind map structure");
     }
     
@@ -115,10 +120,13 @@ export async function POST(request: NextRequest) {
     
     console.log("Chapter updated successfully");
     
-    // Reset generating flag on success
-    await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
-    console.log(`Set user ${userId} mind map generation status to false (success)`);
-    
+    // Reset flag on success
+    await UserGenerationStatus.findOneAndUpdate(
+      { userId },
+      { $set: { isGeneratingMindMap: false, updatedAt: new Date() } },
+      { new: true }
+    );
+
     return NextResponse.json({
       success: true,
       mindMapId: mindMapId,
@@ -127,13 +135,15 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error in mind map generation process:", error);
     
-    // Reset flag on error
     if (userId) {
       try {
-        await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
-        console.log(`Set user ${userId} mind map generation status to false (error)`);
+        await UserGenerationStatus.findOneAndUpdate(
+          { userId },
+          { $set: { isGeneratingMindMap: false, updatedAt: new Date() } },
+          { new: true, upsert: true }
+        );
       } catch (updateError) {
-        console.error("Failed to update user status after error:", updateError);
+        console.error("Failed to update status after error:", updateError);
       }
     }
     

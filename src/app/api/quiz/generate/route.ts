@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AzureOpenAI } from "openai";
-import { Quiz, Exam, Chapter } from '@/lib/db/models';
+import { Quiz, Exam, Chapter, UserGenerationStatus } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/mongoose';
 
 export async function POST(request: NextRequest) {
+  let userIdForCleanup: string | null = null;
   try {
     await connectToDatabase();
     
     const { examId, userId, difficulty = 'medium', numberOfQuestions = 10, selectedChapterIds } = await request.json();
+    userIdForCleanup = userId;
     
     if (!examId || !userId) {
       return NextResponse.json(
@@ -32,6 +34,72 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Atomically set quiz generation flag (treat missing as not generating)
+    const now = new Date();
+    const updatedStatus = await UserGenerationStatus.findOneAndUpdate(
+      { userId, isGeneratingQuiz: { $ne: true } },
+      { $set: { isGeneratingQuiz: true, updatedAt: now }, $setOnInsert: { userId, isGeneratingMindMap: false, createdAt: now } },
+      { new: true, upsert: true }
+    );
+    if (!updatedStatus || updatedStatus.isGeneratingQuiz !== true) {
+      return NextResponse.json(
+        { error: "Quiz generation already in progress for this user" },
+        { status: 409 }
+      );
+    }
+
+    // Kick off background generation and return immediately
+    setImmediate(() => {
+      void backgroundGenerateQuiz({
+        exam,
+        examId,
+        userId,
+        difficulty,
+        numberOfQuestions,
+        selectedChapterIds
+      }).catch(err => {
+        console.error('Background quiz generation failed:', err);
+      });
+    });
+
+    // Respond quickly; frontend will poll status
+    return NextResponse.json({ success: true, started: true }, { status: 202 });
+
+  } catch (error: any) {
+    console.error('Error generating quiz (preflight):', error);
+    // Reset flag on error in preflight
+    if (userIdForCleanup) {
+      try {
+        await UserGenerationStatus.findOneAndUpdate(
+          { userId: userIdForCleanup },
+          { $set: { isGeneratingQuiz: false, updatedAt: new Date() } },
+          { new: true, upsert: true }
+        );
+      } catch (e) {
+        console.error('Failed to reset isGeneratingQuiz after error:', e);
+      }
+    }
+    return NextResponse.json(
+      { error: error.message || "Failed to generate quiz" },
+      { status: 500 }
+    );
+  }
+}
+
+// Detached background worker for quiz generation
+async function backgroundGenerateQuiz(args: {
+  exam: any;
+  examId: string;
+  userId: string;
+  difficulty: string;
+  numberOfQuestions: number;
+  selectedChapterIds: string[];
+}) {
+  const { exam, examId, userId, difficulty, numberOfQuestions, selectedChapterIds } = args;
+
+  try {
+    await connectToDatabase();
+
     // Get only selected chapters for this exam
     const chapters = await Chapter.find({ 
       examId, 
@@ -39,10 +107,7 @@ export async function POST(request: NextRequest) {
     }).select('title content');
     
     if (!chapters || chapters.length === 0) {
-      return NextResponse.json(
-        { error: "No valid chapters found for the selected chapters" },
-        { status: 404 }
-      );
+      throw new Error("No valid chapters found for the selected chapters");
     }
 
     // Azure OpenAI configuration
@@ -52,10 +117,7 @@ export async function POST(request: NextRequest) {
     const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "o4-mini";
 
     if (!endpoint || !apiKey) {
-      return NextResponse.json(
-        { error: "Azure OpenAI credentials not configured" },
-        { status: 500 }
-      );
+      throw new Error("Azure OpenAI credentials not configured");
     }
 
     // Initialize Azure OpenAI client
@@ -72,7 +134,6 @@ export async function POST(request: NextRequest) {
       topics: chapter.content
     }));
 
-    // Create prompt for quiz generation
     const topicsText = allTopics.map(chapter => 
       `Chapter: ${chapter.chapterTitle}\nTopics: ${chapter.topics.join(', ')}`
     ).join('\n\n');
@@ -81,8 +142,9 @@ export async function POST(request: NextRequest) {
       easy: "Focus on basic concepts, definitions, and simple recall questions.",
       medium: "Include application questions, scenario-based problems, and moderate analytical thinking.",
       hard: "Create complex analytical questions, critical thinking problems, and advanced application scenarios."
-    };
+    } as const;
 
+    // Create prompt for quiz generation
     const completion = await client.chat.completions.create({
       model: deploymentName,
       messages: [
@@ -183,24 +245,23 @@ Please ensure questions cover the selected chapters and topics proportionally.`
 
     await quiz.save();
 
-    return NextResponse.json({
-      success: true,
-      quiz: {
-        _id: quiz._id,
-        title: quiz.title,
-        description: quiz.description,
-        totalQuestions: quiz.totalQuestions,
-        timeLimit: quiz.timeLimit,
-        difficulty: quiz.difficulty,
-        createdAt: quiz.createdAt
-      }
-    });
-
-  } catch (error: any) {
-    console.error('Error generating quiz:', error);
-    return NextResponse.json(
-      { error: error.message || "Failed to generate quiz" },
-      { status: 500 }
+    // Reset generating flag on success
+    await UserGenerationStatus.findOneAndUpdate(
+      { userId },
+      { $set: { isGeneratingQuiz: false, updatedAt: new Date() } },
+      { new: true }
     );
+
+  } catch (error) {
+    console.error('Background quiz generation error:', error);
+    try {
+      await UserGenerationStatus.findOneAndUpdate(
+        { userId },
+        { $set: { isGeneratingQuiz: false, updatedAt: new Date() } },
+        { new: true, upsert: true }
+      );
+    } catch (e) {
+      console.error('Failed to reset isGeneratingQuiz after background error:', e);
+    }
   }
 }

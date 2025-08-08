@@ -23,26 +23,32 @@ const ExamDetailsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [generatingChapterId, setGeneratingChapterId] = useState<string | null>(null);
   const [userGeneratingStatus, setUserGeneratingStatus] = useState<boolean>(false);
+  const [userGeneratingQuizStatus, setUserGeneratingQuizStatus] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [generatingQuiz] = useState<boolean>(false);
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+  const [unattemptedQuizzes, setUnattemptedQuizzes] = useState<any[]>([]);
+  const [loadingUnattempted, setLoadingUnattempted] = useState<boolean>(false);
 
   // Add a ref to hold the polling interval
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevGeneratingStatusRef = useRef<boolean>(false);
+  const prevQuizGenRef = useRef<boolean>(false);
 
-  // Function to fetch user generation status
+  // Fetch user generation status (both flags)
   const fetchUserGenerationStatus = useCallback(async () => {
     if (!userId) return;
     try {
       const userResponse = await axios.get(`/api/users/${userId}`);
       const userData = userResponse.data;
       setUserGeneratingStatus(userData.isGeneratingMindMap || false);
+      setUserGeneratingQuizStatus(userData.isGeneratingQuiz || false);
     } catch (error) {
       console.error('Error fetching user generation status:', error);
     }
   }, [userId]);
 
-  // Fetch user data and initial generation status ONLY ONCE on load
+  // Initial single fetch by email; do not start polling unless any flag is true
   useEffect(() => {
     const fetchUserData = async () => {
       if (session?.user?.email) {
@@ -50,7 +56,8 @@ const ExamDetailsPage = () => {
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
           const userData = userResponse.data;
           setUserId(userData._id);
-          setUserGeneratingStatus(userData.isGeneratingMindMap || false); // single initial check
+          setUserGeneratingStatus(userData.isGeneratingMindMap || false);
+          setUserGeneratingQuizStatus(userData.isGeneratingQuiz || false);
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
@@ -59,13 +66,14 @@ const ExamDetailsPage = () => {
     fetchUserData();
   }, [session]);
 
-  // Start/stop polling based on userGeneratingStatus (only poll when true)
+  // Start/stop polling only when any generation is true
   useEffect(() => {
+    const isAnyGenerating = userGeneratingStatus || userGeneratingQuizStatus;
+
     const startPolling = () => {
       if (pollIntervalRef.current || !userId) return;
       pollIntervalRef.current = setInterval(fetchUserGenerationStatus, 3000);
     };
-
     const stopPolling = () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -73,22 +81,18 @@ const ExamDetailsPage = () => {
       }
     };
 
-    if (userGeneratingStatus) {
-      startPolling();
-    } else {
-      stopPolling();
-    }
+    if (isAnyGenerating) startPolling();
+    else stopPolling();
 
-    // Cleanup on unmount
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = null;
       }
     };
-  }, [userGeneratingStatus, userId, fetchUserGenerationStatus]);
+  }, [userId, userGeneratingStatus, userGeneratingQuizStatus, fetchUserGenerationStatus]);
 
-  // Refresh chapters only on transition from true -> false
+  // Refresh chapters only on mindmap true -> false transition
   useEffect(() => {
     const wasGenerating = prevGeneratingStatusRef.current;
     if (wasGenerating && !userGeneratingStatus && examId) {
@@ -130,6 +134,55 @@ const ExamDetailsPage = () => {
       fetchExamData();
     }
   }, [examId]);
+
+  // Fetch unattempted quizzes for this exam
+  const fetchUnattemptedQuizzes = useCallback(async () => {
+    if (!userId || !examId) return;
+    try {
+      setLoadingUnattempted(true);
+      // Get all quizzes for this exam and user
+      const quizzesRes = await axios.get(`/api/quiz?userId=${userId}&examId=${examId}`);
+      const quizzes = quizzesRes.data || [];
+
+      // Get all attempts for this user (across quizzes)
+      const attemptsRes = await axios.get(`/api/quiz/attempt?userId=${userId}`);
+      const attempts = attemptsRes.data || [];
+
+      // Build a set of attempted quizIds for this exam
+      const attemptedIds = new Set<string>();
+      for (const att of attempts) {
+        const quiz = att.quizId; // populated in API
+        if (quiz && quiz._id && quiz.examId && (quiz.examId._id ? quiz.examId._id : quiz.examId) == examId) {
+          attemptedIds.add(String(quiz._id));
+        }
+      }
+
+      // Filter unattempted quizzes
+      const unattempted = quizzes.filter((q: any) => !attemptedIds.has(String(q._id)));
+      setUnattemptedQuizzes(unattempted);
+    } catch (e) {
+      console.error('Failed to fetch unattempted quizzes:', e);
+      setUnattemptedQuizzes([]);
+    } finally {
+      setLoadingUnattempted(false);
+    }
+  }, [userId, examId]);
+
+  // When modal opens, fetch list
+  useEffect(() => {
+    if (isQuizModalOpen) {
+      fetchUnattemptedQuizzes();
+    }
+  }, [isQuizModalOpen, fetchUnattemptedQuizzes]);
+
+  // When quiz generation finishes (true -> false), refresh list if modal open
+  useEffect(() => {
+    const wasGen = prevQuizGenRef.current;
+    if (wasGen && !userGeneratingQuizStatus && isQuizModalOpen) {
+      fetchUnattemptedQuizzes();
+    }
+    prevQuizGenRef.current = userGeneratingQuizStatus;
+  }, [userGeneratingQuizStatus, isQuizModalOpen, fetchUnattemptedQuizzes]);
 
   const handleGenerateMindMap = async (chapter: Chapter) => {
     // Check if user is already generating a mind map
@@ -187,6 +240,12 @@ const ExamDetailsPage = () => {
       // Do NOT force setUserGeneratingStatus(false) here; let polling detect and stop.
       // Do NOT force an immediate fetch; polling is active when generating is true.
     }
+  };
+
+  // Optimistically mark quiz generation as started when opening the dialog trigger
+  const onGenerateQuizClick = () => {
+    // Disable immediately and let polling/route keep it updated.
+    setUserGeneratingQuizStatus(true);
   };
 
   const formatDate = (dateString: string | number | Date) => {
@@ -357,14 +416,15 @@ const ExamDetailsPage = () => {
                   userId={userId || ''}
                   trigger={
                     <button
-                      disabled={generatingQuiz || chapters.length === 0 || !userId}
+                      onClick={onGenerateQuizClick}
+                      disabled={ (chapters.length === 0) || !userId || userGeneratingQuizStatus || userGeneratingStatus }
                       className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 
-                        ${generatingQuiz || chapters.length === 0 || !userId
+                        ${(chapters.length === 0) || !userId || userGeneratingQuizStatus || userGeneratingStatus
                           ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed border border-gray-200 dark:border-gray-700' 
                           : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md'} 
                         rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105`}
                     >
-                      {generatingQuiz ? (
+                      {userGeneratingQuizStatus ? (
                         <>
                           <Loader2 className="h-5 w-5 text-gray-500 dark:text-gray-400 animate-spin" />
                           <span className="text-gray-500 dark:text-gray-400 font-medium">Generating Quiz...</span>
@@ -393,8 +453,8 @@ const ExamDetailsPage = () => {
 
               {/* View Past Quizzes Button */}
               <div className="relative">
-                <Link 
-                  href={`/quiz-history?examId=${examId}`}
+                <button
+                  onClick={() => setIsQuizModalOpen(true)}
                   className="w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 
                     bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 
                     hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 
@@ -402,9 +462,9 @@ const ExamDetailsPage = () => {
                     transition-all duration-300 ease-in-out transform hover:scale-105"
                 >
                   <Play className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200" />
-                  <span className="text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 font-medium">View Quiz History</span>
+                  <span className="text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 font-medium">View Quiz</span>
                   <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                </Link>
+                </button>
               </div>
             </div>
           </div>
@@ -516,6 +576,77 @@ const ExamDetailsPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Simple Modal */}
+        {isQuizModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setIsQuizModalOpen(false)}></div>
+            <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-w-lg w-full p-6 z-10">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Available Quizzes</h3>
+
+              {/* Status banner if generating */}
+              {userGeneratingQuizStatus && (
+                <div className="flex items-center gap-2 mb-4 text-sm text-gray-700 dark:text-gray-300">
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
+                  <span>Quiz generation is in progress. It will appear here once ready.</span>
+                </div>
+              )}
+
+              {/* List of unattempted quizzes */}
+              {loadingUnattempted ? (
+                <div className="flex items-center gap-2 py-4 text-gray-600 dark:text-gray-300">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading quizzes...</span>
+                </div>
+              ) : unattemptedQuizzes.length === 0 ? (
+                <p className="text-gray-700 dark:text-gray-300">No unattempted quizzes available.</p>
+              ) : (
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                  {unattemptedQuizzes.map((q) => (
+                    <div key={q._id} className="flex items-center justify-between p-3 rounded border border-gray-200 dark:border-gray-700">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{q.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(q.createdAt).toLocaleString()} • {q.difficulty?.toUpperCase?.() || 'MEDIUM'} • {q.totalQuestions} Qs
+                        </p>
+                      </div>
+                      {userGeneratingQuizStatus ? (
+                        <button
+                          disabled
+                          className="px-3 py-1.5 text-xs rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                        >
+                          Generating…
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/quiz/${q._id}`}
+                          className="px-3 py-1.5 text-xs rounded bg-gray-900 dark:bg-gray-200 text-white dark:text-gray-900 hover:opacity-90"
+                        >
+                          Attempt
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setIsQuizModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300"
+                >
+                  Close
+                </button>
+                <Link
+                  href={`/quiz-history?examId=${examId}`}
+                  className="px-4 py-2 rounded-lg bg-gray-900 dark:bg-gray-200 text-white dark:text-gray-900 hover:opacity-90"
+                >
+                  Go to Quiz History
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <Footer/>
     </div>

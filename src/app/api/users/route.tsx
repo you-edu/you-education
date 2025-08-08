@@ -1,20 +1,27 @@
-import { User } from '@/lib/db/models';
+import { User, UserGenerationStatus } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { NextResponse, NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
-        await connectToDatabase(); // Connect inside the handler
-        
+        await connectToDatabase();
         const { name, email, image } = await request.json();
-        const newUser = new User({ name, email, image });
-        // check if user already exists
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return NextResponse.json({ error: 'User already exists' }, { status: 400 });
         }
         
+        const newUser = new User({ name, email, image });
         await newUser.save();
+
+        // Create status doc (idempotent)
+        await UserGenerationStatus.findOneAndUpdate(
+            { userId: newUser._id },
+            { $setOnInsert: { isGeneratingMindMap: false, isGeneratingQuiz: false, userId: newUser._id, createdAt: new Date() } },
+            { upsert: true, new: true }
+        );
+
         return NextResponse.json(newUser.toObject(), { status: 201 });
     } catch (error) {
         console.error('Error creating user:', error);
@@ -35,19 +42,20 @@ export async function PUT(request: NextRequest) {
             );
         }
         
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { isGeneratingMindMap },
-            { new: true }
+        // Update status doc instead of User
+        const status = await UserGenerationStatus.findOneAndUpdate(
+            { userId },
+            { $set: { isGeneratingMindMap, updatedAt: new Date() }, $setOnInsert: { userId, isGeneratingQuiz: false, createdAt: new Date() } },
+            { new: true, upsert: true }
         );
         
-        if (!updatedUser) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        if (!status) {
+            return NextResponse.json({ error: 'Failed to update user status' }, { status: 500 });
         }
         
         return NextResponse.json({ 
             success: true, 
-            isGeneratingMindMap: updatedUser.isGeneratingMindMap 
+            isGeneratingMindMap: status.isGeneratingMindMap 
         }, { status: 200 });
         
     } catch (error) {

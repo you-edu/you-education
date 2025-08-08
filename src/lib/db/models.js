@@ -5,7 +5,22 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true, required: true },
   image: { type: String },
   isGeneratingMindMap: { type: Boolean, default: false }, 
+  isGeneratingQuiz: { type: Boolean, default: false }, 
   createdAt: { type: Date, default: Date.now }
+});
+
+// New: per-user generation status collection
+const userGenerationStatusSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, required: true },
+  isGeneratingMindMap: { type: Boolean, default: false },
+  isGeneratingQuiz: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+userGenerationStatusSchema.index({ userId: 1 }, { unique: true });
+userGenerationStatusSchema.pre('save', function (next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 const ExamSchema = new mongoose.Schema({
@@ -86,3 +101,4 @@ export const Notes = mongoose.models.Notes || mongoose.model('Notes', notesSchem
 export const MindMap = mongoose.models.MindMap || mongoose.model('MindMap', mindMapSchema);
 export const Quiz = mongoose.models.Quiz || mongoose.model('Quiz', quizSchema);
 export const QuizAttempt = mongoose.models.QuizAttempt || mongoose.model('QuizAttempt', quizAttemptSchema);
+export const UserGenerationStatus = mongoose.models.UserGenerationStatus || mongoose.model('UserGenerationStatus', userGenerationStatusSchema);

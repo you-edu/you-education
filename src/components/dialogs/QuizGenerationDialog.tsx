@@ -82,8 +82,7 @@ export const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
     }
 
     setIsGenerating(true);
-    
-    toast.info('Generating quiz...');
+    toast.info('Starting quiz generation...');
 
     try {
       const result = await axios.post('/api/quiz/generate', {
@@ -93,20 +92,34 @@ export const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
         numberOfQuestions,
         selectedChapterIds
       });
-      
-      if (result.data.success) {
+
+      // New async behavior: server returns 202 and started=true
+      if (result.status === 202 && result.data?.started) {
+        toast.success('Quiz generation started. You can view it soon in “View Quiz”.');
+        setIsOpen(false);               // close popup immediately
+        onQuizGenerated?.();            // notify parent if needed
+        return;
+      }
+
+      // Backward-compat (if server still returns created quiz)
+      if (result.data?.success && result.data?.quiz?._id) {
         toast.success('Quiz generated successfully!');
         setIsOpen(false);
         onQuizGenerated?.();
-        
-        // Navigate to the quiz immediately
+        // Navigate to quiz only if server actually returned a created quiz
         router.push(`/quiz/${result.data.quiz._id}`);
-      } else {
-        toast.error(`Failed to generate quiz: ${result.data.error}`);
+        return;
       }
+
+      // Fallback error
+      toast.error(`Failed to generate quiz: ${result.data?.error || 'Unknown error'}`);
     } catch (error: any) {
       console.error('Error generating quiz:', error);
-      toast.error('Failed to generate quiz. Please try again later.');
+      if (error?.response?.status === 409) {
+        toast.error('Quiz generation already in progress for this user.');
+      } else {
+        toast.error('Failed to generate quiz. Please try again later.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -241,7 +254,7 @@ export const QuizGenerationDialog: React.FC<QuizGenerationDialogProps> = ({
                 Generating...
               </>
             ) : (
-              'Generate & Start Quiz'
+              'Generate Quiz'
             )}
           </Button>
         </div>
