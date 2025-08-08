@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
   
   try {
-    // Connect to the database first
     await connectToDatabase();
     
     const body = await request.json();
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists and if they're already generating a mind map
+    // Verify user exists
     const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json(
@@ -49,31 +48,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user.isGeneratingMindMap) {
+    // Step 1: Check if mind map already exists for this chapter BEFORE setting generating flag
+    const existingMindMap = await MindMap.findOne({ chapterId });
+    if (existingMindMap) {
+      return NextResponse.json(
+        { error: "Mind map already exists for this chapter" },
+        { status: 409 }
+      );
+    }
+
+    // Step 2: Atomically set user status to generating to avoid races
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId, isGeneratingMindMap: false },
+      { $set: { isGeneratingMindMap: true } },
+      { new: true }
+    );
+    if (!updatedUser) {
       return NextResponse.json(
         { error: "Mind map generation already in progress for this user" },
         { status: 409 }
       );
     }
-
-    // Set user status to generating
-    await User.findByIdAndUpdate(userId, { isGeneratingMindMap: true });
     console.log(`Set user ${userId} mind map generation status to true`);
 
-    // Step 1: Check if mind map already exists for this chapter
-    const existingMindMap = await MindMap.findOne({ chapterId });
-    if (existingMindMap) {
-      // Reset status before throwing error
-      await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
-      throw new Error("Mind map already exists for this chapter");
-    }
-
-    // Step 2: Fetch YouTube videos for each topic
+    // Step 3: Fetch YouTube videos for each topic
     console.log(`Starting YouTube video fetch for ${topics.length} topics`);
     const topicsWithVideos: TopicWithVideo[] = await fetchYouTubeVideosForTopics(topics);
     console.log(`Successfully fetched videos for ${topics.length} topics`);
     
-    // Step 3: Generate mind map structure with those videos
+    // Step 4: Generate mind map structure with those videos
     console.log("Generating mind map structure");
     const mindMap = await generateMindMapStructure(topicsWithVideos, chapterTitle);
     
@@ -83,11 +86,11 @@ export async function POST(request: NextRequest) {
       throw new Error("Failed to generate mind map structure");
     }
     
-    // Step 4: Process mind map - create notes directly using Mongoose models
+    // Step 5: Process mind map - create notes directly using Mongoose models
     console.log("Processing mind map and creating notes");
     const processedMindMap = await processMindMapWithModels(mindMap);
     
-    // Step 5: Save the mind map directly using the MindMap model
+    // Step 6: Save the mind map directly using the MindMap model
     console.log("Saving mind map to database");
     const newMindMap = new MindMap({
       chapterId: chapterId,
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
     const mindMapId = savedMindMap._id.toString();
     console.log("Mind map saved successfully with ID:", mindMapId);
     
-    // Step 6: Update the chapter with the mind map ID using the Chapter model
+    // Step 7: Update the chapter with the mind map ID using the Chapter model
     console.log("Updating chapter with mind map reference");
     
     // Convert string ID to ObjectId if needed
@@ -112,7 +115,7 @@ export async function POST(request: NextRequest) {
     
     console.log("Chapter updated successfully");
     
-    // Reset user status to not generating (success case)
+    // Reset generating flag on success
     await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });
     console.log(`Set user ${userId} mind map generation status to false (success)`);
     
@@ -124,7 +127,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error in mind map generation process:", error);
     
-    // Reset user status to not generating (error case)
+    // Reset flag on error
     if (userId) {
       try {
         await User.findByIdAndUpdate(userId, { isGeneratingMindMap: false });

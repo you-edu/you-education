@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Calendar, BookOpen, FileText, Clock, ArrowRight, Loader2, Brain, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -26,10 +26,13 @@ const ExamDetailsPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [generatingQuiz] = useState<boolean>(false);
 
+  // Add a ref to hold the polling interval
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const prevGeneratingStatusRef = useRef<boolean>(false);
+
   // Function to fetch user generation status
   const fetchUserGenerationStatus = useCallback(async () => {
     if (!userId) return;
-    
     try {
       const userResponse = await axios.get(`/api/users/${userId}`);
       const userData = userResponse.data;
@@ -39,56 +42,66 @@ const ExamDetailsPage = () => {
     }
   }, [userId]);
 
-  // Fetch user data and check generation status
+  // Fetch user data and initial generation status ONLY ONCE on load
   useEffect(() => {
     const fetchUserData = async () => {
       if (session?.user?.email) {
         try {
-          // Get user by email first to get userId
           const userResponse = await axios.get(`/api/users/by-email?email=${session.user.email}`);
           const userData = userResponse.data;
           setUserId(userData._id);
-          setUserGeneratingStatus(userData.isGeneratingMindMap || false);
+          setUserGeneratingStatus(userData.isGeneratingMindMap || false); // single initial check
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
       }
     };
-
     fetchUserData();
   }, [session]);
 
-  // Set up polling for user generation status when userId is available
+  // Start/stop polling based on userGeneratingStatus (only poll when true)
   useEffect(() => {
-    if (!userId) return;
-
-    // Initial fetch
-    fetchUserGenerationStatus();
-
-    // Set up polling every 3 seconds
-    const pollInterval = setInterval(fetchUserGenerationStatus, 3000);
-
-    // Cleanup interval on unmount
-    return () => {
-      clearInterval(pollInterval);
+    const startPolling = () => {
+      if (pollIntervalRef.current || !userId) return;
+      pollIntervalRef.current = setInterval(fetchUserGenerationStatus, 3000);
     };
-  }, [userId, fetchUserGenerationStatus]);
 
-  // Also refresh chapters data when generation status changes from true to false
+    const stopPolling = () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+
+    if (userGeneratingStatus) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [userGeneratingStatus, userId, fetchUserGenerationStatus]);
+
+  // Refresh chapters only on transition from true -> false
   useEffect(() => {
-    const refreshChaptersIfNeeded = async () => {
-      // If user was generating and now isn't, refresh chapters to show new mind maps
-      if (!userGeneratingStatus && examId) {
+    const wasGenerating = prevGeneratingStatusRef.current;
+    if (wasGenerating && !userGeneratingStatus && examId) {
+      (async () => {
         try {
           const chaptersResponse = await axios.get(`/api/exams/chapters?examId=${examId}`);
           setChapters(chaptersResponse.data);
         } catch (error) {
           console.error('Error refreshing chapters:', error);
         }
-      }
-    };
-
-    refreshChaptersIfNeeded();
+      })();
+    }
+    prevGeneratingStatusRef.current = userGeneratingStatus;
   }, [userGeneratingStatus, examId]);
 
   useEffect(() => {
@@ -132,8 +145,8 @@ const ExamDetailsPage = () => {
 
     // Set this specific chapter as generating
     setGeneratingChapterId(chapter._id);
-    
-    // Update user generation status locally
+
+    // Set local status true so buttons disable immediately and polling resumes
     setUserGeneratingStatus(true);
     
     toast.info(
@@ -156,9 +169,7 @@ const ExamDetailsPage = () => {
       if (result.data.success) {
         toast.success(`Mind map for "${chapter.title}" generated successfully!`);
         
-        // Refresh the chapter data to update the UI
-        const chaptersResponse = await axios.get(`/api/exams/chapters?examId=${examId}`);
-        setChapters(chaptersResponse.data);
+        // Chapter list will auto-refresh when polling sees status flip to false
       } else {
         toast.error(`Failed to generate mind map: ${result.data.error}`);
       }
@@ -169,15 +180,12 @@ const ExamDetailsPage = () => {
       } else {
         toast.error('Failed to generate mind map. Please try again later.');
       }
-    } finally {
-      // Reset the generating chapter and user status
-      setGeneratingChapterId(null);
+      // If request failed at the start, restore local status (no server flip happened)
       setUserGeneratingStatus(false);
-      
-      // Force a refresh of user status from server
-      setTimeout(() => {
-        fetchUserGenerationStatus();
-      }, 1000);
+    } finally {
+      setGeneratingChapterId(null);
+      // Do NOT force setUserGeneratingStatus(false) here; let polling detect and stop.
+      // Do NOT force an immediate fetch; polling is active when generating is true.
     }
   };
 
@@ -453,7 +461,7 @@ const ExamDetailsPage = () => {
                                 <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-black rounded-full opacity-0 group-hover:opacity-100 scale-0 group-hover:scale-100 transition-all duration-300"></div>
                                 <ArrowRight className="h-4 w-4 text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white transition-colors duration-200 relative z-10" />
                               </div>
-                              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-700 dark:to-gray-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                             </Link>
                           ) : (
                             // Mind map doesn't exist - Show Generate Mind Map button
