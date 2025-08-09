@@ -242,12 +242,6 @@ const ExamDetailsPage = () => {
     }
   };
 
-  // Optimistically mark quiz generation as started when opening the dialog trigger
-  const onGenerateQuizClick = () => {
-    // Disable immediately and let polling/route keep it updated.
-    setUserGeneratingQuizStatus(true);
-  };
-
   const formatDate = (dateString: string | number | Date) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -414,9 +408,10 @@ const ExamDetailsPage = () => {
                 <QuizGenerationDialog
                   examId={examId}
                   userId={userId || ''}
+                  onQuizGenerated={() => setUserGeneratingQuizStatus(true)}
                   trigger={
                     <button
-                      onClick={onGenerateQuizClick}
+                      // onClick removed; dialog open only, no polling start here
                       disabled={ (chapters.length === 0) || !userId || userGeneratingQuizStatus || userGeneratingStatus }
                       className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 
                         ${(chapters.length === 0) || !userId || userGeneratingQuizStatus || userGeneratingStatus
