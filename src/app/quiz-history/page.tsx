@@ -125,7 +125,7 @@ const QuizHistoryContent = () => {
   const formatDifficulty = (diff?: string) =>
     diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
 
-  const extractChaptersFromTitle = (title: string): string[] => {
+  const extractChaptersFromTitle: (title: string) => string[] = (title: string) => {
     const start = title.lastIndexOf('(');
     const end = title.lastIndexOf(')');
     if (start !== -1 && end !== -1 && end > start) {
@@ -287,7 +287,7 @@ const QuizHistoryContent = () => {
                 quiz?.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId
                   ? (quiz.examId as any).subjectName
                   : 'Subject';
-              const shortName = `${examName} - ${formatDifficulty(quiz?.difficulty)}`;
+              const shortName = `${examName}`;
               const chaptersUsed = extractChaptersFromTitle(quiz?.title || '');
               const isExpanded = expandedQuizInfoId === (quiz?._id || '');
 
@@ -313,9 +313,6 @@ const QuizHistoryContent = () => {
                             Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
                           </p>
                         )}
-                        <p className="text-gray-500 dark:text-white/70 text-lg">
-                          {examName}
-                        </p>
                       </div>
                       
                       <div className="flex items-center gap-4">

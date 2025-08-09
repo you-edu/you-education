@@ -204,7 +204,7 @@ const QuizDashboardPage = () => {
                     quiz?.examId && typeof quiz.examId === 'object' && quiz.examId !== null && 'subjectName' in quiz.examId
                       ? (quiz.examId as any).subjectName
                       : 'Exam';
-                  const shortName = `${examName} - ${formatDifficulty(quiz?.difficulty)}`;
+                  const shortName = `${examName}`;
                   const chaptersUsed = extractChaptersFromTitle(quiz?.title || '');
                   const isExpanded = expandedQuizInfoId === quiz._id;
                   
@@ -232,11 +232,7 @@ const QuizDashboardPage = () => {
                                 Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
                               </p>
                             )}
-                            {quiz.description && (
-                              <p className="text-sm text-gray-500 dark:text-white/70 line-clamp-2 mb-3">
-                                {quiz.description}
-                              </p>
-                            )}
+                            
                           </div>
                           
                           <span className={`px-3 py-1 text-xs font-bold rounded-full border flex-shrink-0 ml-3 ${getDifficultyColor(quiz.difficulty)}`}>
@@ -257,14 +253,7 @@ const QuizDashboardPage = () => {
                             <Calendar className="h-4 w-4 text-blue-500" />
                             <span>Created {formatDate(quiz.createdAt)}</span>
                           </div>
-                          {quiz.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId && (
-                            <div className="flex items-center gap-3">
-                              <BookOpen className="h-4 w-4 text-blue-500" />
-                              <span className="text-blue-600 dark:text-blue-400 font-medium">
-                                {(quiz.examId as any).subjectName}
-                              </span>
-                            </div>
-                          )}
+                          
                         </div>
 
                         <div className="flex gap-3">

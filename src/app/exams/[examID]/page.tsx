@@ -529,7 +529,7 @@ const ExamDetailsPage = () => {
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                   {unattemptedQuizzes.map((q) => {
                     const chaptersUsed = extractChaptersFromTitle(q.title || '');
-                    const shortName = `${examData.subjectName} - ${formatDifficulty(q.difficulty)}`;
+                    const shortName = `${examData.subjectName}`;
                     const isExpanded = expandedQuizInfoId === q._id;
 
                     return (

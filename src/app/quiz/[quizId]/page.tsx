@@ -224,7 +224,7 @@ const QuizPage = () => {
       quiz?.examId && typeof quiz.examId === 'object' && quiz.examId !== null && 'subjectName' in quiz.examId
         ? (quiz.examId as any).subjectName
         : 'Exam';
-    const shortName = `${examName} - ${formatDifficulty(quiz?.difficulty)}`;
+    const shortName = `${examName}`;
     const chaptersUsed = extractChaptersFromTitle(quiz?.title || '');
 
     return (
@@ -247,9 +247,6 @@ const QuizPage = () => {
               <p className="text-gray-600 dark:text-white/70 mb-4 text-sm">
                 Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
               </p>
-            )}
-            {quiz.description && (
-              <p className="text-gray-500 dark:text-white/70 mb-8 text-lg">{quiz.description}</p>
             )}
           </div>
 
