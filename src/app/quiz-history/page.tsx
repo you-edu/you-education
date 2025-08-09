@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { QuizAttemptWithQuiz } from '@/lib/types';
 import { toast } from 'sonner';
-import { Clock, Award, TrendingUp, Filter, Calendar, BookOpen, Eye } from 'lucide-react';
+import { Clock, Award, TrendingUp, Filter, Calendar, BookOpen, Eye, Info } from 'lucide-react';
 import Link from 'next/link';
 
 const QuizHistoryContent = () => {
@@ -19,6 +19,7 @@ const QuizHistoryContent = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [filteredAttempts, setFilteredAttempts] = useState<QuizAttemptWithQuiz[]>([]);
   const [filter, setFilter] = useState<'all' | 'excellent' | 'good' | 'average' | 'poor'>('all');
+  const [expandedQuizInfoId, setExpandedQuizInfoId] = useState<string | null>(null);
 
   // Fetch user data
   useEffect(() => {
@@ -107,10 +108,31 @@ const QuizHistoryContent = () => {
     });
   };
 
+  // Format time in hh:mm:ss format
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s`;
+    if (typeof seconds !== 'number' || isNaN(seconds)) return 'N/A';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return [
+      h > 0 ? String(h).padStart(2, '0') : null,
+      String(m).padStart(2, '0'),
+      String(s).padStart(2, '0')
+    ].filter(Boolean).join(':');
+  };
+
+  // Helpers to format difficulty and parse chapters from existing title
+  const formatDifficulty = (diff?: string) =>
+    diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
+
+  const extractChaptersFromTitle = (title: string): string[] => {
+    const start = title.lastIndexOf('(');
+    const end = title.lastIndexOf(')');
+    if (start !== -1 && end !== -1 && end > start) {
+      const inner = title.slice(start + 1, end);
+      return inner.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
   };
 
   const getPerformanceBadge = (percentage: number) => {
@@ -261,19 +283,38 @@ const QuizHistoryContent = () => {
             {filteredAttempts.map((attempt) => {
               const badge = getPerformanceBadge(attempt.percentage);
               const quiz = attempt.quiz || attempt.quizId;
+              const examName =
+                quiz?.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId
+                  ? (quiz.examId as any).subjectName
+                  : 'Subject';
+              const shortName = `${examName} - ${formatDifficulty(quiz?.difficulty)}`;
+              const chaptersUsed = extractChaptersFromTitle(quiz?.title || '');
+              const isExpanded = expandedQuizInfoId === (quiz?._id || '');
 
               return (
                 <div key={attempt._id} className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-gray-600 transition-all duration-300">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex-1">
-                        <h3 className="text-2xl font-bold text-black dark:text-white mb-2">
-                          {quiz?.title || 'Quiz Title Not Available'}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-2xl font-bold text-black dark:text-white">{shortName}</h3>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedQuizInfoId(isExpanded ? null : (quiz?._id || ''))}
+                            className="inline-flex items-center justify-center rounded p-1 hover:bg-gray-100 dark:hover:bg-black/70"
+                            title="Show chapters used"
+                            aria-label="Show chapters used"
+                          >
+                            <Info className="h-4 w-4 text-gray-500 dark:text-white/70" />
+                          </button>
+                        </div>
+                        {isExpanded && (
+                          <p className="text-sm text-gray-600 dark:text-white/70 mb-1">
+                            Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
+                          </p>
+                        )}
                         <p className="text-gray-500 dark:text-white/70 text-lg">
-                          {quiz?.examId && typeof quiz.examId === 'object' && 'subjectName' in quiz.examId 
-                            ? (quiz.examId as any).subjectName 
-                            : 'Subject'}
+                          {examName}
                         </p>
                       </div>
                       

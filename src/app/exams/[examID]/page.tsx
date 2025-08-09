@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Calendar, BookOpen, FileText, Clock, ArrowRight, Loader2, Brain, Play } from 'lucide-react';
+import { Calendar, BookOpen, FileText, Clock, ArrowRight, Loader2, Brain, Play, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -29,6 +29,7 @@ const ExamDetailsPage = () => {
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [unattemptedQuizzes, setUnattemptedQuizzes] = useState<any[]>([]);
   const [loadingUnattempted, setLoadingUnattempted] = useState<boolean>(false);
+  const [expandedQuizInfoId, setExpandedQuizInfoId] = useState<string | null>(null);
 
   // Add a ref to hold the polling interval
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -250,6 +251,21 @@ const ExamDetailsPage = () => {
     });
   };
 
+  // Helper: Capitalize difficulty and fallback
+  const formatDifficulty = (diff?: string) =>
+    diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
+
+  // Helper: Extract chapters from existing verbose title "(...)" part
+  const extractChaptersFromTitle = (title: string): string[] => {
+    const start = title.lastIndexOf('(');
+    const end = title.lastIndexOf(')');
+    if (start !== -1 && end !== -1 && end > start) {
+      const inner = title.slice(start + 1, end);
+      return inner.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -307,92 +323,6 @@ const ExamDetailsPage = () => {
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-8 py-12 -mt-4">
-        {/* Exam Info Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Info Card - combined or description-only */}
-          <div className={`${examData.description ? 'lg:col-span-2' : 'lg:col-span-3'} bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden`}>
-            <div className="bg-gradient-to-r from-gray-200 to-gray-300 dark:from-black dark:to-gray-800 px-8 py-6">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                <FileText className="mr-3 h-6 w-6" />
-                Exam Overview
-              </h2>
-            </div>
-            <div className="p-8">
-              {examData.description ? (
-                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
-                  {examData.description}
-                </p>
-              ) : (
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-                  <div className="flex-1">
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Course Summary</h3>
-                      <p className="text-gray-600 dark:text-gray-300">
-                        This course covers all essential topics required for the {examData.subjectName} exam. 
-                        Review the chapters below to begin your preparation.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Embed Timeline directly when no description */}
-                  <div className="flex-1 w-full bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <div className="flex items-center mb-4">
-                      <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-3" />
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Timeline</h3>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Created:</span>
-                        </div>
-                        <p className="text-gray-800 dark:text-gray-200 font-medium">{formatDate(examData.createdAt)}</p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Exam Date:</span>
-                        </div>
-                        <p className="text-gray-800 dark:text-gray-200 font-medium">{formatDate(examData.examDate)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Date Info Card - only show separately when there is a description */}
-          {examData.description && (
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-800 dark:to-black px-6 py-6">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                  <Calendar className="mr-3 h-6 w-6" />
-                  Timeline
-                </h2>
-              </div>
-              <div className="p-6 space-y-6">
-                <div>
-                  <div className="flex items-center mb-2">
-                    <Clock className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created</span>
-                  </div>
-                  <p className="text-gray-800 dark:text-gray-200 font-semibold">{formatDate(examData.createdAt)}</p>
-                </div>
-                <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
-                  <div className="flex items-center mb-2">
-                    <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Exam Date</span>
-                  </div>
-                  <p className="text-gray-800 dark:text-gray-200 font-semibold text-lg">{formatDate(examData.examDate)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Quick Actions Section */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-12">
           <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-900 dark:to-black px-8 py-6">
@@ -597,31 +527,55 @@ const ExamDetailsPage = () => {
                 <p className="text-gray-700 dark:text-gray-300">No unattempted quizzes available.</p>
               ) : (
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                  {unattemptedQuizzes.map((q) => (
-                    <div key={q._id} className="flex items-center justify-between p-3 rounded border border-gray-200 dark:border-gray-700">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{q.title}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(q.createdAt).toLocaleString()} • {q.difficulty?.toUpperCase?.() || 'MEDIUM'} • {q.totalQuestions} Qs
-                        </p>
+                  {unattemptedQuizzes.map((q) => {
+                    const chaptersUsed = extractChaptersFromTitle(q.title || '');
+                    const shortName = `${examData.subjectName} - ${formatDifficulty(q.difficulty)}`;
+                    const isExpanded = expandedQuizInfoId === q._id;
+
+                    return (
+                      <div key={q._id} className="flex flex-col p-3 rounded border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{shortName}</p>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedQuizInfoId(isExpanded ? null : q._id)}
+                                className="inline-flex items-center justify-center rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                title="Show chapters used"
+                                aria-label="Show chapters used"
+                              >
+                                <Info className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(q.createdAt).toLocaleString()} • {q.difficulty?.toUpperCase?.() || 'MEDIUM'} • {q.totalQuestions} Qs
+                            </p>
+                            {isExpanded && (
+                              <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
+                              </p>
+                            )}
+                          </div>
+                          {userGeneratingQuizStatus ? (
+                            <button
+                              disabled
+                              className="px-3 py-1.5 text-xs rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                            >
+                              Generating…
+                            </button>
+                          ) : (
+                            <Link
+                              href={`/quiz/${q._id}`}
+                              className="px-3 py-1.5 text-xs rounded bg-gray-900 dark:bg-gray-200 text-white dark:text-gray-900 hover:opacity-90"
+                            >
+                              Attempt
+                            </Link>
+                          )}
+                        </div>
                       </div>
-                      {userGeneratingQuizStatus ? (
-                        <button
-                          disabled
-                          className="px-3 py-1.5 text-xs rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-                        >
-                          Generating…
-                        </button>
-                      ) : (
-                        <Link
-                          href={`/quiz/${q._id}`}
-                          className="px-3 py-1.5 text-xs rounded bg-gray-900 dark:bg-gray-200 text-white dark:text-gray-900 hover:opacity-90"
-                        >
-                          Attempt
-                        </Link>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 

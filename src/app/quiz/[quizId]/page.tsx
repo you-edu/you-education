@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { Quiz, QuizAnswer } from '@/lib/types';
 import { toast } from 'sonner';
-import { Clock, CheckCircle, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, ArrowRight, ArrowLeft, Info } from 'lucide-react';
 
 const QuizPage = () => {
   const params = useParams();
@@ -25,6 +25,7 @@ const QuizPage = () => {
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [showChaptersInfo, setShowChaptersInfo] = useState<boolean>(false);
 
   // Fetch user data
   useEffect(() => {
@@ -176,6 +177,20 @@ const QuizPage = () => {
     return ((currentQuestion + 1) / (quiz?.questions.length || 1)) * 100;
   };
 
+  // Helpers to format difficulty and parse chapters from existing title
+  const formatDifficulty = (diff?: string) =>
+    diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
+
+  const extractChaptersFromTitle = (title: string): string[] => {
+    const start = title.lastIndexOf('(');
+    const end = title.lastIndexOf(')');
+    if (start !== -1 && end !== -1 && end > start) {
+      const inner = title.slice(start + 1, end);
+      return inner.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
@@ -205,11 +220,34 @@ const QuizPage = () => {
   }
 
   if (!isStarted) {
+    const examName =
+      quiz?.examId && typeof quiz.examId === 'object' && quiz.examId !== null && 'subjectName' in quiz.examId
+        ? (quiz.examId as any).subjectName
+        : 'Exam';
+    const shortName = `${examName} - ${formatDifficulty(quiz?.difficulty)}`;
+    const chaptersUsed = extractChaptersFromTitle(quiz?.title || '');
+
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="max-w-2xl mx-auto p-12 bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-black dark:text-white mb-6 tracking-tight">{quiz.title}</h1>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <h1 className="text-4xl font-bold text-black dark:text-white tracking-tight">{shortName}</h1>
+              <button
+                type="button"
+                onClick={() => setShowChaptersInfo(v => !v)}
+                className="inline-flex items-center justify-center rounded p-1 hover:bg-gray-100 dark:hover:bg-black/70"
+                title="Show chapters used"
+                aria-label="Show chapters used"
+              >
+                <Info className="h-5 w-5 text-gray-600 dark:text-white/70" />
+              </button>
+            </div>
+            {showChaptersInfo && (
+              <p className="text-gray-600 dark:text-white/70 mb-4 text-sm">
+                Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
+              </p>
+            )}
             {quiz.description && (
               <p className="text-gray-500 dark:text-white/70 mb-8 text-lg">{quiz.description}</p>
             )}
@@ -259,6 +297,12 @@ const QuizPage = () => {
   }
 
   const currentQ = quiz.questions[currentQuestion];
+  const examName =
+    quiz?.examId && typeof quiz.examId === 'object' && quiz.examId !== null && 'subjectName' in quiz.examId
+      ? (quiz.examId as any).subjectName
+      : 'Exam';
+  const shortName = `${examName} - ${formatDifficulty(quiz?.difficulty)}`;
+  const chaptersUsed = extractChaptersFromTitle(quiz?.title || '');
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -267,7 +311,23 @@ const QuizPage = () => {
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-black dark:text-white">{quiz.title}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-black dark:text-white">{shortName}</h1>
+                <button
+                  type="button"
+                  onClick={() => setShowChaptersInfo(v => !v)}
+                  className="inline-flex items-center justify-center rounded p-1 hover:bg-gray-100 dark:hover:bg-black/70"
+                  title="Show chapters used"
+                  aria-label="Show chapters used"
+                >
+                  <Info className="h-4 w-4 text-gray-600 dark:text-white/70" />
+                </button>
+              </div>
+              {showChaptersInfo && (
+                <p className="text-xs text-gray-600 dark:text-white/70 mt-1">
+                  Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
+                </p>
+              )}
               <p className="text-gray-500 dark:text-white/70">
                 Question {currentQuestion + 1} of {quiz.questions.length}
               </p>

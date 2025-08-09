@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { Quiz } from '@/lib/types';
 import { toast } from 'sonner';
-import { Play, Clock, Target, Calendar, BookOpen, Plus, TrendingUp } from 'lucide-react';
+import { Play, Clock, Target, Calendar, BookOpen, Plus, TrendingUp, Info } from 'lucide-react';
 import Link from 'next/link';
 
 const QuizDashboardPage = () => {
@@ -14,6 +14,7 @@ const QuizDashboardPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [expandedQuizInfoId, setExpandedQuizInfoId] = useState<string | null>(null);
 
   // Fetch user data
   useEffect(() => {
@@ -70,6 +71,20 @@ const QuizDashboardPage = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  // Helpers to format difficulty and parse chapters from existing title
+  const formatDifficulty = (diff?: string) =>
+    diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
+
+  const extractChaptersFromTitle = (title: string): string[] => {
+    const start = title.lastIndexOf('(');
+    const end = title.lastIndexOf(')');
+    if (start !== -1 && end !== -1 && end > start) {
+      const inner = title.slice(start + 1, end);
+      return inner.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
   };
 
   if (loading) {
@@ -184,15 +199,39 @@ const QuizDashboardPage = () => {
                       examLink = `/exams/${quiz.examId}`;
                     }
                   }
+
+                  const examName =
+                    quiz?.examId && typeof quiz.examId === 'object' && quiz.examId !== null && 'subjectName' in quiz.examId
+                      ? (quiz.examId as any).subjectName
+                      : 'Exam';
+                  const shortName = `${examName} - ${formatDifficulty(quiz?.difficulty)}`;
+                  const chaptersUsed = extractChaptersFromTitle(quiz?.title || '');
+                  const isExpanded = expandedQuizInfoId === quiz._id;
                   
                   return (
                     <div key={quiz._id} className="bg-gray-50 dark:bg-black/90 rounded-2xl shadow-lg shadow-gray-500 border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-gray-600 transition-all duration-300">
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="font-bold text-black dark:text-white mb-2 line-clamp-2 text-lg">
-                              {quiz.title}
-                            </h3>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-bold text-black dark:text-white line-clamp-2 text-lg">
+                                {shortName}
+                              </h3>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedQuizInfoId(isExpanded ? null : quiz._id)}
+                                className="inline-flex items-center justify-center rounded p-1 hover:bg-gray-100 dark:hover:bg-black/70"
+                                title="Show chapters used"
+                                aria-label="Show chapters used"
+                              >
+                                <Info className="h-4 w-4 text-gray-600 dark:text-white/70" />
+                              </button>
+                            </div>
+                            {isExpanded && (
+                              <p className="text-xs text-gray-600 dark:text-white/70">
+                                Chapters: {chaptersUsed.length ? chaptersUsed.join(', ') : 'Unavailable'}
+                              </p>
+                            )}
                             {quiz.description && (
                               <p className="text-sm text-gray-500 dark:text-white/70 line-clamp-2 mb-3">
                                 {quiz.description}
