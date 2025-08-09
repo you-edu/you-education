@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Calendar, BookOpen, FileText, Clock, ArrowRight, Loader2, Brain, Play, Info } from 'lucide-react';
+import { BookOpen, FileText, ArrowRight, Loader2, Brain, Play, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -25,7 +25,6 @@ const ExamDetailsPage = () => {
   const [userGeneratingStatus, setUserGeneratingStatus] = useState<boolean>(false);
   const [userGeneratingQuizStatus, setUserGeneratingQuizStatus] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [generatingQuiz] = useState<boolean>(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [unattemptedQuizzes, setUnattemptedQuizzes] = useState<any[]>([]);
   const [loadingUnattempted, setLoadingUnattempted] = useState<boolean>(false);
@@ -242,18 +241,6 @@ const ExamDetailsPage = () => {
       // Do NOT force an immediate fetch; polling is active when generating is true.
     }
   };
-
-  const formatDate = (dateString: string | number | Date) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  // Helper: Capitalize difficulty and fallback
-  const formatDifficulty = (diff?: string) =>
-    diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
 
   // Helper: Extract chapters from existing verbose title "(...)" part
   const extractChaptersFromTitle = (title: string): string[] => {

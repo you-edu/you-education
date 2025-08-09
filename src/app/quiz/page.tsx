@@ -73,9 +73,6 @@ const QuizDashboardPage = () => {
     });
   };
 
-  // Helpers to format difficulty and parse chapters from existing title
-  const formatDifficulty = (diff?: string) =>
-    diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
 
   const extractChaptersFromTitle = (title: string): string[] => {
     const start = title.lastIndexOf('(');

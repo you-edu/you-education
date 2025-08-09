@@ -121,10 +121,6 @@ const QuizHistoryContent = () => {
     ].filter(Boolean).join(':');
   };
 
-  // Helpers to format difficulty and parse chapters from existing title
-  const formatDifficulty = (diff?: string) =>
-    diff ? diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase() : 'Medium';
-
   const extractChaptersFromTitle: (title: string) => string[] = (title: string) => {
     const start = title.lastIndexOf('(');
     const end = title.lastIndexOf(')');

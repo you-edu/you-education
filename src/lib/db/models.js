@@ -17,7 +17,6 @@ const userGenerationStatusSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
-userGenerationStatusSchema.index({ userId: 1 }, { unique: true });
 userGenerationStatusSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
