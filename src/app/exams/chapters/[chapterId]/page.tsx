@@ -5,7 +5,7 @@ import MindMap from "@/components/Mindmap";
 import VideoPlayer from "@/components/VideoPlayer";
 import ChatUI from "@/components/ChatUI";
 import NotesViewer from "@/components/NotesViewer";
-// import VideoDetailsViewer from "@/components/VideoDetailsViewer";
+import VideoDetailsViewer from "@/components/VideoDetailsViewer";
 
 interface NoteData {
   _id: string;
@@ -284,9 +284,9 @@ const ChapterPage: React.FC = () => {
                     {/* Use renderKey to force remounting */}
                     <VideoPlayer key={`${selectedVideo}-${renderKey}`} url={selectedVideo} />
                   </div>
-                  {/* <div className="flex-1 overflow-hidden">
+                  <div className="flex-1 overflow-hidden">
                     <VideoDetailsViewer key={`details-${selectedVideo}-${renderKey}`} videoUrl={selectedVideo} />
-                  </div> */}
+                  </div>
                 </div>
               )}
               
