@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { BookOpen, FileText, ArrowRight, Loader2, Brain, Play, Info } from 'lucide-react';
+import {Calendar, BookOpen, FileText, ArrowRight, Loader2, Brain, Play, Info, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -108,6 +108,7 @@ const ExamDetailsPage = () => {
     prevGeneratingStatusRef.current = userGeneratingStatus;
   }, [userGeneratingStatus, examId]);
 
+
   useEffect(() => {
     const fetchExamData = async () => {
       try {
@@ -134,6 +135,8 @@ const ExamDetailsPage = () => {
       fetchExamData();
     }
   }, [examId]);
+
+  
 
   // Fetch unattempted quizzes for this exam
   const fetchUnattemptedQuizzes = useCallback(async () => {
@@ -253,6 +256,14 @@ const ExamDetailsPage = () => {
     return [];
   };
 
+  const formatDate = (dateString: string | number | Date) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -310,6 +321,90 @@ const ExamDetailsPage = () => {
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-8 py-12 -mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          {/* Info Card - combined or description-only */}
+          <div className={`${examData.description ? 'lg:col-span-2' : 'lg:col-span-3'} bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden`}>
+            <div className="bg-gradient-to-r from-gray-200 to-gray-300 dark:from-black dark:to-gray-800 px-8 py-6">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                <FileText className="mr-3 h-6 w-6" />
+                Exam Overview
+              </h2>
+            </div>
+            <div className="p-8">
+              {examData.description ? (
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  {examData.description}
+                </p>
+              ) : (
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+                  <div className="flex-1">
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Course Summary</h3>
+                      <p className="text-gray-600 dark:text-gray-300">
+                        This course covers all essential topics required for the {examData.subjectName} exam. 
+                        Review the chapters below to begin your preparation.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Embed Timeline directly when no description */}
+                  <div className="flex-1 w-full bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="flex items-center mb-4">
+                      <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-3" />
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Timeline</h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Created:</span>
+                        </div>
+                        <p className="text-gray-800 dark:text-gray-200 font-medium">{formatDate(examData.createdAt)}</p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Exam Date:</span>
+                        </div>
+                        <p className="text-gray-800 dark:text-gray-200 font-medium">{formatDate(examData.examDate)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Date Info Card - only show separately when there is a description */}
+          {examData.description && (
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-800 dark:to-black px-6 py-6">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                  <Calendar className="mr-3 h-6 w-6" />
+                  Timeline
+                </h2>
+              </div>
+              <div className="p-6 space-y-6">
+                <div>
+                  <div className="flex items-center mb-2">
+                    <Clock className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created</span>
+                  </div>
+                  <p className="text-gray-800 dark:text-gray-200 font-semibold">{formatDate(examData.createdAt)}</p>
+                </div>
+                <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+                  <div className="flex items-center mb-2">
+                    <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Exam Date</span>
+                  </div>
+                  <p className="text-gray-800 dark:text-gray-200 font-semibold text-lg">{formatDate(examData.examDate)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         {/* Quick Actions Section */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-12">
           <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-black dark:via-gray-900 dark:to-black px-8 py-6">
