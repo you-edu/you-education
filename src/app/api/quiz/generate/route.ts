@@ -189,7 +189,7 @@ Please ensure questions cover the selected chapters and topics proportionally.`
         }
       ],
       temperature: 1,
-      max_completion_tokens: 4000
+      max_completion_tokens: 100000,
     });
 
     const responseContent = completion.choices[0]?.message?.content;
